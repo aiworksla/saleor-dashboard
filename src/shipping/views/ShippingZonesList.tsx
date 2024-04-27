@@ -1,36 +1,31 @@
-import { DialogContentText } from "@material-ui/core";
-import { useUser } from "@saleor/auth";
-import ActionDialog from "@saleor/components/ActionDialog";
+import { useUser } from "@dashboard/auth";
+import ActionDialog from "@dashboard/components/ActionDialog";
 import {
   useBulkDeleteShippingZoneMutation,
-  useDeleteShippingZoneMutation,
   useShippingZonesQuery,
   useUpdateDefaultWeightUnitMutation,
-} from "@saleor/graphql";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useListSettings from "@saleor/hooks/useListSettings";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { usePaginationReset } from "@saleor/hooks/usePaginationReset";
+} from "@dashboard/graphql";
+import useListSettings from "@dashboard/hooks/useListSettings";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { usePaginationReset } from "@dashboard/hooks/usePaginationReset";
 import usePaginator, {
   createPaginationState,
   PaginatorContext,
-} from "@saleor/hooks/usePaginator";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages } from "@saleor/intl";
-import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import {
-  extractMutationErrors,
-  getStringOrPlaceholder,
-  maybe,
-} from "@saleor/misc";
-import { getById } from "@saleor/orders/components/OrderReturnPage/utils";
-import { ListViews } from "@saleor/types";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import { mapEdgesToItems } from "@saleor/utils/maps";
-import React from "react";
+} from "@dashboard/hooks/usePaginator";
+import { useRowSelection } from "@dashboard/hooks/useRowSelection";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors, getStringOrPlaceholder } from "@dashboard/misc";
+import { ListViews } from "@dashboard/types";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { Text } from "@saleor/macaw-ui-next";
+import isEqual from "lodash/isEqual";
+import React, { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
+import { ShippingWeightUnitDialog } from "../components/ShippingWeightUnitDialog";
 import ShippingZonesListPage from "../components/ShippingZonesListPage";
 import {
   shippingZonesListUrl,
@@ -42,113 +37,99 @@ interface ShippingZonesListProps {
   params: ShippingZonesListUrlQueryParams;
 }
 
-export const ShippingZonesList: React.FC<ShippingZonesListProps> = ({
-  params,
-}) => {
+export const ShippingZonesList: React.FC<ShippingZonesListProps> = ({ params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const shop = useShop();
   const { user } = useUser();
-  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(
-    params.ids,
-  );
-  const { updateListSettings, settings } = useListSettings(
-    ListViews.SHIPPING_METHODS_LIST,
-  );
+  const { updateListSettings, settings } = useListSettings(ListViews.SHIPPING_METHODS_LIST);
+  const {
+    clearRowSelection,
+    selectedRowIds,
+    setClearDatagridRowSelectionCallback,
+    setSelectedRowIds,
+  } = useRowSelection(params);
 
   usePaginationReset(shippingZonesListUrl, params, settings.rowNumber);
 
   const intl = useIntl();
-
   const paginationState = createPaginationState(settings.rowNumber, params);
-
   const queryVariables = React.useMemo(
     () => ({
       ...paginationState,
+      ...(!!params.query && { filter: { search: params.query } }),
     }),
     [params, settings.rowNumber],
   );
-
   const [openModal, closeModal] = createDialogActionHandlers<
     ShippingZonesListUrlDialog,
     ShippingZonesListUrlQueryParams
   >(navigate, shippingZonesListUrl, params);
-
   const { data, loading, refetch } = useShippingZonesQuery({
     displayLoader: true,
     variables: queryVariables,
   });
-
-  const [
-    deleteShippingZone,
-    deleteShippingZoneOpts,
-  ] = useDeleteShippingZoneMutation({
+  const shippingZones = mapEdgesToItems(data?.shippingZones);
+  const [updateDefaultWeightUnit, updateDefaultWeightUnitOpts] = useUpdateDefaultWeightUnitMutation(
+    {
+      onCompleted: data => {
+        if (data.shopSettingsUpdate?.errors.length === 0) {
+          notify({
+            status: "success",
+            text: intl.formatMessage(commonMessages.savedChanges),
+          });
+          closeModal();
+        }
+      },
+    },
+  );
+  const [bulkDeleteShippingZone, bulkDeleteShippingZoneOpts] = useBulkDeleteShippingZoneMutation({
     onCompleted: data => {
-      if (data.shippingZoneDelete.errors.length === 0) {
+      if (data.shippingZoneBulkDelete?.errors.length === 0) {
         notify({
           status: "success",
           text: intl.formatMessage(commonMessages.savedChanges),
         });
         closeModal();
+        clearRowSelection();
         refetch();
       }
     },
   });
-
-  const [
-    updateDefaultWeightUnit,
-    updateDefaultWeightUnitOpts,
-  ] = useUpdateDefaultWeightUnitMutation({
-    onCompleted: data => {
-      if (data.shopSettingsUpdate.errors.length === 0) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-      }
-    },
-  });
-
-  const [
-    bulkDeleteShippingZone,
-    bulkDeleteShippingZoneOpts,
-  ] = useBulkDeleteShippingZoneMutation({
-    onCompleted: data => {
-      if (data.shippingZoneBulkDelete.errors.length === 0) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        closeModal();
-        reset();
-        refetch();
-      }
-    },
-  });
-
   const paginationValues = usePaginator({
-    pageInfo: maybe(() => data.shippingZones.pageInfo),
+    pageInfo: data?.shippingZones?.pageInfo,
     paginationState,
     queryString: params,
   });
+  const handleSetSelectedShippingZonesIds = useCallback(
+    (rows: number[], clearSelection: () => void) => {
+      if (!shippingZones) {
+        return;
+      }
+
+      const rowsIds = rows.map(row => shippingZones[row].id);
+      const haveSaveValues = isEqual(rowsIds, selectedRowIds);
+
+      if (!haveSaveValues) {
+        setSelectedRowIds(rowsIds);
+      }
+
+      setClearDatagridRowSelectionCallback(clearSelection);
+    },
+    [shippingZones, selectedRowIds, setClearDatagridRowSelectionCallback, setSelectedRowIds],
+  );
+  const searchHandler = (query: string) => navigate(shippingZonesListUrl({ ...params, query }));
 
   return (
     <PaginatorContext.Provider value={paginationValues}>
       <ShippingZonesListPage
-        defaultWeightUnit={shop?.defaultWeightUnit}
+        defaultWeightUnit={shop?.defaultWeightUnit ?? undefined}
         settings={settings}
         disabled={
-          loading ||
-          deleteShippingZoneOpts.loading ||
-          updateDefaultWeightUnitOpts.loading
+          loading || bulkDeleteShippingZoneOpts.loading || updateDefaultWeightUnitOpts.loading
         }
-        shippingZones={mapEdgesToItems(data?.shippingZones)}
+        shippingZones={shippingZones}
         onUpdateListSettings={updateListSettings}
-        onRemove={id =>
-          openModal("remove", {
-            id,
-          })
-        }
         onSubmit={unit =>
           extractMutationErrors(
             updateDefaultWeightUnit({
@@ -156,63 +137,29 @@ export const ShippingZonesList: React.FC<ShippingZonesListProps> = ({
             }),
           )
         }
-        isChecked={isSelected}
-        selected={listElements.length}
-        toggle={toggle}
-        toggleAll={toggleAll}
-        toolbar={
-          <IconButton
-            data-test-id="delete-selected-elements-icon"
-            variant="secondary"
-            color="primary"
-            onClick={() =>
-              openModal("remove-many", {
-                ids: listElements,
-              })
-            }
-          >
-            <DeleteIcon />
-          </IconButton>
-        }
+        selectedShippingZonesIds={selectedRowIds}
+        onSelectShippingZones={handleSetSelectedShippingZonesIds}
+        onRemove={() => openModal("remove", { ids: selectedRowIds })}
         userPermissions={user?.userPermissions || []}
+        initialSearch={params.query ?? ""}
+        onSearchChange={searchHandler}
+        onWeightUnitChange={() => openModal("change-weight-unit")}
       />
-
+      <ShippingWeightUnitDialog
+        open={params.action === "change-weight-unit"}
+        onSubmit={unit =>
+          extractMutationErrors(
+            updateDefaultWeightUnit({
+              variables: { unit },
+            }),
+          )
+        }
+        disabled={updateDefaultWeightUnitOpts.loading}
+        onClose={closeModal}
+        defaultWeightUnit={shop?.defaultWeightUnit}
+      />
       <ActionDialog
         open={params.action === "remove"}
-        confirmButtonState={deleteShippingZoneOpts.status}
-        variant="delete"
-        title={intl.formatMessage({
-          id: "k3EI/U",
-          defaultMessage: "Delete Shipping Zone",
-          description: "dialog header",
-        })}
-        onClose={closeModal}
-        onConfirm={() =>
-          deleteShippingZone({
-            variables: { id: params.id },
-          })
-        }
-      >
-        <DialogContentText>
-          <FormattedMessage
-            id="qf/m5l"
-            defaultMessage="Are you sure you want to delete {shippingZoneName} shipping zone?"
-            values={{
-              shippingZoneName: (
-                <strong>
-                  {getStringOrPlaceholder(
-                    mapEdgesToItems(data?.shippingZones)?.find(
-                      getById(params.id),
-                    )?.name,
-                  )}
-                </strong>
-              ),
-            }}
-          />
-        </DialogContentText>
-      </ActionDialog>
-      <ActionDialog
-        open={params.action === "remove-many"}
         confirmButtonState={bulkDeleteShippingZoneOpts.status}
         variant="delete"
         title={intl.formatMessage({
@@ -223,25 +170,23 @@ export const ShippingZonesList: React.FC<ShippingZonesListProps> = ({
         onClose={closeModal}
         onConfirm={() =>
           bulkDeleteShippingZone({
-            variables: { ids: params.ids },
+            variables: { ids: selectedRowIds ?? "" },
           })
         }
       >
-        <DialogContentText>
+        <Text>
           <FormattedMessage
             id="C9pcQx"
             defaultMessage="{counter,plural,one{Are you sure you want to delete this shipping zone?} other{Are you sure you want to delete {displayQuantity} shipping zones?}}"
             description="dialog content"
             values={{
-              counter: params.ids?.length,
+              counter: selectedRowIds?.length,
               displayQuantity: (
-                <strong>
-                  {getStringOrPlaceholder(params.ids?.length.toString())}
-                </strong>
+                <strong>{getStringOrPlaceholder(selectedRowIds?.length.toString())}</strong>
               ),
             }}
           />
-        </DialogContentText>
+        </Text>
       </ActionDialog>
     </PaginatorContext.Provider>
   );

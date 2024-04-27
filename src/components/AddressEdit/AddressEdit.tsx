@@ -1,18 +1,19 @@
+// @ts-strict-ignore
+import { AddressTypeInput } from "@dashboard/customers/types";
+import { AccountErrorFragment, OrderErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
 import { TextField } from "@material-ui/core";
-import { AddressTypeInput } from "@saleor/customers/types";
-import { AccountErrorFragment, OrderErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
-import { IntlShape, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 
 import FormSpacer from "../FormSpacer";
 import SingleAutocompleteSelectField, {
   SingleAutocompleteChoiceType,
 } from "../SingleAutocompleteSelectField";
+import { getErrorMessage } from "./getErrorMessage";
+import { useAddressValidation } from "./useAddressValidation";
 
 const useStyles = makeStyles(
   theme => ({
@@ -31,49 +32,30 @@ interface AddressEditProps {
   data: AddressTypeInput;
   disabled?: boolean;
   errors: Array<AccountErrorFragment | OrderErrorFragment>;
-  onChange(event: React.ChangeEvent<any>);
-  onCountryChange(event: React.ChangeEvent<any>);
+  onChange: (event: React.ChangeEvent<any>) => any;
+  onCountryChange: (event: React.ChangeEvent<any>) => any;
 }
 
-function getErrorMessage(
-  err: AccountErrorFragment | OrderErrorFragment,
-  intl: IntlShape,
-): string {
-  if (err?.__typename === "AccountError") {
-    return getAccountErrorMessage(err, intl);
-  }
-
-  return getOrderErrorMessage(err, intl);
-}
-
+const PossibleFormFields = {
+  CITY: "city",
+  CITY_AREA: "cityArea",
+  COUNTRY: "country",
+  COUNTRY_AREA: "countryArea",
+  FIRST_NAME: "firstName",
+  LAST_NAME: "lastName",
+  COMPANY_NAME: "companyName",
+  PHONE: "phone",
+  POSTAL_CODE: "postalCode",
+  STREET_ADDRESS_1: "streetAddress1",
+  STREET_ADDRESS_2: "streetAddress2",
+} as const;
+const formFields: Array<keyof AddressTypeInput> = Object.values(PossibleFormFields);
 const AddressEdit: React.FC<AddressEditProps> = props => {
-  const {
-    countries,
-    countryDisplayValue,
-    data,
-    disabled,
-    errors,
-    onChange,
-    onCountryChange,
-  } = props;
-
+  const { countries, countryDisplayValue, data, disabled, errors, onChange, onCountryChange } =
+    props;
   const classes = useStyles(props);
   const intl = useIntl();
-
-  const formFields: Array<keyof AddressTypeInput> = [
-    "city",
-    "cityArea",
-    "country",
-    "countryArea",
-    "firstName",
-    "lastName",
-    "companyName",
-    "phone",
-    "postalCode",
-    "streetAddress1",
-    "streetAddress2",
-  ];
-
+  const { areas, isFieldAllowed, getDisplayValue } = useAddressValidation(data.country);
   const formErrors = getFormErrors<
     keyof AddressTypeInput,
     AccountErrorFragment | OrderErrorFragment
@@ -85,6 +67,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <TextField
             disabled={disabled}
+            data-test-id="first-name-input"
             error={!!formErrors.firstName}
             helperText={getErrorMessage(formErrors.firstName, intl)}
             label={intl.formatMessage(commonMessages.firstName)}
@@ -103,6 +86,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <TextField
             disabled={disabled}
+            data-test-id="last-name-input"
             error={!!formErrors.lastName}
             helperText={getErrorMessage(formErrors.lastName, intl)}
             label={intl.formatMessage(commonMessages.lastName)}
@@ -121,6 +105,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
       <div className={classes.root}>
         <div>
           <TextField
+            data-test-id="company-name-input"
             disabled={disabled}
             error={!!formErrors.companyName}
             helperText={getErrorMessage(formErrors.companyName, intl)}
@@ -141,6 +126,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <TextField
             disabled={disabled}
+            data-test-id="phone-input"
             error={!!formErrors.phone}
             fullWidth
             helperText={getErrorMessage(formErrors.phone, intl)}
@@ -161,6 +147,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
       <FormSpacer />
       <TextField
         disabled={disabled}
+        data-test-id="address-line-1-input"
         error={!!formErrors.streetAddress1}
         helperText={getErrorMessage(formErrors.streetAddress1, intl)}
         label={intl.formatMessage({
@@ -179,6 +166,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
       <FormSpacer />
       <TextField
         disabled={disabled}
+        data-test-id="address-line-2-input"
         error={!!formErrors.streetAddress2}
         helperText={getErrorMessage(formErrors.streetAddress2, intl)}
         label={intl.formatMessage({
@@ -199,6 +187,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <TextField
             disabled={disabled}
+            data-test-id="city-input"
             error={!!formErrors.city}
             helperText={getErrorMessage(formErrors.city, intl)}
             label={intl.formatMessage({
@@ -218,8 +207,8 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <TextField
             disabled={disabled}
+            data-test-id="zip-input"
             error={!!formErrors.postalCode}
-            helperText={getErrorMessage(formErrors.postalCode, intl)}
             label={intl.formatMessage({
               id: "oYGfnY",
               defaultMessage: "ZIP / Postal code",
@@ -241,6 +230,7 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
         <div>
           <SingleAutocompleteSelectField
             disabled={disabled}
+            autocomplete="new-password"
             data-test-id="address-edit-country-select-field"
             displayValue={countryDisplayValue}
             error={!!formErrors.country}
@@ -259,27 +249,32 @@ const AddressEdit: React.FC<AddressEditProps> = props => {
           />
         </div>
         <div>
-          <TextField
-            disabled={disabled}
-            error={!!formErrors.countryArea}
-            helperText={getErrorMessage(formErrors.countryArea, intl)}
-            label={intl.formatMessage({
-              id: "AuwpCm",
-              defaultMessage: "Country area",
-            })}
-            name="countryArea"
-            onChange={onChange}
-            value={data.countryArea}
-            fullWidth
-            InputProps={{
-              autoComplete: "new-password",
-              spellCheck: false,
-            }}
-          />
+          {isFieldAllowed(PossibleFormFields.COUNTRY_AREA) && (
+            <SingleAutocompleteSelectField
+              disabled={disabled}
+              autocomplete="new-password"
+              data-test-id="address-edit-country-area-field"
+              displayValue={getDisplayValue(data.countryArea)}
+              error={!!formErrors.countryArea}
+              helperText={getErrorMessage(formErrors.countryArea, intl)}
+              label={intl.formatMessage({
+                id: "AuwpCm",
+                defaultMessage: "Country area",
+              })}
+              name="countryArea"
+              onChange={onChange}
+              value={data.countryArea}
+              choices={areas}
+              InputProps={{
+                spellCheck: false,
+              }}
+            />
+          )}
         </div>
       </div>
     </>
   );
 };
+
 AddressEdit.displayName = "AddressEdit";
 export default AddressEdit;

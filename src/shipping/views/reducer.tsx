@@ -1,7 +1,7 @@
 import {
   PostalCodeRuleInclusionTypeEnum,
   ShippingMethodWithPostalCodesFragment,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
 
 export interface PostalCodesState {
   codesToDelete?: string[];
@@ -11,10 +11,7 @@ export interface PostalCodesState {
   postalCodeRules?: ShippingMethodWithPostalCodesFragment["postalCodeRules"];
 }
 
-function postalCodesReducer(
-  prevState: PostalCodesState,
-  newState: PostalCodesState,
-) {
+function postalCodesReducer(prevState: PostalCodesState, newState: PostalCodesState) {
   return { ...prevState, ...newState };
 }
 

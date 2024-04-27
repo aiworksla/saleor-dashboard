@@ -9,9 +9,10 @@ import { updateAttribute } from "../../../support/api/requests/Attribute";
 import { createProduct } from "../../../support/api/requests/Product";
 import {
   createTypeAttributeAndCategoryForProduct,
-  deleteProductsStartsWith,
 } from "../../../support/api/utils/products/productsUtils";
-import { enterAttributeAndChanegeIsFilterableInDashbord } from "../../../support/pages/attributesPage";
+import {
+  enterAttributeAndChanegeIsFilterableInDashbord,
+} from "../../../support/pages/attributesPage";
 import {
   enterProductListPage,
   selectAttributeFilter,
@@ -19,13 +20,12 @@ import {
 } from "../../../support/pages/catalog/products/productsListPage";
 
 xdescribe("Tests for using attributes in filters", () => {
-  const startsWith = "AttrFilter";
+  const startsWith = "AttrFilter" + Date.now();
 
   let attribute;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteProductsStartsWith(startsWith);
+    cy.loginUserViaRequest();
     createTypeAttributeAndCategoryForProduct({
       name: startsWith,
       attributeValues: [startsWith],
@@ -42,11 +42,11 @@ xdescribe("Tests for using attributes in filters", () => {
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
-    "should use attribute as filter",
+    "should use attribute as filter. TC: SALEOR_0601",
     { tags: ["@attribute", "@allEnv"] },
     () => {
       updateAttribute({
@@ -63,7 +63,7 @@ xdescribe("Tests for using attributes in filters", () => {
   );
 
   it(
-    "should remove attribute from filters",
+    "should remove attribute from filters. TC: SALEOR_0602",
     { tags: ["@attribute", "@allEnv"] },
     () => {
       updateAttribute({

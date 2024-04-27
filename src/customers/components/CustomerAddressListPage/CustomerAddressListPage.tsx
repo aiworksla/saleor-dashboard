@@ -1,12 +1,13 @@
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Button } from "@dashboard/components/Button";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import { customerUrl } from "@dashboard/customers/urls";
+import { AddressTypeEnum, CustomerAddressesFragment } from "@dashboard/graphql";
+import { getStringOrPlaceholder, renderCollection } from "@dashboard/misc";
 import { Typography } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import PageHeader from "@saleor/components/PageHeader";
-import { customerUrl } from "@saleor/customers/urls";
-import { AddressTypeEnum, CustomerAddressesFragment } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getStringOrPlaceholder, renderCollection } from "@saleor/misc";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 
@@ -40,8 +41,7 @@ const messages = defineMessages({
   noNameToShow: {
     id: "CWqmRU",
     defaultMessage: "Address Book",
-    description:
-      "customer's address book when no customer name is available, header",
+    description: "customer's address book when no customer name is available, header",
   },
   fullNameDetail: {
     id: "MpR4zK",
@@ -94,41 +94,37 @@ const CustomerAddressListPage: React.FC<CustomerAddressListPageProps> = props =>
   );
 
   return (
-    <Container>
-      <Backlink href={customerUrl(customer?.id)}>
-        {fullName.trim().length > 0
-          ? intl.formatMessage(messages.fullNameDetail, { fullName })
-          : intl.formatMessage(messages.noNameToShow)}
-      </Backlink>
-      {!isEmpty && (
-        <PageHeader
-          title={
-            fullName.trim().length > 0
-              ? intl.formatMessage(messages.fullNameAddress, { fullName })
-              : intl.formatMessage(messages.noNameToShow)
-          }
-        >
+    <ListPageLayout>
+      <TopNav
+        href={customerUrl(customer?.id)}
+        title={
+          fullName.trim().length > 0
+            ? intl.formatMessage(messages.fullNameAddress, { fullName })
+            : intl.formatMessage(messages.noNameToShow)
+        }
+      >
+        {!isEmpty && (
           <Button variant="primary" onClick={onAdd} data-test-id="add-address">
             {intl.formatMessage(messages.addAddress)}
           </Button>
-        </PageHeader>
-      )}
+        )}
+      </TopNav>
       {isEmpty ? (
-        <div className={classes.empty}>
-          <Typography variant="h5">
-            {intl.formatMessage(messages.noAddressToShow)}
-          </Typography>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          padding={6}
+          flexDirection="column"
+        >
+          <Typography variant="h5">{intl.formatMessage(messages.noAddressToShow)}</Typography>
           <Typography className={classes.description}>
             {intl.formatMessage(messages.doesntHaveAddresses)}
           </Typography>
-          <Button
-            className={classes.addButton}
-            variant="primary"
-            onClick={onAdd}
-          >
+          <Button className={classes.addButton} variant="primary" onClick={onAdd}>
             {intl.formatMessage(messages.addAddress)}
           </Button>
-        </div>
+        </Box>
       ) : (
         <div className={classes.root}>
           {renderCollection(customer?.addresses, (address, addressNumber) => (
@@ -136,12 +132,8 @@ const CustomerAddressListPage: React.FC<CustomerAddressListPageProps> = props =>
               address={address}
               addressNumber={addressNumber + 1}
               disabled={disabled}
-              isDefaultBillingAddress={
-                customer?.defaultBillingAddress?.id === address?.id
-              }
-              isDefaultShippingAddress={
-                customer?.defaultShippingAddress?.id === address?.id
-              }
+              isDefaultBillingAddress={customer?.defaultBillingAddress?.id === address?.id}
+              isDefaultShippingAddress={customer?.defaultShippingAddress?.id === address?.id}
               onEdit={() => onEdit(address.id)}
               onRemove={() => onRemove(address.id)}
               onSetAsDefault={type => onSetAsDefault(address.id, type)}
@@ -150,8 +142,9 @@ const CustomerAddressListPage: React.FC<CustomerAddressListPageProps> = props =>
           ))}
         </div>
       )}
-    </Container>
+    </ListPageLayout>
   );
 };
+
 CustomerAddressListPage.displayName = "CustomerAddressListPage";
 export default CustomerAddressListPage;

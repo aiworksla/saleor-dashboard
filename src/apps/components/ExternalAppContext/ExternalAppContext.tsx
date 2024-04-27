@@ -1,31 +1,18 @@
-import { appDeepUrl, AppDetailsUrlMountQueryParams } from "@saleor/apps/urls";
-import { AppExtensionTargetEnum } from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
+import { AppUrls } from "@dashboard/apps/urls";
+import { APP_VERSION } from "@dashboard/config";
+import { AppExtensionTargetEnum } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useShop from "@dashboard/hooks/useShop";
 import React from "react";
 
 import { AppDialog } from "../AppDialog";
 import { AppFrame } from "../AppFrame";
-
-export interface AppData {
-  id: string;
-  appToken: string;
-  src: string;
-  label: string;
-  target: AppExtensionTargetEnum;
-  params?: AppDetailsUrlMountQueryParams;
-}
-
-const ExternalAppContext = React.createContext<{
-  open: boolean;
-  appData: AppData | undefined;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setAppData: React.Dispatch<React.SetStateAction<AppData | undefined>>;
-}>(undefined);
+import { AppData, ExternalAppContext } from "./context";
 
 export const ExternalAppProvider: React.FC = ({ children }) => {
   const [open, setOpen] = React.useState(false);
   const [appData, setAppData] = React.useState<AppData | undefined>();
-
+  const shop = useShop();
   const handleClose = () => {
     setOpen(false);
     setAppData(undefined);
@@ -41,6 +28,8 @@ export const ExternalAppProvider: React.FC = ({ children }) => {
             appToken={appData.appToken}
             appId={appData.id}
             params={appData.params}
+            dashboardVersion={APP_VERSION}
+            coreVersion={shop?.version}
           />
         )}
       </AppDialog>
@@ -51,18 +40,16 @@ export const ExternalAppProvider: React.FC = ({ children }) => {
 export const useExternalApp = () => {
   const { open, setOpen, setAppData } = React.useContext(ExternalAppContext);
   const navigate = useNavigator();
-
   const openApp = (appData: AppData) => {
     if (appData.target === AppExtensionTargetEnum.POPUP) {
       setOpen(true);
       setAppData(appData);
     } else {
-      navigate(appDeepUrl(appData.id, appData.src, appData.params), {
+      navigate(AppUrls.resolveAppDeepUrl(appData.id, appData.src, appData.params), {
         resetScroll: true,
       });
     }
   };
-
   const closeApp = () => setOpen(false);
 
   return { open, openApp, closeApp };

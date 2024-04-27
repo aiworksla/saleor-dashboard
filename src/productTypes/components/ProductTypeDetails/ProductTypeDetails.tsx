@@ -1,18 +1,13 @@
-import {
-  Card,
-  CardContent,
-  Divider,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import PreviewPill from "@saleor/components/PreviewPill";
-import RadioGroupField from "@saleor/components/RadioGroupField";
-import { ProductTypeKindEnum } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import PreviewPill from "@dashboard/components/PreviewPill";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
+import { ProductTypeKindEnum } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { UserError } from "@dashboard/types";
+import { getFieldError } from "@dashboard/utils/errors";
+import { Card, CardContent, Divider, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import { UserError } from "@saleor/types";
-import { getFieldError } from "@saleor/utils/errors";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -56,18 +51,14 @@ const kindOptions = [
     type: ProductTypeKindEnum.GIFT_CARD,
   },
 ];
-
 const ProductTypeDetails: React.FC<ProductTypeDetailsProps> = props => {
   const { data, disabled, errors, onChange, onKindChange } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
     <Card className={classes.root}>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
           disabled={disabled}
@@ -113,5 +104,6 @@ const ProductTypeDetails: React.FC<ProductTypeDetailsProps> = props => {
     </Card>
   );
 };
+
 ProductTypeDetails.displayName = "ProductTypeDetails";
 export default ProductTypeDetails;

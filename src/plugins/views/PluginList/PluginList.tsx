@@ -1,31 +1,28 @@
-import DeleteFilterTabDialog from "@saleor/components/DeleteFilterTabDialog";
+// @ts-strict-ignore
+import DeleteFilterTabDialog from "@dashboard/components/DeleteFilterTabDialog";
 import SaveFilterTabDialog, {
   SaveFilterTabDialogFormData,
-} from "@saleor/components/SaveFilterTabDialog";
-import { usePluginsQuery } from "@saleor/graphql";
-import { useChannelsSearchWithLoadMore } from "@saleor/hooks/useChannelsSearchWithLoadMore";
-import useListSettings from "@saleor/hooks/useListSettings";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { usePaginationReset } from "@saleor/hooks/usePaginationReset";
+} from "@dashboard/components/SaveFilterTabDialog";
+import { usePluginsQuery } from "@dashboard/graphql";
+import { useChannelsSearchWithLoadMore } from "@dashboard/hooks/useChannelsSearchWithLoadMore";
+import useListSettings from "@dashboard/hooks/useListSettings";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { usePaginationReset } from "@dashboard/hooks/usePaginationReset";
 import usePaginator, {
   createPaginationState,
   PaginatorContext,
-} from "@saleor/hooks/usePaginator";
-import { maybe } from "@saleor/misc";
-import { ListViews } from "@saleor/types";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createFilterHandlers from "@saleor/utils/handlers/filterHandlers";
-import createSortHandler from "@saleor/utils/handlers/sortHandler";
-import { mapEdgesToItems } from "@saleor/utils/maps";
-import { getSortParams } from "@saleor/utils/sort";
+} from "@dashboard/hooks/usePaginator";
+import { maybe } from "@dashboard/misc";
+import { ListViews } from "@dashboard/types";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import createFilterHandlers from "@dashboard/utils/handlers/filterHandlers";
+import createSortHandler from "@dashboard/utils/handlers/sortHandler";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { getSortParams } from "@dashboard/utils/sort";
 import React from "react";
 
 import PluginsListPage from "../../components/PluginsListPage/PluginsListPage";
-import {
-  pluginListUrl,
-  PluginListUrlDialog,
-  PluginListUrlQueryParams,
-} from "../../urls";
+import { pluginListUrl, PluginListUrlDialog, PluginListUrlQueryParams } from "../../urls";
 import {
   deleteFilterTab,
   getActiveFilters,
@@ -44,9 +41,7 @@ interface PluginsListProps {
 
 export const PluginsList: React.FC<PluginsListProps> = ({ params }) => {
   const navigate = useNavigator();
-  const { updateListSettings, settings } = useListSettings(
-    ListViews.PLUGINS_LIST,
-  );
+  const { updateListSettings, settings } = useListSettings(ListViews.PLUGINS_LIST);
 
   usePaginationReset(pluginListUrl, params, settings.rowNumber);
 
@@ -63,27 +58,18 @@ export const PluginsList: React.FC<PluginsListProps> = ({ params }) => {
     displayLoader: true,
     variables: queryVariables,
   });
-
   const tabs = getFilterTabs();
-
   const currentTab = getFiltersCurrentTab(params, tabs);
-
-  const [
-    changeFilters,
-    resetFilters,
-    handleSearchChange,
-  ] = createFilterHandlers({
+  const [changeFilters, resetFilters, handleSearchChange] = createFilterHandlers({
     createUrl: pluginListUrl,
     getFilterQueryParam,
     navigate,
     params,
   });
-
   const [openModal, closeModal] = createDialogActionHandlers<
     PluginListUrlDialog,
     PluginListUrlQueryParams
   >(navigate, pluginListUrl, params);
-
   const handleTabChange = (tab: number) => {
     navigate(
       pluginListUrl({
@@ -92,26 +78,21 @@ export const PluginsList: React.FC<PluginsListProps> = ({ params }) => {
       }),
     );
   };
-
   const handleFilterTabDelete = () => {
     deleteFilterTab(currentTab);
     navigate(pluginListUrl());
   };
-
   const handleFilterTabSave = (data: SaveFilterTabDialogFormData) => {
     saveFilterTab(data.name, getActiveFilters(params));
     handleTabChange(tabs.length + 1);
   };
-
   const paginationValues = usePaginator({
     pageInfo: maybe(() => data.plugins.pageInfo),
     paginationState,
     queryString: params,
   });
-
   const handleSort = createSortHandler(navigate, pluginListUrl, params);
   const channelsSearchWithLoadMoreProps = useChannelsSearchWithLoadMore();
-
   const filterOpts = getFilterOpts(params, channelsSearchWithLoadMoreProps);
 
   return (

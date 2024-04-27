@@ -6,13 +6,13 @@ import faker from "faker";
 import { urlList } from "../../../fixtures/urlList";
 import { createChannel } from "../../../support/api/requests/Channels";
 import { completeCheckout } from "../../../support/api/requests/Checkout";
-import * as channelsUtils from "../../../support/api/utils/channelsUtils";
-import { deleteVouchersStartsWith } from "../../../support/api/utils/discounts/vouchersUtils";
 import {
   addPayment,
   createCheckoutWithVoucher,
 } from "../../../support/api/utils/ordersUtils";
 import * as productsUtils from "../../../support/api/utils/products/productsUtils";
+import { updateTaxConfigurationForChannel } from "../../../support/api/utils/taxesUtils";
+import { ensureCanvasStatic } from "../../../support/customCommands/sharedElementsOperations/canvas";
 import {
   createVoucher,
   discountOptions,
@@ -31,9 +31,7 @@ describe("As an admin I want to create voucher", () => {
   let defaultChannel;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    channelsUtils.deleteChannelsStartsWith(startsWith);
-    deleteVouchersStartsWith(startsWith);
+    cy.loginUserViaRequest();
     productsUtils
       .createProductWithShipping({ name, productPrice, shippingPrice })
       .then(
@@ -52,10 +50,26 @@ describe("As an admin I want to create voucher", () => {
             shippingMethodName: shippingMethodResp.name,
             auth: "token",
           };
+
+          updateTaxConfigurationForChannel({
+            channelSlug: defaultChannel.slug,
+          });
+          cy.checkIfDataAreNotNull({
+            createdChannel,
+            dataForCheckout,
+            defaultChannel,
+          });
         },
       );
   });
 
+  beforeEach(() => {
+    cy.loginUserViaRequest();
+    updateTaxConfigurationForChannel({
+      channelSlug: defaultChannel.slug,
+      pricesEnteredWithTax: true,
+    });
+  });
   it(
     "should be able to create fixed price voucher. TC: SALEOR_1901",
     { tags: ["@vouchers", "@allEnv", "@stable"] },
@@ -149,10 +163,8 @@ describe("As an admin I want to create voucher", () => {
     () => {
       const voucherCode = `${startsWith}${faker.datatype.number()}`;
 
-      cy.clearSessionData()
-        .loginUserViaRequest()
-        .visit(urlList.vouchers);
-      cy.expectSkeletonIsVisible();
+      cy.clearSessionData().loginUserViaRequest().visit(urlList.vouchers);
+      ensureCanvasStatic();
       createChannel({ name }).then(channel => {
         createdChannel = channel;
 

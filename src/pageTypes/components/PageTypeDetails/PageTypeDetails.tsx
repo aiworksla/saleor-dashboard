@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import { PageErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getPageErrorMessage from "@dashboard/utils/errors/page";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { PageErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors } from "@saleor/utils/errors";
-import getPageErrorMessage from "@saleor/utils/errors/page";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -19,14 +20,11 @@ interface PageTypeDetailsProps {
 const PageTypeDetails: React.FC<PageTypeDetailsProps> = props => {
   const { data, disabled, errors, onChange } = props;
   const intl = useIntl();
-
   const formErrors = getFormErrors(["name"], errors);
 
   return (
     <Card>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
           disabled={disabled}
@@ -38,6 +36,7 @@ const PageTypeDetails: React.FC<PageTypeDetailsProps> = props => {
             defaultMessage: "Content Type Name",
           })}
           name="name"
+          data-test-id="page-type-name"
           onChange={onChange}
           value={data.name}
         />
@@ -45,6 +44,7 @@ const PageTypeDetails: React.FC<PageTypeDetailsProps> = props => {
     </Card>
   );
 };
+
 PageTypeDetails.defaultProps = {
   errors: [],
 };

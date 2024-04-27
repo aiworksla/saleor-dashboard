@@ -1,25 +1,17 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import {
   SearchAvailablePageAttributesDocument,
   SearchAvailablePageAttributesQuery,
   SearchAvailablePageAttributesQueryVariables,
-} from "@saleor/graphql";
-import makeSearch from "@saleor/hooks/makeSearch";
+} from "@dashboard/graphql";
+import makeSearch from "@dashboard/hooks/makeSearch";
 
 export const searchPageAttributes = gql`
-  query SearchAvailablePageAttributes(
-    $id: ID!
-    $after: String
-    $first: Int!
-    $query: String!
-  ) {
+  query SearchAvailablePageAttributes($id: ID!, $after: String, $first: Int!, $query: String!) {
     pageType(id: $id) {
       id
-      availableAttributes(
-        after: $after
-        first: $first
-        filter: { search: $query }
-      ) {
+      availableAttributes(after: $after, first: $first, filter: { search: $query }) {
         edges {
           node {
             ...AvailableAttribute

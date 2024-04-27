@@ -1,12 +1,12 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import Hr from "@dashboard/components/Hr";
+import { PluginErrorCode, PluginErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import getPluginErrorMessage from "@dashboard/utils/errors/plugins";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import FormSpacer from "@saleor/components/FormSpacer";
-import Hr from "@saleor/components/Hr";
-import { PluginErrorCode, PluginErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import getPluginErrorMessage from "@saleor/utils/errors/plugins";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -32,20 +32,10 @@ const useStyles = makeStyles(
   }),
   { name: "PluginInfo" },
 );
-
-const PluginInfo: React.FC<PluginInfoProps> = ({
-  data,
-  description,
-  errors,
-  name,
-  onChange,
-}) => {
+const PluginInfo: React.FC<PluginInfoProps> = ({ data, description, errors, name, onChange }) => {
   const classes = useStyles({});
   const intl = useIntl();
-
-  const misconfiguredError = errors.find(
-    err => err.code === PluginErrorCode.PLUGIN_MISCONFIGURED,
-  );
+  const misconfiguredError = errors.find(err => err.code === PluginErrorCode.PLUGIN_MISCONFIGURED);
 
   return (
     <Card>
@@ -92,13 +82,12 @@ const PluginInfo: React.FC<PluginInfoProps> = ({
           onChange={onChange}
         />
         {misconfiguredError && (
-          <Typography color="error">
-            {getPluginErrorMessage(misconfiguredError, intl)}
-          </Typography>
+          <Typography color="error">{getPluginErrorMessage(misconfiguredError, intl)}</Typography>
         )}
       </CardContent>
     </Card>
   );
 };
+
 PluginInfo.displayName = "PluginInfo";
 export default PluginInfo;

@@ -1,7 +1,8 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { buttonMessages } from "@dashboard/intl";
+import { getStringOrPlaceholder } from "@dashboard/misc";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { getStringOrPlaceholder } from "@saleor/misc";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -10,7 +11,7 @@ import msgs from "./messages";
 export interface AppDeactivateDialogProps {
   confirmButtonState: ConfirmButtonTransitionState;
   open: boolean;
-  name: string;
+  name?: string | null;
   thirdParty?: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -25,43 +26,39 @@ const AppDeactivateDialog: React.FC<AppDeactivateDialogProps> = ({
   onConfirm,
 }) => {
   const intl = useIntl();
+  const isNameMissing = name === null || name === "";
+  const getMainText = () => {
+    if (isNameMissing) {
+      return intl.formatMessage(msgs.deactivateApp);
+    }
+
+    return intl.formatMessage(msgs.deactivateNamedApp, {
+      name: <strong>{getStringOrPlaceholder(name)}</strong>,
+    });
+  };
 
   return (
     <ActionDialog
-      confirmButtonLabel={intl.formatMessage({
-        id: "W+AFZY",
-        defaultMessage: "Deactivate",
-        description: "button label",
-      })}
+      confirmButtonLabel={intl.formatMessage(buttonMessages.deactivate)}
       confirmButtonState={confirmButtonState}
       open={open}
       onClose={onClose}
       onConfirm={onConfirm}
-      title={intl.formatMessage({
-        id: "yMi8I8",
-        defaultMessage: "Dectivate App",
-        description: "dialog header",
-      })}
+      title={intl.formatMessage(msgs.deactivateAppTitle)}
       variant="delete"
     >
-      <DialogContentText>
-        {["", null].includes(name) ? (
-          <FormattedMessage
-            {...(thirdParty ? msgs.deactivateApp : msgs.deactivateLocalApp)}
-          />
-        ) : (
-          <FormattedMessage
-            {...(thirdParty
-              ? msgs.deactivateNamedApp
-              : msgs.deactivateLocalNamedApp)}
-            values={{
-              name: <strong>{getStringOrPlaceholder(name)}</strong>,
-            }}
-          />
+      <DialogContentText data-test-id="dialog-content">
+        {getMainText()}
+        {thirdParty && (
+          <>
+            {" "}
+            <FormattedMessage {...msgs.deactivateAppBillingInfo} />
+          </>
         )}
       </DialogContentText>
     </ActionDialog>
   );
 };
+
 AppDeactivateDialog.displayName = "AppDeactivateDialog";
 export default AppDeactivateDialog;

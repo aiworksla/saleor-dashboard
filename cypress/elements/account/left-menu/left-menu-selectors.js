@@ -1,31 +1,36 @@
-export const LEFT_MENU_SELECTORS = {
-  catalog: "[data-test='menu-item-label'][data-test-id='catalogue']",
-  pages: "[data-test='menu-item-label'][data-test-id='pages']",
-  configuration: "[data-test='menu-item-label'][data-test-id='configure']",
-  home: "[data-test='menu-item-label'][data-test-id='home']",
-  orders: "[data-test='menu-item-label'][data-test-id='orders']",
-  discounts: "[data-test='menu-item-label'][data-test-id='discounts']",
-  appSection: "[data-test='menu-item-label'][data-test-id='apps_section']",
-  app: "[data-test='menu-item-label'][data-test-id='apps']",
-  translations: "[data-test='menu-item-label'][data-test-id='translations']",
-  customers: "[data-test='menu-item-label'][data-test-id='customers']"
+export const MENU = {
+  catalog: "[data-test-id='menu-item-label-catalogue']",
+  pages: "[data-test-id='menu-item-label-pages']",
+  configuration: "[data-test-id='menu-item-label-configure']",
+  home: "[data-test-id='menu-item-label-home']",
+  orders: "[data-test-id='menu-item-label-orders']",
+  discounts: "[data-test-id='menu-item-label-discounts']",
+  appSection: "[data-test-id='menu-item-label-apps_section']",
+  app: "[data-test-id='menu-item-label-apps']",
+  translations: "[data-test-id='menu-item-label-translations']",
+  customers: "[data-test-id='menu-item-label-customers']",
+  list: "[data-test-id='menu-list']",
+  listItem: "[data-test-id='menu-list-item']",
+  products: "[data-test-id='menu-item-label-products']",
+  menuItem: "[data-test-id*='menu-item-label-']",
 };
-export const DISCOUNTS_MENU_SELECTORS = {
-  sales: "[data-test='submenu-item-label'][data-test-id='sales']",
-  vouchers: "[data-test='submenu-item-label'][data-test-id='vouchers']"
+export const DISCOUNTS = {
+  sales: "[data-test-id='menu-item-label-sales']",
+  vouchers: "[data-test-id='menu-item-label-vouchers']",
 };
 export const ORDERS = {
-  orders: "[data-test='submenu-item-label'][data-test-id='orders']",
-  draftOrders: "[data-test='submenu-item-label'][data-test-id='order-drafts']"
+  orders: "[data-test-id='menu-item-label-orders']",
+  draftOrders: "[data-test-id='menu-item-label-order-drafts']",
 };
 export const CATALOG = {
-  products: "[data-test='submenu-item-label'][data-test-id='products']",
-  categories: "[data-test='submenu-item-label'][data-test-id='categories']",
-  collections: "[data-test='submenu-item-label'][data-test-id='collections']"
+  products: "[data-test-id='menu-item-label-products']",
+  categories: "[data-test-id='menu-item-label-categories']",
+  collections: "[data-test-id='menu-item-label-collections']",
+  giftCards: "[data-test-id='menu-item-label-giftCards']",
 };
 
-export const APP_MENU_SELECTORS = {
-  app: "[data-test='submenu-item-label'][data-test-id='apps']"
+export const APP = {
+  app: "[data-test-id='menu-item-label-apps']",
 };
 
 export const appCommonSelector = "[data-test-id*='apps']";

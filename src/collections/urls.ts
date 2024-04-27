@@ -1,5 +1,5 @@
-import { ChannelsAction } from "@saleor/channels/urls";
-import { stringifyQs } from "@saleor/utils/urls";
+import { ChannelsAction } from "@dashboard/channels/urls";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import {
@@ -24,8 +24,8 @@ export type CollectionListUrlFilters = Filters<CollectionListUrlFiltersEnum>;
 export type CollectionListUrlDialog = "remove" | TabActionDialog;
 export enum CollectionListUrlSortField {
   name = "name",
-  available = "available",
-  productCount = "products",
+  availability = "availability",
+  productCount = "productCount",
 }
 export type CollectionListUrlSort = Sort<CollectionListUrlSortField>;
 export type CollectionListUrlQueryParams = ActiveTab &
@@ -38,12 +38,7 @@ export const collectionListUrl = (params?: CollectionListUrlQueryParams) =>
   collectionSectionUrl + "?" + stringifyQs(params);
 
 export const collectionPath = (id: string) => urlJoin(collectionSectionUrl, id);
-export type CollectionUrlDialog =
-  | "remove"
-  | "removeImage"
-  | "assign"
-  | "unassign"
-  | ChannelsAction;
+export type CollectionUrlDialog = "remove" | "removeImage" | "assign" | "unassign" | ChannelsAction;
 export type CollectionUrlQueryParams = BulkAction & Dialog<CollectionUrlDialog>;
 export type CollectionCreateUrlQueryParams = Dialog<ChannelsAction>;
 export const collectionUrl = (id: string, params?: CollectionUrlQueryParams) =>

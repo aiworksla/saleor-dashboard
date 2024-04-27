@@ -1,12 +1,13 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import Grid from "@dashboard/components/Grid";
+import Hr from "@dashboard/components/Hr";
+import { AccountErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAccountErrorMessage from "@dashboard/utils/errors/account";
 import { Card, CardContent, TextField, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import Grid from "@saleor/components/Grid";
-import Hr from "@saleor/components/Hr";
-import { AccountErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -61,6 +62,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = props => {
         </Typography>
         <Grid variant="uniform">
           <TextField
+            data-test-id="customer-first-name"
             disabled={disabled}
             error={!!formErrors.firstName}
             fullWidth
@@ -75,6 +77,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = props => {
             }}
           />
           <TextField
+            data-test-id="customer-last-name"
             disabled={disabled}
             error={!!formErrors.lastName}
             fullWidth
@@ -98,6 +101,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = props => {
           />
         </Typography>
         <TextField
+          data-test-id="customer-email"
           disabled={disabled}
           error={!!formErrors.email}
           fullWidth
@@ -115,5 +119,6 @@ const CustomerInfo: React.FC<CustomerInfoProps> = props => {
     </Card>
   );
 };
+
 CustomerInfo.displayName = "CustomerInfo";
 export default CustomerInfo;

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
   FormControl,
   FormControlLabel,
@@ -6,15 +7,13 @@ import {
   Radio,
   RadioGroup,
 } from "@material-ui/core";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { useStyles } from "./styles";
 
-export interface RadioGroupFieldChoice<
-  T extends string | number = string | number
-> {
+export interface RadioGroupFieldChoice<T extends string | number = string | number> {
   disabled?: boolean;
   value: T;
   label: React.ReactNode;
@@ -54,7 +53,7 @@ export const RadioGroupField: React.FC<RadioGroupFieldProps> = props => {
 
   return (
     <FormControl
-      className={classNames(classes.root, className, {
+      className={clsx(classes.root, className, {
         [classes.rootNoLabel]: !label,
       })}
       error={error}
@@ -66,7 +65,7 @@ export const RadioGroupField: React.FC<RadioGroupFieldProps> = props => {
         name={name}
         value={value}
         onChange={onChange}
-        className={classNames({
+        className={clsx({
           [classes.radioGroupInline]: variant === "inline",
           [innerContainerClassName]: !!innerContainerClassName,
         })}
@@ -76,7 +75,7 @@ export const RadioGroupField: React.FC<RadioGroupFieldProps> = props => {
             <FormControlLabel
               disabled={choice.disabled}
               value={choice.value}
-              className={classNames({
+              className={clsx({
                 [classes.radioLabel]: variant !== "inline",
                 [classes.radioLabelInline]: variant === "inline",
               })}
@@ -85,10 +84,11 @@ export const RadioGroupField: React.FC<RadioGroupFieldProps> = props => {
               }}
               control={
                 <Radio
-                  className={classNames({
+                  data-test-id={choice.value}
+                  className={clsx({
                     [classes.alignTop]: alignTop,
                   })}
-                  color="primary"
+                  color="secondary"
                 />
               }
               label={choice.label}

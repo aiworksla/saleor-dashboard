@@ -1,7 +1,6 @@
-import { APP_DEFAULT_URI, APP_MOUNT_URI } from "@saleor/config";
-import { useAvailableExternalAuthenticationsQuery } from "@saleor/graphql";
-import useLocalStorage from "@saleor/hooks/useLocalStorage";
-import useNavigator from "@saleor/hooks/useNavigator";
+import { useAvailableExternalAuthenticationsLazyQuery } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { getAppMountUriForRedirect } from "@dashboard/utils/urls";
 import React, { useEffect } from "react";
 import urlJoin from "url-join";
 import useRouter from "use-react-router";
@@ -9,6 +8,7 @@ import useRouter from "use-react-router";
 import { useUser } from "..";
 import LoginPage from "../components/LoginPage";
 import { LoginFormData } from "../components/LoginPage/types";
+import { useAuthParameters } from "../hooks/useAuthParameters";
 import { loginCallbackPath, LoginUrlQueryParams } from "../urls";
 
 interface LoginViewProps {
@@ -18,84 +18,82 @@ interface LoginViewProps {
 const LoginView: React.FC<LoginViewProps> = ({ params }) => {
   const navigate = useNavigator();
   const { location } = useRouter();
-  const {
-    login,
-    requestLoginByExternalPlugin,
-    loginByExternalPlugin,
-    authenticating,
-    error,
-  } = useUser();
-  const {
-    data: externalAuthentications,
-    loading: externalAuthenticationsLoading,
-  } = useAvailableExternalAuthenticationsQuery();
+  const { login, requestLoginByExternalPlugin, loginByExternalPlugin, authenticating, errors } =
+    useUser();
   const [
+    queryExternalAuthentications,
+    { data: externalAuthentications, loading: externalAuthenticationsLoading },
+  ] = useAvailableExternalAuthenticationsLazyQuery();
+  const {
+    fallbackUri,
     requestedExternalPluginId,
+    isCallbackPath,
+    setFallbackUri,
     setRequestedExternalPluginId,
-  ] = useLocalStorage("requestedExternalPluginId", null);
-
-  const [fallbackUri, setFallbackUri] = useLocalStorage(
-    "externalLoginFallbackUri",
-    null,
-  );
-
+  } = useAuthParameters();
   const handleSubmit = async (data: LoginFormData) => {
-    const result = await login(data.email, data.password);
+    const result = await login!(data.email, data.password);
     const errors = result?.errors || [];
 
     return errors;
   };
-
   const handleRequestExternalAuthentication = async (pluginId: string) => {
     setFallbackUri(location.pathname);
 
-    const result = await requestLoginByExternalPlugin(pluginId, {
-      redirectUri: urlJoin(
-        window.location.origin,
-        APP_MOUNT_URI === APP_DEFAULT_URI ? "" : APP_MOUNT_URI,
-        loginCallbackPath,
-      ),
+    const result = await requestLoginByExternalPlugin!(pluginId, {
+      redirectUri: urlJoin(window.location.origin, getAppMountUriForRedirect(), loginCallbackPath),
     });
     const data = JSON.parse(result?.authenticationData || "");
+
     if (data && !result?.errors?.length) {
       setRequestedExternalPluginId(pluginId);
       window.location.href = data.authorizationUrl;
     }
   };
-
   const handleExternalAuthentication = async (code: string, state: string) => {
-    const result = await loginByExternalPlugin(requestedExternalPluginId, {
+    await loginByExternalPlugin!(requestedExternalPluginId, {
       code,
       state,
     });
     setRequestedExternalPluginId(null);
-    if (result && !result?.errors?.length) {
-      navigate(fallbackUri ?? "/");
-      setFallbackUri(null);
-    }
+    navigate(fallbackUri);
+    setFallbackUri(null);
   };
 
   useEffect(() => {
     const { code, state } = params;
-    const isCallbackPath = location.pathname.includes(loginCallbackPath);
+    const externalAuthParamsExist = code && state && isCallbackPath;
 
-    if (code && state && isCallbackPath) {
+    if (!externalAuthParamsExist) {
+      queryExternalAuthentications();
+    }
+  }, [isCallbackPath, params, queryExternalAuthentications]);
+  useEffect(() => {
+    const { code, state } = params;
+    const externalAuthParamsExist = code && state && isCallbackPath;
+    const externalAuthNotPerformed = !authenticating && !errors.length;
+
+    if (externalAuthParamsExist && externalAuthNotPerformed) {
       handleExternalAuthentication(code, state);
     }
+
+    return () => {
+      setRequestedExternalPluginId(null);
+      setFallbackUri(null);
+    };
   }, []);
 
   return (
     <LoginPage
-      error={error}
+      errors={errors}
       disabled={authenticating}
-      externalAuthentications={
-        externalAuthentications?.shop?.availableExternalAuthentications
-      }
+      externalAuthentications={externalAuthentications?.shop?.availableExternalAuthentications}
       loading={externalAuthenticationsLoading || authenticating}
       onExternalAuthentication={handleRequestExternalAuthentication}
       onSubmit={handleSubmit}
     />
   );
 };
+
 LoginView.displayName = "LoginView";
 export default LoginView;

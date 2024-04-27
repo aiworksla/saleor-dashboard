@@ -1,12 +1,9 @@
-import { FormData } from "@saleor/channels/components/ChannelForm";
-import { SearchData } from "@saleor/hooks/makeTopLevelSearch";
-import { getParsedSearchData } from "@saleor/hooks/makeTopLevelSearch/utils";
-import {
-  getById,
-  getByUnmatchingId,
-} from "@saleor/orders/components/OrderReturnPage/utils";
-import { ReorderAction, ReorderEvent } from "@saleor/types";
-import { move } from "@saleor/utils/lists";
+import { FormData } from "@dashboard/channels/components/ChannelForm";
+import { SearchData } from "@dashboard/hooks/makeTopLevelSearch";
+import { getParsedSearchData } from "@dashboard/hooks/makeTopLevelSearch/utils";
+import { getById, getByUnmatchingId } from "@dashboard/misc";
+import { ReorderAction, ReorderEvent } from "@dashboard/types";
+import { move } from "@dashboard/utils/lists";
 
 import { getUpdatedIdsWithNewId, getUpdatedIdsWithoutNewId } from "./utils";
 
@@ -18,22 +15,13 @@ export function createShippingZoneAddHandler(
 ) {
   return (zoneId: string) => {
     triggerChange();
-
     set({
       ...data,
-      shippingZonesIdsToRemove: getUpdatedIdsWithoutNewId(
-        data.shippingZonesIdsToRemove,
-        zoneId,
-      ),
-      shippingZonesIdsToAdd: getUpdatedIdsWithNewId(
-        data.shippingZonesIdsToAdd,
-        zoneId,
-      ),
+      shippingZonesIdsToRemove: getUpdatedIdsWithoutNewId(data.shippingZonesIdsToRemove, zoneId),
+      shippingZonesIdsToAdd: getUpdatedIdsWithNewId(data.shippingZonesIdsToAdd, zoneId),
       shippingZonesToDisplay: [
-        ...data.shippingZonesToDisplay,
-        getParsedSearchData({ data: searchShippingZonesData }).find(
-          getById(zoneId),
-        ),
+        ...data.shippingZonesToDisplay!,
+        getParsedSearchData({ data: searchShippingZonesData }).find(getById(zoneId)),
       ],
     });
   };
@@ -46,20 +34,11 @@ export function createShippingZoneRemoveHandler(
 ) {
   return (zoneId: string) => {
     triggerChange();
-
     set({
       ...data,
-      shippingZonesIdsToAdd: getUpdatedIdsWithoutNewId(
-        data.shippingZonesIdsToAdd,
-        zoneId,
-      ),
-      shippingZonesIdsToRemove: getUpdatedIdsWithNewId(
-        data.shippingZonesIdsToRemove,
-        zoneId,
-      ),
-      shippingZonesToDisplay: data.shippingZonesToDisplay.filter(
-        getByUnmatchingId(zoneId),
-      ),
+      shippingZonesIdsToAdd: getUpdatedIdsWithoutNewId(data.shippingZonesIdsToAdd, zoneId),
+      shippingZonesIdsToRemove: getUpdatedIdsWithNewId(data.shippingZonesIdsToRemove, zoneId),
+      shippingZonesToDisplay: data.shippingZonesToDisplay!.filter(getByUnmatchingId(zoneId)),
     });
   };
 }
@@ -72,22 +51,13 @@ export function createWarehouseAddHandler(
 ) {
   return (warehouseId: string) => {
     triggerChange();
-
     set({
       ...data,
-      warehousesIdsToRemove: getUpdatedIdsWithoutNewId(
-        data.warehousesIdsToRemove,
-        warehouseId,
-      ),
-      warehousesIdsToAdd: getUpdatedIdsWithNewId(
-        data.warehousesIdsToAdd,
-        warehouseId,
-      ),
+      warehousesIdsToRemove: getUpdatedIdsWithoutNewId(data.warehousesIdsToRemove, warehouseId),
+      warehousesIdsToAdd: getUpdatedIdsWithNewId(data.warehousesIdsToAdd, warehouseId),
       warehousesToDisplay: [
         ...data.warehousesToDisplay,
-        getParsedSearchData({ data: searchWarehousesData }).find(
-          getById(warehouseId),
-        ),
+        getParsedSearchData({ data: searchWarehousesData }).find(getById(warehouseId)),
       ],
     });
   };
@@ -100,20 +70,11 @@ export function createWarehouseRemoveHandler(
 ) {
   return (warehouseId: string) => {
     triggerChange();
-
     set({
       ...data,
-      warehousesIdsToAdd: getUpdatedIdsWithoutNewId(
-        data.warehousesIdsToAdd,
-        warehouseId,
-      ),
-      warehousesIdsToRemove: getUpdatedIdsWithNewId(
-        data.warehousesIdsToRemove,
-        warehouseId,
-      ),
-      warehousesToDisplay: data.warehousesToDisplay.filter(
-        getByUnmatchingId(warehouseId),
-      ),
+      warehousesIdsToAdd: getUpdatedIdsWithoutNewId(data.warehousesIdsToAdd, warehouseId),
+      warehousesIdsToRemove: getUpdatedIdsWithNewId(data.warehousesIdsToRemove, warehouseId),
+      warehousesToDisplay: data.warehousesToDisplay.filter(getByUnmatchingId(warehouseId)),
     });
   };
 }

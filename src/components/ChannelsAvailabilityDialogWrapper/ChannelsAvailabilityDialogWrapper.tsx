@@ -1,8 +1,8 @@
+import { ControlledCheckbox } from "@dashboard/components/ControlledCheckbox";
+import Hr from "@dashboard/components/Hr";
+import Label from "@dashboard/orders/components/OrderHistory/Label";
 import { TextField, Typography } from "@material-ui/core";
-import { ControlledCheckbox } from "@saleor/components/ControlledCheckbox";
-import Hr from "@saleor/components/Hr";
 import { makeStyles } from "@saleor/macaw-ui";
-import Label from "@saleor/orders/components/OrderHistory/Label";
 import React from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
@@ -54,8 +54,7 @@ export const useStyles = makeStyles(
 const messages = defineMessages({
   selectTitle: {
     id: "7scATx",
-    defaultMessage:
-      "Select channels you want for {contentType} to be available on",
+    defaultMessage: "Select channels you want for {contentType} to be available on",
     description: "select title",
   },
   selectAllChannelsLabel: {
@@ -127,9 +126,7 @@ export const ChannelsAvailabilityContentWrapper: React.FC<ChannelsAvailabilityCo
               name="allChannels"
               label={
                 toggleAllLabel || (
-                  <Label
-                    text={intl.formatMessage(messages.selectAllChannelsLabel)}
-                  />
+                  <Label text={intl.formatMessage(messages.selectAllChannelsLabel)} />
                 )
               }
               onChange={toggleAll}

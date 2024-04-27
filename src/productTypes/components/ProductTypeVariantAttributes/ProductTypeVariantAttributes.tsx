@@ -1,28 +1,27 @@
-import { Card, TableCell, Tooltip } from "@material-ui/core";
+// @ts-strict-ignore
+import { attributeUrl } from "@dashboard/attributes/urls";
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Checkbox from "@dashboard/components/Checkbox";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import { SortableTableBody, SortableTableRow } from "@dashboard/components/SortableTable";
+import { TableButtonWrapper } from "@dashboard/components/TableButtonWrapper/TableButtonWrapper";
+import TableHead from "@dashboard/components/TableHead";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { ProductAttributeType, ProductTypeDetailsQuery } from "@dashboard/graphql";
+import { maybe, renderCollection } from "@dashboard/misc";
+import { ListActions, ReorderAction } from "@dashboard/types";
+import { Card, CardContent, TableCell } from "@material-ui/core";
 import HelpOutline from "@material-ui/icons/HelpOutline";
-import { attributeUrl } from "@saleor/attributes/urls";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Checkbox from "@saleor/components/Checkbox";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import {
-  SortableTableBody,
-  SortableTableRow,
-} from "@saleor/components/SortableTable";
-import { TableButtonWrapper } from "@saleor/components/TableButtonWrapper/TableButtonWrapper";
-import TableHead from "@saleor/components/TableHead";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { ProductAttributeType, ProductTypeDetailsQuery } from "@saleor/graphql";
 import { DeleteIcon, IconButton, makeStyles } from "@saleor/macaw-ui";
-import { maybe, renderCollection } from "@saleor/misc";
-import { ListActions, ReorderAction } from "@saleor/types";
+import { Tooltip } from "@saleor/macaw-ui-next";
 import capitalize from "lodash/capitalize";
 import React, { useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 const useStyles = makeStyles(
-  {
+  theme => ({
     colAction: {
       "&:last-child": {
         paddingRight: 0,
@@ -46,7 +45,7 @@ const useStyles = makeStyles(
       alignItems: "center",
     },
     colVariantDisabled: {
-      fill: "#28234A",
+      fill: theme.palette.alert.icon.info,
       fillOpacity: 0.6,
       "&:hover": {
         fillOpacity: 1,
@@ -58,7 +57,7 @@ const useStyles = makeStyles(
     textLeft: {
       textAlign: "left",
     },
-  },
+  }),
   { name: "ProductTypeAttributes" },
 );
 
@@ -82,9 +81,7 @@ function handleContainerAssign(
 ) {
   if (isSelected) {
     setSelectedAttributes(
-      selectedAttributes.filter(
-        selectedContainer => selectedContainer !== variantID,
-      ),
+      selectedAttributes.filter(selectedContainer => selectedContainer !== variantID),
     );
   } else {
     setSelectedAttributes([...selectedAttributes, variantID]);
@@ -92,7 +89,6 @@ function handleContainerAssign(
 }
 
 const numberOfColumns = 6;
-
 const ProductTypeVariantAttributes: React.FC<ProductTypeVariantAttributesProps> = props => {
   const {
     assignedVariantAttributes,
@@ -111,7 +107,6 @@ const ProductTypeVariantAttributes: React.FC<ProductTypeVariantAttributesProps> 
     selectedVariantAttributes,
   } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   useEffect(() => {
@@ -137,166 +132,160 @@ const ProductTypeVariantAttributes: React.FC<ProductTypeVariantAttributesProps> 
             variant="tertiary"
             onClick={() => onAttributeAssign(ProductAttributeType[type])}
           >
-            <FormattedMessage
-              id="uxPpRx"
-              defaultMessage="Assign attribute"
-              description="button"
-            />
+            <FormattedMessage id="uxPpRx" defaultMessage="Assign attribute" description="button" />
           </Button>
         }
       />
-      <ResponsiveTable>
-        <colgroup>
-          <col className={classes.colGrab} />
-          <col />
-          <col className={classes.colName} />
-          <col className={classes.colSlug} />
-          <col className={classes.colVariant} />
-          <col className={classes.colAction} />
-        </colgroup>
-        {assignedVariantAttributes?.length > 0 && (
-          <TableHead
-            colSpan={numberOfColumns}
-            disabled={disabled}
-            dragRows
-            selected={selected}
-            items={assignedVariantAttributes?.map(
-              selectedAttribute => selectedAttribute.attribute,
-            )}
-            toggleAll={toggleAll}
-            toolbar={toolbar}
-          >
-            <TableCell className={classes.colName}>
-              <FormattedMessage id="kTr2o8" defaultMessage="Attribute name" />
-            </TableCell>
-            <TableCell className={classes.colName}>
-              <FormattedMessage
-                id="nf3XSt"
-                defaultMessage="Slug"
-                description="attribute internal name"
-              />
-            </TableCell>
-            <TableCell className={classes.colName}>
-              <FormattedMessage
-                id="4k9rMQ"
-                defaultMessage="Variant Selection"
-                description="variant attribute checkbox"
-              />
-            </TableCell>
-            <TableCell />
-          </TableHead>
-        )}
-        <SortableTableBody onSortEnd={onAttributeReorder}>
-          {renderCollection(
-            assignedVariantAttributes,
-            (assignedVariantAttribute, attributeIndex) => {
-              const { attribute } = assignedVariantAttribute;
-              const isVariantSelected = assignedVariantAttribute
-                ? isChecked(attribute.id)
-                : false;
-              const isSelected = !!selectedVariantAttributes.find(
-                selectedAttribute => selectedAttribute === attribute.id,
-              );
-              const variantSelectionDisabled = ![
-                "DROPDOWN",
-                "BOOLEAN",
-                "SWATCH",
-                "NUMERIC",
-              ].includes(attribute.inputType);
-              const readableAttributeInputType = capitalize(
-                attribute.inputType.split("_").join(" "),
-              );
-
-              return (
-                <SortableTableRow
-                  selected={isVariantSelected}
-                  className={!!attribute ? classes.link : undefined}
-                  hover={!!attribute}
-                  href={attribute ? attributeUrl(attribute.id) : undefined}
-                  key={maybe(() => attribute.id)}
-                  index={attributeIndex || 0}
-                  data-test-id={"id-" + +maybe(() => attribute.id)}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={isVariantSelected}
-                      disabled={disabled}
-                      disableClickPropagation
-                      onChange={() => toggle(attribute.id)}
-                    />
-                  </TableCell>
-                  <TableCell className={classes.colName} data-test-id="name">
-                    {attribute.name ?? <Skeleton />}
-                  </TableCell>
-                  <TableCell className={classes.colSlug} data-test-id="slug">
-                    {maybe(() => attribute.slug) ? (
-                      attribute.slug
-                    ) : (
-                      <Skeleton />
-                    )}
-                  </TableCell>
-                  <TableCell
-                    className={classes.colVariant}
-                    data-test-id="variant-selection"
-                  >
-                    <div className={classes.colVariantContent}>
-                      <Checkbox
-                        data-test-id="variant-selection-checkbox"
-                        checked={isSelected}
-                        disabled={disabled || variantSelectionDisabled}
-                        disableClickPropagation
-                        onChange={() =>
-                          handleContainerAssign(
-                            attribute.id,
-                            isSelected,
-                            selectedVariantAttributes,
-                            setSelectedVariantAttributes,
-                          )
-                        }
-                      />
-                      {!!variantSelectionDisabled && (
-                        <Tooltip
-                          title={
-                            <FormattedMessage
-                              id="vlLyvk"
-                              defaultMessage="{inputType} attributes cannot be used as variant selection attributes."
-                              values={{ inputType: readableAttributeInputType }}
-                            />
-                          }
-                        >
-                          <HelpOutline className={classes.colVariantDisabled} />
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className={classes.colAction}>
-                    <TableButtonWrapper>
-                      <IconButton
-                        data-test-id="delete-icon"
-                        onClick={() => onAttributeUnassign(attribute.id)}
-                      >
-                        <DeleteIcon color="primary" />
-                      </IconButton>
-                    </TableButtonWrapper>
-                  </TableCell>
-                </SortableTableRow>
-              );
-            },
-            () => (
-              <TableRowLink>
-                <TableCell colSpan={numberOfColumns}>
-                  <FormattedMessage
-                    id="ztQgD8"
-                    defaultMessage="No attributes found"
-                  />
-                </TableCell>
-              </TableRowLink>
-            ),
+      <CardContent>
+        <ResponsiveTable>
+          <colgroup>
+            <col className={classes.colGrab} />
+            <col />
+            <col className={classes.colName} />
+            <col className={classes.colSlug} />
+            <col className={classes.colVariant} />
+            <col className={classes.colAction} />
+          </colgroup>
+          {assignedVariantAttributes?.length > 0 && (
+            <TableHead
+              colSpan={numberOfColumns}
+              disabled={disabled}
+              dragRows
+              selected={selected}
+              items={assignedVariantAttributes?.map(
+                selectedAttribute => selectedAttribute.attribute,
+              )}
+              toggleAll={toggleAll}
+              toolbar={toolbar}
+            >
+              <TableCell className={classes.colName}>
+                <FormattedMessage id="kTr2o8" defaultMessage="Attribute name" />
+              </TableCell>
+              <TableCell className={classes.colName}>
+                <FormattedMessage
+                  id="nf3XSt"
+                  defaultMessage="Slug"
+                  description="attribute internal name"
+                />
+              </TableCell>
+              <TableCell className={classes.colName}>
+                <FormattedMessage
+                  id="4k9rMQ"
+                  defaultMessage="Variant Selection"
+                  description="variant attribute checkbox"
+                />
+              </TableCell>
+              <TableCell />
+            </TableHead>
           )}
-        </SortableTableBody>
-      </ResponsiveTable>
+          <SortableTableBody onSortEnd={onAttributeReorder}>
+            {renderCollection(
+              assignedVariantAttributes,
+              (assignedVariantAttribute, attributeIndex) => {
+                const { attribute } = assignedVariantAttribute;
+                const isVariantSelected = assignedVariantAttribute
+                  ? isChecked(attribute.id)
+                  : false;
+                const isSelected = !!selectedVariantAttributes.find(
+                  selectedAttribute => selectedAttribute === attribute.id,
+                );
+                const variantSelectionDisabled = ![
+                  "DROPDOWN",
+                  "BOOLEAN",
+                  "SWATCH",
+                  "NUMERIC",
+                ].includes(attribute.inputType);
+                const readableAttributeInputType = capitalize(
+                  attribute.inputType.split("_").join(" "),
+                );
+
+                return (
+                  <SortableTableRow
+                    selected={isVariantSelected}
+                    className={attribute ? classes.link : undefined}
+                    hover={!!attribute}
+                    href={attribute ? attributeUrl(attribute.id) : undefined}
+                    key={maybe(() => attribute.id)}
+                    index={attributeIndex || 0}
+                    data-test-id={"id-" + +maybe(() => attribute.id)}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={isVariantSelected}
+                        disabled={disabled}
+                        disableClickPropagation
+                        onChange={() => toggle(attribute.id)}
+                      />
+                    </TableCell>
+                    <TableCell className={classes.colName} data-test-id="name">
+                      {attribute.name ?? <Skeleton />}
+                    </TableCell>
+                    <TableCell className={classes.colSlug} data-test-id="slug">
+                      {maybe(() => attribute.slug) ? attribute.slug : <Skeleton />}
+                    </TableCell>
+                    <TableCell className={classes.colVariant} data-test-id="variant-selection">
+                      <div className={classes.colVariantContent}>
+                        <Checkbox
+                          data-test-id="variant-selection-checkbox"
+                          checked={isSelected}
+                          disabled={disabled || variantSelectionDisabled}
+                          disableClickPropagation
+                          onChange={() =>
+                            handleContainerAssign(
+                              attribute.id,
+                              isSelected,
+                              selectedVariantAttributes,
+                              setSelectedVariantAttributes,
+                            )
+                          }
+                        />
+                        {!!variantSelectionDisabled && (
+                          <Tooltip>
+                            <Tooltip.Trigger>
+                              <HelpOutline className={classes.colVariantDisabled} />
+                            </Tooltip.Trigger>
+                            <Tooltip.Content side="bottom">
+                              <Tooltip.Arrow />
+                              <FormattedMessage
+                                id="vlLyvk"
+                                defaultMessage="{inputType} attributes cannot be used as variant selection attributes."
+                                values={{
+                                  inputType: readableAttributeInputType,
+                                }}
+                              />
+                            </Tooltip.Content>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className={classes.colAction}>
+                      <TableButtonWrapper>
+                        <IconButton
+                          data-test-id="delete-icon"
+                          onClick={() => onAttributeUnassign(attribute.id)}
+                          variant="secondary"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableButtonWrapper>
+                    </TableCell>
+                  </SortableTableRow>
+                );
+              },
+              () => (
+                <TableRowLink>
+                  <TableCell colSpan={numberOfColumns}>
+                    <FormattedMessage id="ztQgD8" defaultMessage="No attributes found" />
+                  </TableCell>
+                </TableRowLink>
+              ),
+            )}
+          </SortableTableBody>
+        </ResponsiveTable>
+      </CardContent>
     </Card>
   );
 };
+
 ProductTypeVariantAttributes.displayName = "ProductTypeVariantAttributes";
 export default ProductTypeVariantAttributes;

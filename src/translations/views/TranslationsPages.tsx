@@ -1,22 +1,23 @@
-import { OutputData } from "@editorjs/editorjs";
+// @ts-strict-ignore
 import {
   LanguageCodeEnum,
   usePageTranslationDetailsQuery,
   useUpdateAttributeValueTranslationsMutation,
   useUpdatePageTranslationsMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors } from "@saleor/misc";
-import { stringifyQs } from "@saleor/utils/urls";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors } from "@dashboard/misc";
+import { stringifyQs } from "@dashboard/utils/urls";
+import { OutputData } from "@editorjs/editorjs";
 import React from "react";
 import { useIntl } from "react-intl";
 
 import TranslationsPagesPage from "../components/TranslationsPagesPage";
 import { PageTranslationInputFieldName, TranslationField } from "../types";
-import { getParsedTranslationInputData } from "../utils";
+import { getAttributeValueTranslationsInputData, getParsedTranslationInputData } from "../utils";
 
 export interface TranslationsPagesQueryParams {
   activeField: string;
@@ -27,20 +28,17 @@ export interface TranslationsPagesProps {
   params: TranslationsPagesQueryParams;
 }
 
-const TranslationsPages: React.FC<TranslationsPagesProps> = ({
-  id,
-  languageCode,
-  params,
-}) => {
+type HandleSubmitData = string | any;
+type HandleSubmitAttributeValue = OutputData | string;
+
+const TranslationsPages: React.FC<TranslationsPagesProps> = ({ id, languageCode, params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const shop = useShop();
   const intl = useIntl();
-
   const pageTranslations = usePageTranslationDetailsQuery({
     variables: { id, language: languageCode },
   });
-
   const onUpdate = (errors: unknown[]) => {
     if (errors.length === 0) {
       pageTranslations.refetch();
@@ -51,20 +49,12 @@ const TranslationsPages: React.FC<TranslationsPagesProps> = ({
       navigate("?", { replace: true });
     }
   };
-
-  const [
-    updateTranslations,
-    updateTranslationsOpts,
-  ] = useUpdatePageTranslationsMutation({
+  const [updateTranslations, updateTranslationsOpts] = useUpdatePageTranslationsMutation({
     onCompleted: data => onUpdate(data.pageTranslate.errors),
   });
-
-  const [
-    updateAttributeValueTranslations,
-  ] = useUpdateAttributeValueTranslationsMutation({
+  const [updateAttributeValueTranslations] = useUpdateAttributeValueTranslationsMutation({
     onCompleted: data => onUpdate(data.attributeValueTranslate.errors),
   });
-
   const onEdit = (field: string) =>
     navigate(
       "?" +
@@ -73,14 +63,12 @@ const TranslationsPages: React.FC<TranslationsPagesProps> = ({
         }),
       { replace: true },
     );
-
   const onDiscard = () => {
     navigate("?", { replace: true });
   };
-
   const handleSubmit = (
     { name: fieldName }: TranslationField<PageTranslationInputFieldName>,
-    data: string | any,
+    data: HandleSubmitData,
   ) =>
     extractMutationErrors(
       updateTranslations({
@@ -94,21 +82,19 @@ const TranslationsPages: React.FC<TranslationsPagesProps> = ({
         },
       }),
     );
-
   const handleAttributeValueSubmit = (
-    { id }: TranslationField<PageTranslationInputFieldName>,
-    data: OutputData,
+    { id, type }: TranslationField<PageTranslationInputFieldName>,
+    data: HandleSubmitAttributeValue,
   ) =>
     extractMutationErrors(
       updateAttributeValueTranslations({
         variables: {
           id,
-          input: { richText: JSON.stringify(data) },
+          input: getAttributeValueTranslationsInputData(type, data),
           language: languageCode,
         },
       }),
     );
-
   const translation = pageTranslations?.data?.translation;
 
   return (
@@ -123,13 +109,10 @@ const TranslationsPages: React.FC<TranslationsPagesProps> = ({
       onDiscard={onDiscard}
       onSubmit={handleSubmit}
       onAttributeValueSubmit={handleAttributeValueSubmit}
-      data={
-        translation?.__typename === "PageTranslatableContent"
-          ? translation
-          : null
-      }
+      data={translation?.__typename === "PageTranslatableContent" ? translation : null}
     />
   );
 };
+
 TranslationsPages.displayName = "TranslationsPages";
 export default TranslationsPages;

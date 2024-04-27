@@ -16,152 +16,56 @@
   <a href="https://saleor.io/blog/">📰 Blog</a>
   <span> • </span>
   <a href="https://twitter.com/getsaleor">🐦 Twitter</a>
+  <span> • </span>
+  <a href="https://discord.gg/H52JTZAtSH">💬 Discord</a>
 </div>
 
-## Demo
+<div align="center">
+   <span> • </span>
+  <a href="https://githubbox.com/saleor/saleor-dashboard">🔎 Explore Code</a>
+</div>
 
-See the [public demo](https://demo.saleor.io/dashboard/) of Saleor Dashboard!
+## Prerequisites
 
-Or launch the demo on a free Heroku instance.
+- Node.js v18+
+- A running instance of [Saleor](https://github.com/saleor/saleor/)
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+## Development
 
-## Getting Started
+1. Clone the repository:
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
-
-### Prerequisites
-
-- Node.js v14+
-- A running instance of [Saleor](https://github.com/saleor/saleor/).
-
-### Installing
-
-Clone the repository:
-
-```
-$ git clone https://github.com/saleor/saleor-dashboard.git
+```bash
+git clone https://github.com/saleor/saleor-dashboard.git
 ```
 
-Enter the project directory:
+2. Enter the project directory:
 
-```
-$ cd saleor-dashboard
-```
-
-#### Using stable release
-
-Check [release log](https://github.com/saleor/saleor-dashboard/releases/) for the latest release
-
-#### Using development version
-
-If you want to use the latest development version, checkout to the `main` branch:
-
-```
-$ git checkout main
+```bash
+cd saleor-dashboard
 ```
 
-Install NPM dependencies:
+3. Install the dependencies:
 
-```
-$ npm i
-```
-
-### Configuration
-
-Create `.env` file in a root directory or set environment variables with following values:
-
-- `API_URI` (required) - URI of a running instance of Saleor GraphQL API.
-  If you are running Saleor locally with the default settings, set `API_URI` to: `http://localhost:8000/graphql/`.
-  Make sure that you have `/` at the end of `API_URI`.
-
-- `APP_MOUNT_URI` - URI at which the Dashboard app will be mounted.
-  E.g. if you set `APP_MOUNT_URI` to `/dashboard/`, your app will be mounted at `http://localhost:9000/dashboard/`.
-
-- `STATIC_URL` - URL where the static files are located.
-  E.g. if you use S3 bucket, you should set it to the bucket's URL. By default Saleor assumes you serve static files from the root of your site at `http://localhost:9000/`.
-
-### Development
-
-To start the development server run:
-
-```
-$ npm start
+```bash
+npm i
 ```
 
-In case you see CORS errors make sure to check [CORS configuration](https://docs.saleor.io/docs/3.x/developer/running-saleor/configuration#allowed_client_hosts) of your Saleor instance or CORS settings in the Cloud Console.
+4. Configure the env vars as described in [docs/configuration.md](docs/configuration.md).
 
-### Production
+5. Start the development server with:
 
-To build the application bundle run:
-
-```
-$ npm run build
+```bash
+npm run dev
 ```
 
-### Error Tracking
+> Note:
+> If you see CORS errors, check [CORS configuration](https://docs.saleor.io/docs/3.x/developer/running-saleor/configuration#allowed_client_hosts) of your Saleor instance or CORS settings in the Cloud Console.
 
-Saleor Dashboard is using a generic error tracking wrapper function that takes care of the most popular use cases:
+## Docs
 
-- initializing the tracker
-- capturing exceptions and (optionally) displaying the event id
-- setting basic user data (this is opt-in and disabled by default)
-
-By default it ships with a Sentry adapter but any kind of error tracking software can be used by creating a custom adapter (using Sentry and TS types as an example).
-
-Example:
-
-```javascript
-// src/services/errorTracking/index.ts
-
-import { CustomAdapter } from "./adapters/";
-
-const errorTracker = ErrorTrackerFactory(CustomAdapter(config));
-```
-
-### Running e2e tests
-
-Add Cypress specific env variables to `.env` file (created in configuration section above):
-
-```
-CYPRESS_USER_NAME=
-CYPRESS_USER_PASSWORD=
-CYPRESS_SECOND_USER_NAME=
-CYPRESS_PERMISSIONS_USERS_PASSWORD=
-
-CYPRESS_mailHogUrl=
-STRIPE_SECRET_KEY=
-STRIPE_PUBLIC_KEY=
-
-// not required
-CYPRESS_RECORD_KEY= // if you want your local runs recorded
-```
-
-For values of those variables refer to our internal documentation.
-
-You are ready to run cypress commands like:
-
-```shell
-npm run cy:open
-```
-
-##### Usage with Sentry adapter:
-
-Sentry is used as the default tracker so no changes in code are necessary and the configuration is done via environment variables.
-
-The following environment variables are available:
-
-```
-# Required
-SENTRY_DSN=
-
-# Optional
-# https://docs.sentry.io/product/cli/configuration/
-SENTRY_AUTH_TOKEN=
-SENTRY_ORG=
-SENTRY_PROJECT=
-SENTRY_URL_PREFIX=
-ENVIRONMENT=
-```
-
-#### Crafted with ❤️ by [Saleor Commerce](https://saleor.io)
+- [Configuration ⚙️](docs/configuration.md)
+- [Error tracking ⚠️](docs/error-tracking.md)
+- [Running tests 🏁](docs/running-tests.md)
+- [Usage with Docker 🐳](docs/docker.md)
+- [Sentry adapter 🗼](docs/sentry-adapter.md)
+- [Deployment 🌐](docs/deployment.md)

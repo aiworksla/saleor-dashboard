@@ -1,10 +1,10 @@
-import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { WarehouseErrorFragment } from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors } from "@saleor/utils/errors";
-import getWarehouseErrorMessage from "@saleor/utils/errors/warehouse";
+import { DashboardCard } from "@dashboard/components/Card";
+import { WarehouseErrorFragment } from "@dashboard/graphql";
+import { FormChange } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getWarehouseErrorMessage from "@dashboard/utils/errors/warehouse";
+import { TextField } from "@material-ui/core";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -15,23 +15,18 @@ export interface WarehouseInfoProps {
   onChange: FormChange;
 }
 
-const WarehouseInfo: React.FC<WarehouseInfoProps> = ({
-  data,
-  disabled,
-  errors,
-  onChange,
-}) => {
+const WarehouseInfo: React.FC<WarehouseInfoProps> = ({ data, disabled, errors, onChange }) => {
   const intl = useIntl();
-
   const formErrors = getFormErrors(["name"], errors);
 
   return (
-    <Card data-test-id="general-information-section">
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
-      <CardContent>
+    <DashboardCard data-test-id="general-information-section" paddingTop={9}>
+      <DashboardCard.Title>
+        {intl.formatMessage(commonMessages.generalInformations)}
+      </DashboardCard.Title>
+      <DashboardCard.Content>
         <TextField
+          data-test-id="warehouse-name-input"
           disabled={disabled}
           error={!!formErrors.name}
           fullWidth
@@ -49,8 +44,8 @@ const WarehouseInfo: React.FC<WarehouseInfoProps> = ({
             },
           }}
         />
-      </CardContent>
-    </Card>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
 

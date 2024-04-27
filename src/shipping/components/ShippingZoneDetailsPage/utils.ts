@@ -1,5 +1,6 @@
-import { ShippingZoneQuery } from "@saleor/graphql";
-import { mapMetadataItemToInput } from "@saleor/utils/maps";
+// @ts-strict-ignore
+import { ShippingZoneQuery } from "@dashboard/graphql";
+import { mapMetadataItemToInput } from "@dashboard/utils/maps";
 
 import { ShippingZoneUpdateFormData } from "./types";
 

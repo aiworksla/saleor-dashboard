@@ -22,7 +22,6 @@ import {
   getWarehouse,
 } from "../../../support/api/requests/Warehouse";
 import { getDefaultChannel } from "../../../support/api/utils/channelsUtils";
-import { deleteShippingStartsWith } from "../../../support/api/utils/shippingUtils";
 
 describe("As an admin I want to manage warehouses", () => {
   const startsWith = "CyWarehouse";
@@ -30,16 +29,16 @@ describe("As an admin I want to manage warehouses", () => {
   let secondUsAddress;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteShippingStartsWith(startsWith);
+    cy.loginUserViaRequest();
     cy.fixture("addresses").then(addresses => {
       usAddress = addresses.usAddress;
       secondUsAddress = addresses.secondUsAddress;
+      cy.checkIfDataAreNotNull({ usAddress, secondUsAddress });
     });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
@@ -192,7 +191,9 @@ describe("As an admin I want to manage warehouses", () => {
           warehouse = warehouseResp;
           cy.visit(warehouseDetailsUrl(warehouse.id))
             .get(WAREHOUSES_DETAILS.nameInput)
-            .clearAndType(updatedName)
+            .clear()
+            .type(updatedName)
+            // .clearAndType(updatedName)
             .fillUpBasicAddress(secondUsAddress)
             .addAliasToGraphRequest("WarehouseUpdate")
             .get(BUTTON_SELECTORS.confirm)

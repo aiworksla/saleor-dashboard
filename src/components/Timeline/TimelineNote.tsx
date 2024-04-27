@@ -1,44 +1,30 @@
-import { Avatar, Card, CardContent, Typography } from "@material-ui/core";
-import * as colors from "@material-ui/core/colors";
-import PersonIcon from "@material-ui/icons/Person";
+import { GiftCardEventFragment, OrderEventFragment } from "@dashboard/graphql";
+import { getUserInitials, getUserName } from "@dashboard/misc";
+import { Card, CardContent } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import CRC from "crc-32";
+import { Text, vars } from "@saleor/macaw-ui-next";
 import React from "react";
 
 import { DateTime } from "../Date";
-
-const palette = [
-  colors.amber,
-  colors.blue,
-  colors.cyan,
-  colors.deepOrange,
-  colors.deepPurple,
-  colors.green,
-  colors.indigo,
-  colors.lightBlue,
-  colors.lightGreen,
-  colors.lime,
-  colors.orange,
-  colors.pink,
-  colors.purple,
-  colors.red,
-  colors.teal,
-  colors.yellow,
-].map(color => color[500]);
+import { UserAvatar } from "../UserAvatar";
 
 const useStyles = makeStyles(
   theme => ({
     avatar: {
-      left: -45,
+      left: -40,
       position: "absolute",
       top: 0,
     },
     card: {
       marginBottom: theme.spacing(3),
-      marginLeft: theme.spacing(3),
       position: "relative",
+      boxShadow: "none",
+      background: vars.colors.background.default1,
     },
     cardContent: {
+      wordBreak: "break-all",
+      borderRadius: "4px",
+      border: `1px solid ${vars.colors.border.default1}`,
       "&:last-child": {
         padding: 16,
       },
@@ -54,7 +40,6 @@ const useStyles = makeStyles(
       display: "flex",
       justifyContent: "space-between",
       marginBottom: theme.spacing(),
-      paddingLeft: theme.spacing(3),
     },
   }),
   { name: "TimelineNote" },
@@ -63,57 +48,74 @@ const useStyles = makeStyles(
 interface TimelineNoteProps {
   date: string;
   message: string | null;
-  user: {
-    email: string;
-    firstName?: string;
-    lastName?: string;
-  };
+  user: OrderEventFragment["user"];
+  app: OrderEventFragment["app"] | GiftCardEventFragment["app"];
+  hasPlainDate?: boolean;
 }
 
 interface NoteMessageProps {
-  message: string;
+  message: string | null;
 }
 
 const NoteMessage: React.FC<NoteMessageProps> = ({ message }) => (
   <>
-    {message.split("\n").map(string => {
+    {message?.split("\n").map(string => {
       if (string === "") {
-        return <br />;
+        return <br key={`break-${string}`} />;
       }
 
-      return <Typography>{string}</Typography>;
+      return <Text key={`note-${string}`}>{string}</Text>;
     })}
   </>
 );
 
-export const TimelineNote: React.FC<TimelineNoteProps> = props => {
-  const { date, user, message } = props;
+const TimelineAvatar = ({
+  user,
+  app,
+  className,
+}: {
+  user: OrderEventFragment["user"];
+  app: OrderEventFragment["app"] | GiftCardEventFragment["app"];
+  className: string;
+}) => {
+  if (user) {
+    return (
+      <UserAvatar initials={getUserInitials(user)} url={user?.avatar?.url} className={className} />
+    );
+  }
 
-  const classes = useStyles(props);
+  if (app) {
+    return (
+      <UserAvatar
+        initials={app.name?.slice(0, 2)}
+        url={app.brand?.logo?.default}
+        className={className}
+      />
+    );
+  }
 
-  const getUserTitleOrEmail = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
+  return null;
+};
 
-    return user?.email;
-  };
+export const TimelineNote: React.FC<TimelineNoteProps> = ({
+  date,
+  user,
+  message,
+  hasPlainDate,
+  app,
+}) => {
+  const classes = useStyles();
+
+  const userDisplayName = getUserName(user, true) ?? app?.name;
 
   return (
     <div className={classes.root}>
-      {user && (
-        <Avatar
-          className={classes.avatar}
-          style={{ background: palette[CRC.str(user.email) % palette.length] }}
-        >
-          <PersonIcon />
-        </Avatar>
-      )}
+      <TimelineAvatar user={user} app={app} className={classes.avatar} />
       <div className={classes.title}>
-        <Typography>{getUserTitleOrEmail()}</Typography>
-        <Typography>
-          <DateTime date={date} />
-        </Typography>
+        <Text size={3}>{userDisplayName}</Text>
+        <Text size={3} color="default2" whiteSpace="nowrap">
+          <DateTime date={date} plain={hasPlainDate} />
+        </Text>
       </div>
       <Card className={classes.card} elevation={16}>
         <CardContent className={classes.cardContent}>

@@ -1,12 +1,6 @@
-import {
-  OrderSettingsFragment,
-  ShopOrderSettingsFragment,
-} from "@saleor/graphql";
-import useForm, {
-  CommonUseFormResult,
-  SubmitPromise,
-} from "@saleor/hooks/useForm";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
+import { OrderSettingsFragment, ShopOrderSettingsFragment } from "@dashboard/graphql";
+import useForm, { CommonUseFormResult, SubmitPromise } from "@dashboard/hooks/useForm";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
 import React from "react";
 
 export interface OrderSettingsFormData {
@@ -16,9 +10,7 @@ export interface OrderSettingsFormData {
   automaticallyFulfillNonShippableGiftCard: boolean;
 }
 
-export type UseOrderSettingsFormResult = CommonUseFormResult<
-  OrderSettingsFormData
->;
+export type UseOrderSettingsFormResult = CommonUseFormResult<OrderSettingsFormData>;
 export interface OrderSettingsFormProps {
   children: (props: UseOrderSettingsFormResult) => React.ReactNode;
   orderSettings: OrderSettingsFragment;
@@ -34,8 +26,7 @@ function getOrderSeettingsFormData(
   return {
     automaticallyFulfillNonShippableGiftCard:
       orderSettings?.automaticallyFulfillNonShippableGiftCard,
-    automaticallyConfirmAllNewOrders:
-      orderSettings?.automaticallyConfirmAllNewOrders,
+    automaticallyConfirmAllNewOrders: orderSettings?.automaticallyConfirmAllNewOrders,
     fulfillmentAutoApprove: shop?.fulfillmentAutoApprove,
     fulfillmentAllowUnpaid: shop?.fulfillmentAllowUnpaid,
   };
@@ -54,13 +45,12 @@ function useOrderSettingsForm(
       confirmLeave: true,
     },
   );
-
   const handleFormSubmit = useHandleFormSubmit({
     formId,
     onSubmit,
   });
-
   const submit = () => handleFormSubmit(data);
+
   setIsSubmitDisabled(disabled);
 
   return {

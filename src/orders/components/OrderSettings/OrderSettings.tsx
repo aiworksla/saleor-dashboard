@@ -1,7 +1,8 @@
-import { Card, CardContent, Typography } from "@material-ui/core";
-import CardSpacer from "@saleor/components/CardSpacer";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import { Card, CardContent } from "@material-ui/core";
+import { Box, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -13,19 +14,15 @@ export interface OrderSettingsProps {
   onChange: (event: React.ChangeEvent<any>) => void;
 }
 
-const OrderSettings: React.FC<OrderSettingsProps> = ({
-  data,
-  disabled,
-  onChange,
-}) => {
+const OrderSettings: React.FC<OrderSettingsProps> = ({ data, disabled, onChange }) => {
   const intl = useIntl();
 
   return (
     <Card data-test-id="order-settings">
       <CardTitle
         title={intl.formatMessage({
-          id: "CLYlsu",
-          defaultMessage: "Settings",
+          id: "kn7jjd",
+          defaultMessage: "General settings",
           description: "section header",
         })}
       />
@@ -33,20 +30,22 @@ const OrderSettings: React.FC<OrderSettingsProps> = ({
         <ControlledCheckbox
           name="automaticallyConfirmAllNewOrders"
           label={
-            <>
-              <FormattedMessage
-                id="RLYfMF"
-                defaultMessage="Automatically confirm all orders"
-                description="checkbox label"
-              />
-              <Typography variant="caption">
+            <Box display="flex" flexDirection="column">
+              <Text>
+                <FormattedMessage
+                  id="RLYfMF"
+                  defaultMessage="Automatically confirm all orders"
+                  description="checkbox label"
+                />
+              </Text>
+              <Text size={2} color="default2">
                 <FormattedMessage
                   id="wpAXKX"
                   defaultMessage="All orders will be automatically confirmed and all payments will be captured."
                   description="checkbox label description"
                 />
-              </Typography>
-            </>
+              </Text>
+            </Box>
           }
           checked={data.automaticallyConfirmAllNewOrders}
           onChange={onChange}
@@ -57,20 +56,22 @@ const OrderSettings: React.FC<OrderSettingsProps> = ({
         <ControlledCheckbox
           name="automaticallyFulfillNonShippableGiftCard"
           label={
-            <>
-              <FormattedMessage
-                id="7UG1Lx"
-                defaultMessage="Automatically fulfill non shippable gift cards"
-                description="checkbox gift cards label"
-              />
-              <Typography variant="caption">
+            <Box display="flex" flexDirection="column">
+              <Text>
                 <FormattedMessage
-                  id="Nfh9QM"
-                  defaultMessage="when activated non-shippable gift cards will be automatically set as fulfilled and sent to customer"
+                  id="7UG1Lx"
+                  defaultMessage="Automatically fulfill non shippable gift cards"
+                  description="checkbox gift cards label"
+                />
+              </Text>
+              <Text size={2} color="default2">
+                <FormattedMessage
+                  id="EewziG"
+                  defaultMessage="When activated non-shippable gift cards will be automatically set as fulfilled and sent to customer"
                   description="checkbox gift cards label description"
                 />
-              </Typography>
-            </>
+              </Text>
+            </Box>
           }
           checked={data.automaticallyFulfillNonShippableGiftCard}
           onChange={onChange}
@@ -81,5 +82,6 @@ const OrderSettings: React.FC<OrderSettingsProps> = ({
     </Card>
   );
 };
+
 OrderSettings.displayName = "OrderSettings";
 export default OrderSettings;

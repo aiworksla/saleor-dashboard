@@ -1,6 +1,6 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -47,5 +47,6 @@ const OrderBulkCancelDialog: React.FC<OrderBulkCancelDialogProps> = ({
     </ActionDialog>
   );
 };
+
 OrderBulkCancelDialog.displayName = "OrderBulkCancelDialog";
 export default OrderBulkCancelDialog;

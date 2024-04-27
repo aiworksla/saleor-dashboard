@@ -3,7 +3,9 @@
 
 import faker from "faker";
 
-import { PRODUCT_TYPE_DETAILS } from "../../../elements/productTypes/productTypeDetails";
+import {
+  PRODUCT_TYPE_DETAILS_SELECTORS,
+} from "../../../elements/productTypes/productTypeDetails";
 import { BUTTON_SELECTORS } from "../../../elements/shared/button-selectors";
 import { productTypeDetailsUrl } from "../../../fixtures/urlList";
 import { createAttribute } from "../../../support/api/requests/Attribute";
@@ -12,20 +14,19 @@ import {
   createTypeProduct,
   getProductType,
 } from "../../../support/api/requests/ProductType";
-import { deleteProductsStartsWith } from "../../../support/api/utils/products/productsUtils";
 
 describe("As an admin I want to manage attributes in product types", () => {
   const startsWith = "attrProdType";
   let attribute;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteProductsStartsWith(startsWith);
+    cy.loginUserViaRequest();
     createAttribute({ name: startsWith }).then(resp => (attribute = resp));
+    cy.checkIfDataAreNotNull(attribute);
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
@@ -39,7 +40,7 @@ describe("As an admin I want to manage attributes in product types", () => {
           cy.visitAndWaitForProgressBarToDisappear(
             productTypeDetailsUrl(productType.id),
           )
-            .get(PRODUCT_TYPE_DETAILS.assignProductAttributeButton)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.assignProductAttributeButton)
             .click()
             .addAliasToGraphRequest("AssignProductAttribute")
             .assignElements(startsWith)
@@ -64,10 +65,10 @@ describe("As an admin I want to manage attributes in product types", () => {
           cy.visitAndWaitForProgressBarToDisappear(
             productTypeDetailsUrl(productType.id),
           )
-            .get(PRODUCT_TYPE_DETAILS.hasVariantsButton)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.hasVariantsButton)
             .should("be.enabled")
             .click({ force: true })
-            .get(PRODUCT_TYPE_DETAILS.assignVariantAttributeButton)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.assignVariantAttributeButton)
             .click()
             .addAliasToGraphRequest("AssignProductAttribute")
             .assignElements(startsWith)
@@ -85,7 +86,7 @@ describe("As an admin I want to manage attributes in product types", () => {
 
   it(
     "should be able to remove variant attribute from product type. TC: SALEOR_1506",
-    { tags: ["@productType", "@allEnv"] },
+    { tags: ["@productType", "@allEnv", "@stable"] },
     () => {
       const name = `${startsWith}${faker.datatype.number()}`;
       let productType;
@@ -99,7 +100,7 @@ describe("As an admin I want to manage attributes in product types", () => {
           cy.visitAndWaitForProgressBarToDisappear(
             productTypeDetailsUrl(productType.id),
           )
-            .get(PRODUCT_TYPE_DETAILS.nameInput)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.nameInput)
             .should("be.enabled")
             .get(BUTTON_SELECTORS.deleteIcon)
             .should("be.enabled")
@@ -118,7 +119,7 @@ describe("As an admin I want to manage attributes in product types", () => {
 
   it(
     "should be able to remove product attribute from product type. TC: SALEOR_1507",
-    { tags: ["@productType", "@allEnv"] },
+    { tags: ["@productType", "@allEnv", "@stable"] },
     () => {
       const name = `${startsWith}${faker.datatype.number()}`;
       let productType;
@@ -132,7 +133,7 @@ describe("As an admin I want to manage attributes in product types", () => {
           cy.visitAndWaitForProgressBarToDisappear(
             productTypeDetailsUrl(productType.id),
           )
-            .get(PRODUCT_TYPE_DETAILS.nameInput)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.nameInput)
             .should("be.enabled")
             .get(BUTTON_SELECTORS.deleteIcon)
             .should("be.enabled")
@@ -165,7 +166,7 @@ describe("As an admin I want to manage attributes in product types", () => {
           cy.visitAndWaitForProgressBarToDisappear(
             productTypeDetailsUrl(productType.id),
           )
-            .get(PRODUCT_TYPE_DETAILS.variantSelectionCheckbox)
+            .get(PRODUCT_TYPE_DETAILS_SELECTORS.variantSelectionCheckbox)
             .click()
             .addAliasToGraphRequest("ProductAttributeAssignmentUpdate")
             .get(BUTTON_SELECTORS.confirm)

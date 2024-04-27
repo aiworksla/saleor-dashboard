@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import CardSpacer from "@dashboard/components/CardSpacer";
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import { TimelineEvent } from "@dashboard/components/Timeline";
+import { TitleElement } from "@dashboard/components/Timeline/TimelineEventHeader";
+import { OrderEventFragment, OrderEventsEnum } from "@dashboard/graphql";
 import { Typography } from "@material-ui/core";
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import CardSpacer from "@saleor/components/CardSpacer";
-import { TimelineEvent } from "@saleor/components/Timeline";
-import { TitleElement } from "@saleor/components/Timeline/TimelineEventHeader";
-import { OrderEventFragment, OrderEventsEnum } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
@@ -43,14 +44,9 @@ const ExtendedDiscountTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
 }) => {
   const classes = useStyles({});
   const intl = useIntl();
-
   const { lines, date, type } = event;
-
   const parsedDiscount =
-    type === OrderEventsEnum.ORDER_LINE_DISCOUNT_UPDATED
-      ? lines[0].discount
-      : event.discount;
-
+    type === OrderEventsEnum.ORDER_LINE_DISCOUNT_UPDATED ? lines[0].discount : event.discount;
   const {
     valueType: calculationMode,
     value,
@@ -60,7 +56,6 @@ const ExtendedDiscountTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
     oldValue,
     oldAmount: oldMoneyData,
   } = parsedDiscount;
-
   const shouldDisplayOldNewSections = !!oldValue;
 
   return (

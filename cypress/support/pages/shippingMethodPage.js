@@ -2,7 +2,8 @@ import { BUTTON_SELECTORS } from "../../elements/shared/button-selectors";
 import { SHARED_ELEMENTS } from "../../elements/shared/sharedElements";
 import { SHIPPING_RATE_DETAILS } from "../../elements/shipping/shipping-rate-details";
 import { SHIPPING_ZONE_DETAILS } from "../../elements/shipping/shipping-zone-details";
-import { SHIPPING_ZONES_LIST } from "../../elements/shipping/shipping-zones-list";
+import { SHIPPING_ZONES_LIST_SELECTORS } from "../../elements/shipping/shipping-zones-list";
+import { WEIGHT_UNITS } from "../../fixtures/weightsUnits";
 
 export function createShippingZone(
   shippingName,
@@ -10,7 +11,7 @@ export function createShippingZone(
   country,
   channelName,
 ) {
-  cy.get(SHIPPING_ZONES_LIST.addShippingZone).click();
+  cy.get(SHIPPING_ZONES_LIST_SELECTORS.addShippingZone).click();
   fillUpShippingZoneData({
     shippingName,
     warehouseName,
@@ -26,9 +27,11 @@ export function fillUpShippingZoneData({
   channelName,
 }) {
   cy.get(SHIPPING_ZONE_DETAILS.nameInput)
-    .clearAndType(shippingName)
+    .clear()
+    .type(shippingName)
     .get(SHIPPING_ZONE_DETAILS.descriptionInput)
-    .clearAndType(shippingName)
+    .clear()
+    .type(shippingName)
     .get(BUTTON_SELECTORS.confirm)
     .click()
     .confirmationMessageShouldAppear()
@@ -40,6 +43,8 @@ export function fillUpShippingZoneData({
     .get(SHIPPING_ZONE_DETAILS.autocompleteContentDialog);
   cy.contains(SHIPPING_ZONE_DETAILS.option, warehouseName)
     .click({ force: true })
+    .get(SHIPPING_ZONE_DETAILS.warehouseSelector)
+    .click()
     .get(SHIPPING_ZONE_DETAILS.channelSelector)
     .click()
     .get(SHIPPING_ZONE_DETAILS.option)
@@ -55,17 +60,17 @@ export function fillUpShippingZoneData({
     .click()
     .get(SHIPPING_ZONE_DETAILS.submitAssignCountry)
     .click()
+    .addAliasToGraphRequest("UpdateShippingZone")
     .get(BUTTON_SELECTORS.confirm)
     .click()
     .confirmationMessageShouldDisappear()
-    .addAliasToGraphRequest("UpdateShippingZone")
-    .reload();
+    .waitForRequestAndCheckIfNoErrors("@UpdateShippingZone");
 }
 
 export function changeWeightUnit(weightUnit) {
-  cy.fillBaseSelect(SHIPPING_ZONES_LIST.unitSelect, weightUnit)
+  cy.fillBaseSelect(SHIPPING_ZONES_LIST_SELECTORS.unitSelect, weightUnit)
     .addAliasToGraphRequest("UpdateDefaultWeightUnit")
-    .get(SHIPPING_ZONES_LIST.saveUnit)
+    .get(SHIPPING_ZONES_LIST_SELECTORS.saveUnit)
     .click()
     .confirmationMessageShouldAppear()
     .waitForRequestAndCheckIfNoErrors("@UpdateDefaultWeightUnit")
@@ -132,11 +137,11 @@ export function fillUpShippingRate({
   }
   cy.get(SHIPPING_RATE_DETAILS.priceInput).each($priceInput => {
     cy.wrap($priceInput)
-      .clear()
+      .clear({ force: true })
       .get(SHARED_ELEMENTS.pageHeader)
       .click()
       .wrap($priceInput)
-      .clearAndType(price);
+      .clearAndType(price, { force: true });
   });
 }
 
@@ -185,16 +190,38 @@ export function saveRateAfterUpdate() {
 
 export function fillUpLimits({ max, min }) {
   cy.get(SHIPPING_RATE_DETAILS.minValueInput)
-    .type(min)
+    .type(min, { force: true })
     .get(SHIPPING_RATE_DETAILS.maxValueInput)
-    .type(max);
+    .type(max, { force: true });
 }
 
 export function fillUpDeliveryTime({ min, max }) {
   cy.get(SHIPPING_RATE_DETAILS.minDeliveryTimeInput)
-    .clearAndType(min)
+    .clearAndType(min, { force: true })
     .get(SHIPPING_RATE_DETAILS.maxDeliveryTimeInput)
-    .clearAndType(max);
+    .clearAndType(max, { force: true });
+}
+export function openSettings() {
+  cy.get(SHIPPING_ZONES_LIST_SELECTORS.settingsButton).click();
+}
+export function openChangeDefaultWeightDialog() {
+  openSettings();
+  cy.get(SHIPPING_ZONES_LIST_SELECTORS.changeDefaultWeightUnitButton).click();
+}
+export function getDifferentDefaultWeight() {
+  return cy
+    .get(SHIPPING_ZONES_LIST_SELECTORS.weightUnitSelector)
+    .invoke("text")
+    .then(defaultUnit => {
+      WEIGHT_UNITS.find(unit => {
+        unit !== defaultUnit;
+      });
+    });
+}
+export function selectDifferentDefaultWeight(unit) {
+  cy.get(SHIPPING_ZONES_LIST_SELECTORS.weightUnitSelector).click();
+  cy.contains(unit).click();
+  return cy.get(SHIPPING_ZONES_LIST_SELECTORS.saveUnitsButton).click();
 }
 
 export const rateOptions = {

@@ -1,6 +1,6 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -32,21 +32,17 @@ const ProductVariantEndPreorderDialog: React.FC<ProductVariantEndPreorderDialogP
       open={open}
       onClose={onClose}
       onConfirm={onConfirm}
-      title={intl.formatMessage(
-        productVariantEndPreorderDialogMessages.dialogTitle,
-      )}
+      title={intl.formatMessage(productVariantEndPreorderDialogMessages.dialogTitle)}
       variant="default"
     >
       <DialogContentText>
-        {intl.formatMessage(
-          productVariantEndPreorderDialogMessages.dialogMessage,
-          {
-            variantGlobalSoldUnits,
-          },
-        )}
+        {intl.formatMessage(productVariantEndPreorderDialogMessages.dialogMessage, {
+          variantGlobalSoldUnits,
+        })}
       </DialogContentText>
     </ActionDialog>
   );
 };
+
 ProductVariantEndPreorderDialog.displayName = "ProductVariantEndPreorderDialog";
 export default ProductVariantEndPreorderDialog;

@@ -1,18 +1,19 @@
-import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import NotFoundPage from "@saleor/components/NotFoundPage";
-import { WindowTitle } from "@saleor/components/WindowTitle";
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import NotFoundPage from "@dashboard/components/NotFoundPage";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
 import {
   useRemoveCustomerMutation,
   useUpdateCustomerMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors, getStringOrPlaceholder } from "@saleor/misc";
-import createMetadataUpdateHandler from "@saleor/utils/handlers/metadataUpdateHandler";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors, getStringOrPlaceholder } from "@dashboard/misc";
+import createMetadataUpdateHandler from "@dashboard/utils/handlers/metadataUpdateHandler";
+import { DialogContentText } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -28,10 +29,7 @@ interface CustomerDetailsViewProps {
   params: CustomerUrlQueryParams;
 }
 
-const CustomerDetailsViewInner: React.FC<CustomerDetailsViewProps> = ({
-  id,
-  params,
-}) => {
+const CustomerDetailsViewInner: React.FC<CustomerDetailsViewProps> = ({ id, params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const intl = useIntl();
@@ -98,14 +96,12 @@ const CustomerDetailsViewInner: React.FC<CustomerDetailsViewProps> = ({
 
   return (
     <>
-      <WindowTitle title={user?.email} />
+      <WindowTitle title={user?.email} data-test-id="user-email-title" />
       <CustomerDetailsPage
         customerId={id}
         customer={user}
         disabled={
-          customerDetailsLoading ||
-          updateCustomerOpts.loading ||
-          removeCustomerOpts.loading
+          customerDetailsLoading || updateCustomerOpts.loading || removeCustomerOpts.loading
         }
         errors={updateCustomerOpts.data?.customerUpdate.errors || []}
         saveButtonBar={updateCustomerOpts.status}
@@ -151,10 +147,7 @@ const CustomerDetailsViewInner: React.FC<CustomerDetailsViewProps> = ({
   );
 };
 
-export const CustomerDetailsView: React.FC<CustomerDetailsViewProps> = ({
-  id,
-  params,
-}) => (
+export const CustomerDetailsView: React.FC<CustomerDetailsViewProps> = ({ id, params }) => (
   <CustomerDetailsProvider id={id}>
     <CustomerDetailsViewInner id={id} params={params} />
   </CustomerDetailsProvider>

@@ -1,7 +1,7 @@
-import { FormId } from "@saleor/components/Form/ExitFormDialogProvider";
-import { useExitFormDialog } from "@saleor/components/Form/useExitFormDialog";
-import { MessageContext } from "@saleor/components/messages";
-import { SubmitPromise } from "@saleor/hooks/useForm";
+// @ts-strict-ignore
+import { FormId, useExitFormDialog } from "@dashboard/components/Form";
+import { MessageContext } from "@dashboard/components/messages";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
 import { useContext } from "react";
 
 interface UseHandleFormSubmitProps<TData, TError> {

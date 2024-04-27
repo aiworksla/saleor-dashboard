@@ -1,6 +1,6 @@
-import { DEMO_MODE } from "@saleor/config";
-import useForm, { FormChange, SubmitPromise } from "@saleor/hooks/useForm";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
+import { DEMO_MODE } from "@dashboard/config";
+import useForm, { FormChange, SubmitPromise } from "@dashboard/hooks/useForm";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
 import React from "react";
 
 export interface LoginFormData {
@@ -26,18 +26,14 @@ const getLoginFormData = () => {
       password: "admin",
     };
   }
+
   return { email: "", password: "" };
 };
 
-function useLoginForm(
-  onSubmit: (data: LoginFormData) => SubmitPromise,
-): UseLoginFormResult {
+function useLoginForm(onSubmit: (data: LoginFormData) => SubmitPromise): UseLoginFormResult {
   const form = useForm(getLoginFormData());
-
   const { change, data } = form;
-
   const handleFormSubmit = useHandleFormSubmit({ onSubmit });
-
   const submit = async () => handleFormSubmit(data);
 
   return {
@@ -49,7 +45,6 @@ function useLoginForm(
 
 const LoginForm: React.FC<LoginFormProps> = ({ children, onSubmit }) => {
   const props = useLoginForm(onSubmit);
-
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     // Cypress tests blow up without it
     event.preventDefault();

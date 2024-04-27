@@ -1,4 +1,4 @@
-import { ExportErrorFragment } from "@saleor/graphql";
+import { ExportErrorFragment } from "@dashboard/graphql";
 import { IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -6,7 +6,7 @@ import { getCommonFormFieldErrorMessage } from "./common";
 function getExportErrorMessage(
   err: Omit<ExportErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   return getCommonFormFieldErrorMessage(err, intl);
 }
 

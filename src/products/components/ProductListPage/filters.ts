@@ -1,13 +1,11 @@
-import { IFilter } from "@saleor/components/Filter";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
-import { AttributeInputTypeEnum, StockAvailability } from "@saleor/graphql";
-import { commonMessages, sectionNames } from "@saleor/intl";
-import {
-  AutocompleteFilterOpts,
-  FilterOpts,
-  KeyValue,
-  MinMax,
-} from "@saleor/types";
+// @ts-strict-ignore
+import { IFilter } from "@dashboard/components/Filter";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { AttributeInputTypeEnum, StockAvailability } from "@dashboard/graphql";
+import { commonMessages, sectionNames } from "@dashboard/intl";
+import { parseBoolean } from "@dashboard/misc";
+import { ProductListUrlFiltersAsDictWithMultipleValues } from "@dashboard/products/urls";
+import { AutocompleteFilterOpts, FilterOpts, KeyValue, MinMax } from "@dashboard/types";
 import {
   createAutocompleteField,
   createBooleanField,
@@ -17,20 +15,21 @@ import {
   createNumberField,
   createOptionsField,
   createPriceField,
-} from "@saleor/utils/filters/fields";
+} from "@dashboard/utils/filters/fields";
 import { defineMessages, IntlShape } from "react-intl";
 
-export enum ProductFilterKeys {
-  attributes = "attributes",
-  categories = "categories",
-  collections = "collections",
-  metadata = "metadata",
-  price = "price",
-  productType = "productType",
-  stock = "stock",
-  channel = "channel",
-  productKind = "productKind",
-}
+export const ProductFilterKeys = {
+  ...ProductListUrlFiltersAsDictWithMultipleValues,
+  categories: "categories",
+  collections: "collections",
+  metadata: "metadata",
+  price: "price",
+  productType: "productType",
+  stock: "stock",
+  channel: "channel",
+  productKind: "productKind",
+} as const;
+export type ProductFilterKeys = (typeof ProductFilterKeys)[keyof typeof ProductFilterKeys];
 
 export type AttributeFilterOpts = FilterOpts<string[]> & {
   id: string;
@@ -102,30 +101,18 @@ const messages = defineMessages({
     description: "product is visible",
   },
 });
-
-const filterByType = (type: AttributeInputTypeEnum) => (
-  attribute: AttributeFilterOpts,
-) => attribute.inputType === type;
+const filterByType = (type: AttributeInputTypeEnum) => (attribute: AttributeFilterOpts) =>
+  attribute.inputType === type;
 
 export function createFilterStructure(
   intl: IntlShape,
   opts: ProductListFilterOpts,
 ): IFilter<string> {
   const attributes = opts.attributes;
-
-  const booleanAttributes = attributes.filter(
-    filterByType(AttributeInputTypeEnum.BOOLEAN),
-  );
-  const dateAttributes = attributes.filter(
-    filterByType(AttributeInputTypeEnum.DATE),
-  );
-  const dateTimeAttributes = attributes.filter(
-    filterByType(AttributeInputTypeEnum.DATE_TIME),
-  );
-  const numericAttributes = attributes.filter(
-    filterByType(AttributeInputTypeEnum.NUMERIC),
-  );
-
+  const booleanAttributes = attributes.filter(filterByType(AttributeInputTypeEnum.BOOLEAN));
+  const dateAttributes = attributes.filter(filterByType(AttributeInputTypeEnum.DATE));
+  const dateTimeAttributes = attributes.filter(filterByType(AttributeInputTypeEnum.DATE_TIME));
+  const numericAttributes = attributes.filter(filterByType(AttributeInputTypeEnum.NUMERIC));
   const defaultAttributes = opts.attributes.filter(
     ({ inputType }) =>
       ![
@@ -252,7 +239,7 @@ export function createFilterStructure(
         attr.slug,
         attr.name,
         Array.isArray(attr.value)
-          ? undefined
+          ? parseBoolean(attr.value[0], undefined)
           : (attr.value as unknown) === "true",
         {
           positive: intl.formatMessage(commonMessages.yes),
@@ -260,7 +247,7 @@ export function createFilterStructure(
         },
       ),
       active: attr.active,
-      group: ProductFilterKeys.attributes,
+      group: ProductFilterKeys.booleanAttributes,
     })),
     ...dateAttributes.map(attr => ({
       ...createDateField(attr.slug, attr.name, {
@@ -268,7 +255,7 @@ export function createFilterStructure(
         max: attr.value[1] ?? attr.value[0],
       }),
       active: attr.active,
-      group: ProductFilterKeys.attributes,
+      group: ProductFilterKeys.dateAttributes,
     })),
     ...dateTimeAttributes.map(attr => ({
       ...createDateTimeField(attr.slug, attr.name, {
@@ -276,7 +263,7 @@ export function createFilterStructure(
         max: attr.value[1] ?? attr.value[0],
       }),
       active: attr.active,
-      group: ProductFilterKeys.attributes,
+      group: ProductFilterKeys.dateTimeAttributes,
     })),
     ...numericAttributes.map(attr => ({
       ...createNumberField(attr.slug, attr.name, {
@@ -284,7 +271,7 @@ export function createFilterStructure(
         max: attr.value[1] ?? attr.value[0],
       }),
       active: attr.active,
-      group: ProductFilterKeys.attributes,
+      group: ProductFilterKeys.numericAttributes,
     })),
     ...defaultAttributes.map(attr => ({
       ...createAutocompleteField(
@@ -304,7 +291,7 @@ export function createFilterStructure(
         attr.id,
       ),
       active: attr.active,
-      group: ProductFilterKeys.attributes,
+      group: ProductFilterKeys.stringAttributes,
     })),
   ];
 }

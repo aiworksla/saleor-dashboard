@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Dispatch, SetStateAction, useState } from "react";
 
 export type UseLocalStorage<T> = [T, Dispatch<SetStateAction<T>>];
@@ -22,7 +23,9 @@ export default function useLocalStorage<T>(
   function getValue(value: T, initOrCb: SetStateAction<T>): T {
     if (initOrCb instanceof Function) {
       const newValue = initOrCb(value);
+
       saveToLocalStorage(newValue);
+
       return newValue;
     }
 
@@ -39,6 +42,7 @@ export default function useLocalStorage<T>(
 
     try {
       const parsed = JSON.parse(item);
+
       if (!parsed) {
         throw new Error("Empty value");
       }
@@ -48,14 +52,14 @@ export default function useLocalStorage<T>(
       // Casting to T (which should resolve to string) because JSON.parse would
       // throw an error if "foo" was passed, but properly casting "true" or "1"
       // to their respective types
-      result = (item as unknown) as T;
+      result = item as unknown as T;
     }
 
     return getValue(result, initialValue);
   });
-
   const setValue = (value: SetStateAction<T>) => {
     const valueToStore = value instanceof Function ? value(storedValue) : value;
+
     setStoredValue(valueToStore);
     saveToLocalStorage(valueToStore);
   };

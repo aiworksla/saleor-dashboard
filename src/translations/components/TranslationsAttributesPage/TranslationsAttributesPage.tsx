@@ -1,22 +1,19 @@
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import LanguageSwitch from "@saleor/components/LanguageSwitch";
-import PageHeader from "@saleor/components/PageHeader";
-import { ListSettingsUpdate } from "@saleor/components/TablePagination";
-import {
-  AttributeTranslationDetailsFragment,
-  LanguageCodeEnum,
-} from "@saleor/graphql";
-import { commonMessages, sectionNames } from "@saleor/intl";
-import { getStringOrPlaceholder } from "@saleor/misc";
-import { TranslationsEntitiesPageProps } from "@saleor/translations/types";
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import LanguageSwitch from "@dashboard/components/LanguageSwitch";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { ListSettingsUpdate } from "@dashboard/components/TablePagination";
+import { AttributeTranslationDetailsFragment, LanguageCodeEnum } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getStringOrPlaceholder } from "@dashboard/misc";
+import { TranslationsEntitiesPageProps } from "@dashboard/translations/types";
 import {
   languageEntitiesUrl,
   languageEntityUrl,
   TranslatableEntities,
-} from "@saleor/translations/urls";
-import { ListSettings } from "@saleor/types";
+} from "@dashboard/translations/urls";
+import { ListSettings } from "@dashboard/types";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -24,8 +21,7 @@ import { getTranslationFields } from "../../utils";
 import TranslationFields from "../TranslationFields";
 import { transtionsAttributesPageFieldsMessages as messages } from "./messages";
 
-export interface TranslationsAttributesPageProps
-  extends TranslationsEntitiesPageProps {
+export interface TranslationsAttributesPageProps extends TranslationsEntitiesPageProps {
   data: AttributeTranslationDetailsFragment;
   settings?: ListSettings;
   onUpdateListSettings?: ListSettingsUpdate;
@@ -52,24 +48,18 @@ const TranslationsAttributesPage: React.FC<TranslationsAttributesPageProps> = ({
   onUpdateListSettings,
 }) => {
   const intl = useIntl();
-
   const withChoices = data?.attribute?.withChoices;
 
   return (
-    <Container>
-      <Backlink
+    <DetailPageLayout gridTemplateColumns={1}>
+      <TopNav
         href={languageEntitiesUrl(languageCode, {
           tab: TranslatableEntities.attributes,
         })}
-      >
-        {intl.formatMessage(sectionNames.translations)}
-      </Backlink>
-      <PageHeader
         title={intl.formatMessage(
           {
             id: "SPBLzT",
-            defaultMessage:
-              'Translation Attribute "{attribute}" - {languageCode}',
+            defaultMessage: 'Translation Attribute "{attribute}" - {languageCode}',
             description: "header",
           },
           {
@@ -82,58 +72,57 @@ const TranslationsAttributesPage: React.FC<TranslationsAttributesPageProps> = ({
           currentLanguage={LanguageCodeEnum[languageCode]}
           languages={languages}
           getLanguageUrl={lang =>
-            languageEntityUrl(
-              lang,
-              TranslatableEntities.attributes,
-              translationId,
-            )
+            languageEntityUrl(lang, TranslatableEntities.attributes, translationId)
           }
         />
-      </PageHeader>
-      <TranslationFields
-        activeField={activeField}
-        disabled={disabled}
-        initialState={true}
-        title={intl.formatMessage(commonMessages.generalInformations)}
-        fields={[
-          {
-            displayName: intl.formatMessage({
-              id: "DRMMDs",
-              defaultMessage: "Attribute Name",
-            }),
-            name: fieldNames.attribute + ":" + data?.attribute.id,
-            translation: data?.translation?.name || null,
-            type: "short" as "short",
-            value: data?.attribute?.name,
-          },
-        ]}
-        saveButtonState={saveButtonState}
-        richTextResetKey={languageCode}
-        onEdit={onEdit}
-        onDiscard={onDiscard}
-        onSubmit={onSubmit}
-      />
-      <CardSpacer />
-      {data?.attribute?.choices.edges.length > 0 && withChoices && (
+      </TopNav>
+      <DetailPageLayout.Content>
         <TranslationFields
           activeField={activeField}
           disabled={disabled}
           initialState={true}
-          title={intl.formatMessage(messages.values)}
-          fields={getTranslationFields(data?.attribute?.choices, intl)}
+          title={intl.formatMessage(commonMessages.generalInformations)}
+          fields={[
+            {
+              displayName: intl.formatMessage({
+                id: "DRMMDs",
+                defaultMessage: "Attribute Name",
+              }),
+              name: fieldNames.attribute + ":" + data?.attribute.id,
+              translation: data?.translation?.name || null,
+              type: "short" as const,
+              value: data?.attribute?.name,
+            },
+          ]}
           saveButtonState={saveButtonState}
           richTextResetKey={languageCode}
-          pagination={{
-            settings,
-            onUpdateListSettings,
-          }}
           onEdit={onEdit}
           onDiscard={onDiscard}
           onSubmit={onSubmit}
         />
-      )}
-    </Container>
+        <CardSpacer />
+        {data?.attribute?.choices.edges.length > 0 && withChoices && (
+          <TranslationFields
+            activeField={activeField}
+            disabled={disabled}
+            initialState={true}
+            title={intl.formatMessage(messages.values)}
+            fields={getTranslationFields(data?.attribute?.choices, intl)}
+            saveButtonState={saveButtonState}
+            richTextResetKey={languageCode}
+            pagination={{
+              settings,
+              onUpdateListSettings,
+            }}
+            onEdit={onEdit}
+            onDiscard={onDiscard}
+            onSubmit={onSubmit}
+          />
+        )}
+      </DetailPageLayout.Content>
+    </DetailPageLayout>
   );
 };
+
 TranslationsAttributesPage.displayName = "TranslationsAttributesPage";
 export default TranslationsAttributesPage;

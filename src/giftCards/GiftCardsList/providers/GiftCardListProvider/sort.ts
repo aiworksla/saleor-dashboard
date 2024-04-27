@@ -1,11 +1,10 @@
-import { GiftCardSortField } from "@saleor/graphql";
-import { createGetSortQueryVariables } from "@saleor/utils/sort";
+// @ts-strict-ignore
+import { GiftCardSortField } from "@dashboard/graphql";
+import { createGetSortQueryVariables } from "@dashboard/utils/sort";
 
 import { GiftCardUrlSortField } from "../../types";
 
-export const getSortQueryField = (
-  sort: GiftCardUrlSortField,
-): GiftCardSortField => {
+export const getSortQueryField = (sort: GiftCardUrlSortField): GiftCardSortField => {
   switch (sort) {
     case GiftCardUrlSortField.balance:
       return GiftCardSortField.CURRENT_BALANCE;
@@ -18,6 +17,4 @@ export const getSortQueryField = (
   }
 };
 
-export const getSortQueryVariables = createGetSortQueryVariables(
-  getSortQueryField,
-);
+export const getSortQueryVariables = createGetSortQueryVariables(getSortQueryField);

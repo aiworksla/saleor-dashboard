@@ -1,17 +1,18 @@
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Checkbox from "@dashboard/components/Checkbox";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import { TableButtonWrapper } from "@dashboard/components/TableButtonWrapper/TableButtonWrapper";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableHead from "@dashboard/components/TableHead";
+import { TablePaginationWithContext } from "@dashboard/components/TablePagination";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { SaleDetailsFragment } from "@dashboard/graphql";
+import { productVariantEditPath } from "@dashboard/products/urls";
 import { Card, TableBody, TableCell, TableFooter } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Checkbox from "@saleor/components/Checkbox";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import { TableButtonWrapper } from "@saleor/components/TableButtonWrapper/TableButtonWrapper";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableHead from "@saleor/components/TableHead";
-import { TablePaginationWithContext } from "@saleor/components/TablePagination";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { SaleDetailsFragment } from "@saleor/graphql";
 import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import { productVariantEditPath } from "@saleor/products/urls";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -27,7 +28,6 @@ export interface SaleVariantsProps extends ListProps, ListActions {
 }
 
 const numberOfColumns = 5;
-
 const DiscountVariants: React.FC<SaleVariantsProps> = props => {
   const {
     variants,
@@ -41,7 +41,6 @@ const DiscountVariants: React.FC<SaleVariantsProps> = props => {
     toolbar,
   } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
@@ -72,20 +71,14 @@ const DiscountVariants: React.FC<SaleVariantsProps> = props => {
         >
           <TableCell className={classes.colProductName}>
             <span className={variants?.length > 0 && classes.colNameLabel}>
-              <FormattedMessage
-                {...messages.discountVariantsTableProductHeader}
-              />
+              <FormattedMessage {...messages.discountVariantsTableProductHeader} />
             </span>
           </TableCell>
           <TableCell className={classes.colVariantName}>
-            <FormattedMessage
-              {...messages.discountVariantsTableVariantHeader}
-            />
+            <FormattedMessage {...messages.discountVariantsTableVariantHeader} />
           </TableCell>
           <TableCell className={classes.colType}>
-            <FormattedMessage
-              {...messages.discountVariantsTableProductHeader}
-            />
+            <FormattedMessage {...messages.discountVariantsTableProductHeader} />
           </TableCell>
           <TableCell className={classes.colActions} />
         </TableHead>
@@ -104,10 +97,7 @@ const DiscountVariants: React.FC<SaleVariantsProps> = props => {
                 <TableRowLink
                   hover={!!variant}
                   key={variant ? variant.id : "skeleton"}
-                  href={
-                    variant &&
-                    productVariantEditPath(variant.product.id, variant.id)
-                  }
+                  href={variant && productVariantEditPath(variant.product.id, variant.id)}
                   className={classes.tableRow}
                   selected={isSelected}
                 >
@@ -123,19 +113,13 @@ const DiscountVariants: React.FC<SaleVariantsProps> = props => {
                     className={classes.colProductName}
                     thumbnail={maybe(() => variant.product.thumbnail.url)}
                   >
-                    {maybe<React.ReactNode>(
-                      () => variant.product.name,
-                      <Skeleton />,
-                    )}
+                    {maybe<React.ReactNode>(() => variant.product.name, <Skeleton />)}
                   </TableCellAvatar>
                   <TableCell className={classes.colType}>
                     {maybe<React.ReactNode>(() => variant.name, <Skeleton />)}
                   </TableCell>
                   <TableCell className={classes.colType}>
-                    {maybe<React.ReactNode>(
-                      () => variant.product.productType.name,
-                      <Skeleton />,
-                    )}
+                    {maybe<React.ReactNode>(() => variant.product.productType.name, <Skeleton />)}
                   </TableCell>
                   <TableCell className={classes.colActions}>
                     <TableButtonWrapper>
@@ -167,5 +151,6 @@ const DiscountVariants: React.FC<SaleVariantsProps> = props => {
     </Card>
   );
 };
+
 DiscountVariants.displayName = "DiscountVariants";
 export default DiscountVariants;

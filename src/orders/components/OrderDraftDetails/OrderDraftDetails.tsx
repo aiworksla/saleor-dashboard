@@ -1,16 +1,17 @@
-import { Card, CardContent } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
 import {
   ChannelUsabilityDataQuery,
   OrderDetailsFragment,
   OrderErrorFragment,
   OrderLineInput,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
 import {
   OrderDiscountContext,
   OrderDiscountContextConsumerProps,
-} from "@saleor/products/components/OrderDiscountProviders/OrderDiscountProvider";
+} from "@dashboard/products/components/OrderDiscountProviders/OrderDiscountProvider";
+import { Card, CardContent } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -22,23 +23,26 @@ interface OrderDraftDetailsProps {
   order: OrderDetailsFragment;
   channelUsabilityData?: ChannelUsabilityDataQuery;
   errors: OrderErrorFragment[];
+  loading: boolean;
   onOrderLineAdd: () => void;
   onOrderLineChange: (id: string, data: OrderLineInput) => void;
   onOrderLineRemove: (id: string) => void;
   onShippingMethodEdit: () => void;
+  onShowMetadata: (id: string) => void;
 }
 
 const OrderDraftDetails: React.FC<OrderDraftDetailsProps> = ({
   order,
   channelUsabilityData,
   errors,
+  loading,
   onOrderLineAdd,
   onOrderLineChange,
   onOrderLineRemove,
   onShippingMethodEdit,
+  onShowMetadata,
 }) => {
   const intl = useIntl();
-
   const isChannelActive = order?.channel.isActive;
   const areProductsInChannel = !!channelUsabilityData?.products.totalCount;
 
@@ -53,16 +57,8 @@ const OrderDraftDetails: React.FC<OrderDraftDetailsProps> = ({
         toolbar={
           isChannelActive &&
           areProductsInChannel && (
-            <Button
-              variant="tertiary"
-              onClick={onOrderLineAdd}
-              data-test-id="add-products-button"
-            >
-              <FormattedMessage
-                id="C50ahv"
-                defaultMessage="Add products"
-                description="button"
-              />
+            <Button variant="tertiary" onClick={onOrderLineAdd} data-test-id="add-products-button">
+              <FormattedMessage id="C50ahv" defaultMessage="Add products" description="button" />
             </Button>
           )
         }
@@ -70,8 +66,10 @@ const OrderDraftDetails: React.FC<OrderDraftDetailsProps> = ({
       <OrderDraftDetailsProducts
         order={order}
         errors={errors}
+        loading={loading}
         onOrderLineChange={onOrderLineChange}
         onOrderLineRemove={onOrderLineRemove}
+        onShowMetadata={onShowMetadata}
       />
       {maybe(() => order.lines.length) !== 0 && (
         <CardContent>
@@ -90,5 +88,6 @@ const OrderDraftDetails: React.FC<OrderDraftDetailsProps> = ({
     </Card>
   );
 };
+
 OrderDraftDetails.displayName = "OrderDraftDetails";
 export default OrderDraftDetails;

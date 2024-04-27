@@ -1,22 +1,19 @@
-import { TableCell, TextField, Typography } from "@material-ui/core";
-import Skeleton from "@saleor/components/Skeleton";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { OrderFulfillLineFragment } from "@saleor/graphql";
-import { FormsetChange, FormsetData } from "@saleor/hooks/useFormset";
-import {
-  ChevronIcon,
-  IconButton,
-  Tooltip,
-  WarningIcon,
-} from "@saleor/macaw-ui";
+// @ts-strict-ignore
+import Skeleton from "@dashboard/components/Skeleton";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { OrderFulfillLineFragment } from "@dashboard/graphql";
+import { FormsetChange, FormsetData } from "@dashboard/hooks/useFormset";
 import {
   getAttributesCaption,
   getOrderLineAvailableQuantity,
   getWarehouseStock,
   OrderFulfillLineFormData,
-} from "@saleor/orders/utils/data";
-import classNames from "classnames";
+} from "@dashboard/orders/utils/data";
+import { TableCell, TextField, Typography } from "@material-ui/core";
+import { ChevronIcon, IconButton, WarningIcon } from "@saleor/macaw-ui";
+import { Box, Tooltip } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -32,31 +29,16 @@ interface OrderFulfillLineProps {
 }
 
 export const OrderFulfillLine: React.FC<OrderFulfillLineProps> = props => {
-  const {
-    line,
-    lineIndex,
-    formsetData,
-    formsetChange,
-    onWarehouseChange,
-  } = props;
+  const { line, lineIndex, formsetData, formsetChange, onWarehouseChange } = props;
   const classes = useStyles();
   const intl = useIntl();
-
   const isDeletedVariant = !line?.variant;
   const isPreorder = !!line.variant?.preorder;
-  const lineFormQuantity = isPreorder
-    ? 0
-    : formsetData[lineIndex]?.value?.[0]?.quantity;
+  const lineFormQuantity = isPreorder ? 0 : formsetData[lineIndex]?.value?.[0]?.quantity;
   const lineFormWarehouse = formsetData[lineIndex]?.value?.[0]?.warehouse;
-
   const overfulfill = lineFormQuantity > line.quantityToFulfill;
-
-  const warehouseStock = getWarehouseStock(
-    line?.variant?.stocks,
-    lineFormWarehouse?.id,
-  );
+  const warehouseStock = getWarehouseStock(line?.variant?.stocks, lineFormWarehouse?.id);
   const availableQuantity = getOrderLineAvailableQuantity(line, warehouseStock);
-
   const isStockExceeded = lineFormQuantity > availableQuantity;
 
   if (!line) {
@@ -88,21 +70,22 @@ export const OrderFulfillLine: React.FC<OrderFulfillLineProps> = props => {
         thumbnail={line?.thumbnail?.url}
         badge={
           isPreorder || !line?.variant ? (
-            <Tooltip
-              variant="warning"
-              title={intl.formatMessage(
-                isPreorder
-                  ? messages.preorderWarning
-                  : messages.deletedVariantWarning,
-              )}
-            >
-              <div className={classes.warningIcon}>
-                <WarningIcon />
-              </div>
+            <Tooltip>
+              <Tooltip.Trigger>
+                <div className={classes.warningIcon}>
+                  <WarningIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content side="bottom">
+                <Tooltip.Arrow />
+                <Box __maxWidth={350}>
+                  {intl.formatMessage(
+                    isPreorder ? messages.preorderWarning : messages.deletedVariantWarning,
+                  )}
+                </Box>
+              </Tooltip.Content>
             </Tooltip>
-          ) : (
-            undefined
-          )
+          ) : undefined
         }
       >
         {line.productName}
@@ -121,9 +104,8 @@ export const OrderFulfillLine: React.FC<OrderFulfillLineProps> = props => {
           <TextField
             type="number"
             inputProps={{
-              className: classNames(classes.quantityInnerInput, {
-                [classes.quantityInnerInputNoRemaining]: !line.variant
-                  ?.trackInventory,
+              className: clsx(classes.quantityInnerInput, {
+                [classes.quantityInnerInputNoRemaining]: !line.variant?.trackInventory,
               }),
               min: 0,
               style: { textAlign: "right" },
@@ -148,38 +130,35 @@ export const OrderFulfillLine: React.FC<OrderFulfillLineProps> = props => {
                   }),
               },
               endAdornment: (
-                <div className={classes.remainingQuantity}>
-                  / {line.quantityToFulfill}
-                </div>
+                <div className={classes.remainingQuantity}>/ {line.quantityToFulfill}</div>
               ),
             }}
           />
         </TableCell>
       )}
       <TableCell className={classes.colStock} key="total">
-        {lineFormWarehouse
-          ? isPreorder || isDeletedVariant
-            ? undefined
-            : availableQuantity
-          : "-"}
+        {lineFormWarehouse ? (isPreorder || isDeletedVariant ? undefined : availableQuantity) : "-"}
       </TableCell>
       <TableCell className={classes.colWarehouse}>
-        <IconButton
-          onClick={onWarehouseChange}
-          className={classes.warehouseButton}
-          data-test-id="select-warehouse-button"
-        >
-          <div className={classes.warehouseButtonContent}>
-            <Typography
-              color={lineFormWarehouse ? "textPrimary" : "textSecondary"}
-              className={classes.warehouseButtonContentText}
-            >
-              {lineFormWarehouse?.name ??
-                intl.formatMessage(messages.selectWarehouse)}
-            </Typography>
-            <ChevronIcon />
-          </div>
-        </IconButton>
+        {isPreorder ? (
+          "-"
+        ) : (
+          <IconButton
+            onClick={onWarehouseChange}
+            className={clsx(
+              classes.warehouseButton,
+              "MuiInputBase-root MuiOutlinedInput-root MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-adornedEnd MuiOutlinedInput-adornedEnd",
+            )}
+            data-test-id="select-warehouse-button"
+          >
+            <div className={classes.warehouseButtonContent}>
+              <Typography className={classes.warehouseButtonContentText}>
+                {lineFormWarehouse?.name ?? intl.formatMessage(messages.selectWarehouse)}
+              </Typography>
+              <ChevronIcon />
+            </div>
+          </IconButton>
+        )}
       </TableCell>
     </TableRowLink>
   );

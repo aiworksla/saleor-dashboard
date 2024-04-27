@@ -1,4 +1,4 @@
-import { Tooltip } from "@saleor/macaw-ui";
+import { Tooltip } from "@saleor/macaw-ui-next";
 import React from "react";
 
 import TableCellHeader, { TableCellHeaderProps } from "../TableCellHeader";
@@ -9,19 +9,33 @@ interface TooltipTableCellHeaderProps extends TableCellHeaderProps {
 
 export const TooltipTableCellHeader: React.FC<TooltipTableCellHeaderProps> = props => {
   const { children, tooltip, disabled, ...rest } = props;
-
   const tooltipDisabled = () => {
     if (!tooltip) {
       return true;
     }
+
     return !disabled;
   };
 
-  return (
-    <Tooltip title={tooltip} placement="top" disabled={tooltipDisabled()}>
+  if (tooltipDisabled()) {
+    return (
       <TableCellHeader disabled={disabled} {...rest}>
         {children}
       </TableCellHeader>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <Tooltip.Trigger>
+        <TableCellHeader disabled={disabled} {...rest}>
+          {children}
+        </TableCellHeader>
+      </Tooltip.Trigger>
+      <Tooltip.Content side="top">
+        <Tooltip.Arrow />
+        {tooltip}
+      </Tooltip.Content>
     </Tooltip>
   );
 };

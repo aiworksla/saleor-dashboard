@@ -1,12 +1,12 @@
-import MultiAutocompleteSelectField from "@saleor/components/MultiAutocompleteSelectField";
-import { SingleAutocompleteSelectFieldProps } from "@saleor/components/SingleAutocompleteSelectField";
-import { DEFAULT_INITIAL_SEARCH_DATA } from "@saleor/config";
-import { GiftCardBulkCreateFormError } from "@saleor/giftCards/GiftCardBulkCreateDialog/types";
-import { getGiftCardErrorMessage } from "@saleor/giftCards/GiftCardUpdate/messages";
-import { FormChange } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
-import useGiftCardTagsSearch from "@saleor/searches/useGiftCardTagsSearch";
-import { mapEdgesToItems, mapMultiValueNodeToChoice } from "@saleor/utils/maps";
+import MultiAutocompleteSelectField from "@dashboard/components/MultiAutocompleteSelectField";
+import { SingleAutocompleteSelectFieldProps } from "@dashboard/components/SingleAutocompleteSelectField";
+import { DEFAULT_INITIAL_SEARCH_DATA } from "@dashboard/config";
+import { GiftCardBulkCreateFormError } from "@dashboard/giftCards/GiftCardBulkCreateDialog/types";
+import { getGiftCardErrorMessage } from "@dashboard/giftCards/GiftCardUpdate/messages";
+import { FormChange } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
+import useGiftCardTagsSearch from "@dashboard/searches/useGiftCardTagsSearch";
+import { mapEdgesToItems, mapMultiValueNodeToChoice } from "@dashboard/utils/maps";
 import compact from "lodash/compact";
 import uniq from "lodash/uniq";
 import React from "react";
@@ -15,8 +15,7 @@ import { useIntl } from "react-intl";
 import { giftCardTagInputMessages as messages } from "./messages";
 import { getMultiChoices } from "./utils";
 
-interface GiftCardTagInputProps
-  extends Pick<SingleAutocompleteSelectFieldProps, "name"> {
+interface GiftCardTagInputProps extends Pick<SingleAutocompleteSelectFieldProps, "name"> {
   toggleChange: FormChange;
   values: string[];
   error: GiftCardBulkCreateFormError;
@@ -33,18 +32,13 @@ const GiftCardTagInput: React.FC<GiftCardTagInputProps> = ({
   loading,
 }) => {
   const intl = useIntl();
-
   const { loadMore, search, result } = useGiftCardTagsSearch({
     variables: DEFAULT_INITIAL_SEARCH_DATA,
   });
-
   const choices = mapMultiValueNodeToChoice(
-    uniq(
-      compact(mapEdgesToItems(result?.data?.search)?.map(({ name }) => name)),
-    ),
+    uniq(compact(mapEdgesToItems(result?.data?.search)?.map(({ name }) => name))),
     "tags",
   );
-
   const label = optional
     ? `${intl.formatMessage(messages.placeholder)} *${intl.formatMessage(
         commonMessages.optionalField,

@@ -1,6 +1,6 @@
 import { Typography } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 export interface Step<T> {
@@ -45,22 +45,17 @@ export interface CreatorStepsProps<T> {
 }
 
 function makeCreatorSteps<T extends string | number>() {
-  const CreatorSteps: React.FC<CreatorStepsProps<T>> = ({
-    currentStep,
-    steps,
-    onStepClick,
-  }) => {
+  const CreatorSteps: React.FC<CreatorStepsProps<T>> = ({ currentStep, steps, onStepClick }) => {
     const classes = useStyles({});
 
     return (
       <div className={classes.root}>
         {steps.map((step, stepIndex) => {
-          const visitedStep =
-            steps.findIndex(step => step.value === currentStep) >= stepIndex;
+          const visitedStep = steps.findIndex(step => step.value === currentStep) >= stepIndex;
 
           return (
             <div
-              className={classNames(classes.tab, {
+              className={clsx(classes.tab, {
                 [classes.tabActive]: step.value === currentStep,
                 [classes.tabVisited]: visitedStep,
               })}
@@ -76,6 +71,7 @@ function makeCreatorSteps<T extends string | number>() {
       </div>
     );
   };
+
   CreatorSteps.displayName = "CreatorSteps";
 
   return CreatorSteps;

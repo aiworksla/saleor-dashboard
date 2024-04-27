@@ -1,11 +1,21 @@
+// @ts-strict-ignore
+import { FetchResult } from "@apollo/client";
 import {
   ChannelData,
   ChannelPriceAndPreorderData,
   ChannelPriceArgs,
   ChannelPriceData,
-} from "@saleor/channels/utils";
-import { ProductChannelListingAddInput } from "@saleor/graphql";
-import { FormChange, UseFormResult } from "@saleor/hooks/useForm";
+} from "@dashboard/channels/utils";
+import {
+  ProductChannelListingAddInput,
+  ProductVariantFragment,
+  VariantMediaAssignMutation,
+  VariantMediaAssignMutationVariables,
+  VariantMediaUnassignMutation,
+  VariantMediaUnassignMutationVariables,
+} from "@dashboard/graphql";
+import { FormChange, UseFormResult } from "@dashboard/hooks/useForm";
+import { diff } from "fast-array-diff";
 import moment from "moment";
 
 export function createChannelsPriceChangeHandler(
@@ -15,13 +25,11 @@ export function createChannelsPriceChangeHandler(
 ) {
   return (id: string, priceData: ChannelPriceArgs) => {
     const { costPrice, price } = priceData;
-
     const updatedChannels = channelListings.map(channel =>
       channel.id === id ? { ...channel, costPrice, price } : channel,
     );
 
     updateChannels(updatedChannels);
-
     triggerChange();
   };
 }
@@ -31,13 +39,9 @@ export function createChannelsChangeHandler(
   updateChannels: (data: ChannelData[]) => void,
   triggerChange: () => void,
 ) {
-  return (
-    id: string,
-    data: Omit<ChannelData, "name" | "price" | "currency" | "id">,
-  ) => {
+  return (id: string, data: Omit<ChannelData, "name" | "price" | "currency" | "id">) => {
     const channelIndex = channelsData.findIndex(channel => channel.id === id);
     const channel = channelsData[channelIndex];
-
     const updatedChannels = [
       ...channelsData.slice(0, channelIndex),
       {
@@ -48,7 +52,6 @@ export function createChannelsChangeHandler(
     ];
 
     updateChannels(updatedChannels);
-
     triggerChange();
   };
 }
@@ -60,11 +63,8 @@ export function createVariantChannelsChangeHandler(
 ) {
   return (id: string, priceData: ChannelPriceArgs) => {
     const { costPrice, price } = priceData;
-    const channelIndex = channelListings.findIndex(
-      channel => channel.id === id,
-    );
+    const channelIndex = channelListings.findIndex(channel => channel.id === id);
     const channel = channelListings[channelIndex];
-
     const updatedChannels = [
       ...channelListings.slice(0, channelIndex),
       {
@@ -74,6 +74,7 @@ export function createVariantChannelsChangeHandler(
       },
       ...channelListings.slice(channelIndex + 1),
     ];
+
     setData(updatedChannels);
     triggerChange();
   };
@@ -85,6 +86,7 @@ export function createProductTypeSelectHandler(
 ): FormChange {
   return (event: React.ChangeEvent<any>) => {
     const id = event.target.value;
+
     setProductType(id);
     triggerChange();
   };
@@ -114,15 +116,11 @@ export const getAvailabilityVariables = (
       visibleInListings,
     } = channel;
     const isAvailable =
-      availableForPurchase && !isAvailableForPurchase
-        ? true
-        : isAvailableForPurchase;
+      availableForPurchase && !isAvailableForPurchase ? true : isAvailableForPurchase;
 
     return {
       availableForPurchaseDate:
-        isAvailableForPurchase || availableForPurchase === ""
-          ? null
-          : availableForPurchase,
+        isAvailableForPurchase || availableForPurchase === "" ? null : availableForPurchase,
       channelId: channel.id,
       isAvailableForPurchase: isAvailable,
       isPublished,
@@ -131,16 +129,73 @@ export const getAvailabilityVariables = (
     };
   });
 
-export const createPreorderEndDateChangeHandler = (
-  form: UseFormResult<{ preorderEndDateTime?: string }>,
-  triggerChange: () => void,
-  preorderPastDateErrorMessage: string,
-): FormChange => event => {
-  form.change(event);
-  if (moment(event.target.value).isSameOrBefore(Date.now())) {
-    form.setError("preorderEndDateTime", preorderPastDateErrorMessage);
-  } else {
-    form.clearErrors("preorderEndDateTime");
-  }
-  triggerChange();
+export const createPreorderEndDateChangeHandler =
+  (
+    form: UseFormResult<{ preorderEndDateTime?: string }>,
+    triggerChange: () => void,
+    preorderPastDateErrorMessage: string,
+  ): FormChange =>
+  event => {
+    form.change(event);
+
+    if (moment(event.target.value).isSameOrBefore(Date.now())) {
+      form.setError("preorderEndDateTime", preorderPastDateErrorMessage);
+    } else {
+      form.clearErrors("preorderEndDateTime");
+    }
+
+    triggerChange();
+  };
+
+export const createMediaChangeHandler =
+  (form: UseFormResult<{ media: string[] }>, triggerChange: () => void) => (ids: string[]) => {
+    form.change({
+      target: {
+        name: "media",
+        value: ids,
+      },
+    });
+    triggerChange();
+  };
+
+export const handleAssignMedia = async <T extends Pick<ProductVariantFragment, "id" | "media">>(
+  media: string[],
+  variant: T,
+  assignMedia: (
+    variables: VariantMediaAssignMutationVariables,
+  ) => Promise<FetchResult<VariantMediaAssignMutation>>,
+  unassignMedia: (
+    variables: VariantMediaUnassignMutationVariables,
+  ) => Promise<FetchResult<VariantMediaUnassignMutation>>,
+) => {
+  const { added, removed } = diff(
+    variant.media.map(mediaObj => mediaObj.id),
+    media,
+  );
+  const assignResults = await Promise.all(
+    added.map(mediaId =>
+      assignMedia({
+        mediaId,
+        variantId: variant.id,
+      }),
+    ),
+  );
+  const unassignResults = await Promise.all(
+    removed.map(mediaId =>
+      unassignMedia({
+        mediaId,
+        variantId: variant.id,
+      }),
+    ),
+  );
+  const assignErrors = assignResults.reduce(
+    (errors, result) => [...errors, ...(result.data?.variantMediaAssign.errors || [])],
+    [],
+  );
+  const unassignErrors = unassignResults.reduce(
+    (errors, result) => [...errors, ...(result.data?.variantMediaUnassign.errors || [])],
+    [],
+  );
+
+  return [...assignErrors, ...unassignErrors];
 };

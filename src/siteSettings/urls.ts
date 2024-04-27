@@ -1,4 +1,4 @@
-import { stringifyQs } from "@saleor/utils/urls";
+import { stringifyQs } from "@dashboard/utils/urls";
 
 import { Dialog } from "../types";
 
@@ -8,4 +8,4 @@ export const siteSettingsPath = siteSettingsSection;
 export type SiteSettingsUrlDialog = "add-key";
 export type SiteSettingsUrlQueryParams = Dialog<SiteSettingsUrlDialog>;
 export const siteSettingsUrl = (params?: SiteSettingsUrlQueryParams) =>
-  siteSettingsPath + "?" + stringifyQs(params);
+  `${siteSettingsPath}?${stringifyQs(params)}`;

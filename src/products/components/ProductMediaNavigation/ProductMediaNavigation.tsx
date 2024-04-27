@@ -1,8 +1,10 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import Skeleton from "@dashboard/components/Skeleton";
 import { Card, CardContent } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import Skeleton from "@saleor/components/Skeleton";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { vars } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 
@@ -13,7 +15,6 @@ const messages = defineMessages({
     description: "section header",
   },
 });
-
 const useStyles = makeStyles(
   theme => ({
     card: {
@@ -29,7 +30,7 @@ const useStyles = makeStyles(
       width: "100%",
     },
     imageContainer: {
-      border: "2px solid #eaeaea",
+      border: `2px solid ${vars.colors.border.default1}`,
       borderRadius: theme.spacing(),
       cursor: "pointer",
       height: 48,
@@ -76,24 +77,18 @@ const ProductMediaNavigation: React.FC<ProductMediaNavigationProps> = props => {
           <div className={classes.root}>
             {media.map(mediaObj => {
               const mediaObjOembedData = JSON.parse(mediaObj?.oembedData);
-              const mediaUrl =
-                mediaObjOembedData?.thumbnail_url || mediaObj.url;
+              const mediaUrl = mediaObjOembedData?.thumbnail_url || mediaObj.url;
 
               return (
                 <div
-                  className={classNames({
+                  className={clsx({
                     [classes.imageContainer]: true,
-                    [classes.highlightedImageContainer]:
-                      mediaObj.id === highlighted,
+                    [classes.highlightedImageContainer]: mediaObj.id === highlighted,
                   })}
                   onClick={onRowClick(mediaObj.id)}
                   key={mediaObj.id}
                 >
-                  <img
-                    className={classes.image}
-                    src={mediaUrl}
-                    alt={mediaObj.alt}
-                  />
+                  <img className={classes.image} src={mediaUrl} alt={mediaObj.alt} />
                 </div>
               );
             })}
@@ -103,5 +98,6 @@ const ProductMediaNavigation: React.FC<ProductMediaNavigationProps> = props => {
     </Card>
   );
 };
+
 ProductMediaNavigation.displayName = "ProductMediaNavigation";
 export default ProductMediaNavigation;

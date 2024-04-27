@@ -1,4 +1,16 @@
+// @ts-strict-ignore
 import { FetchResult } from "@apollo/client";
+import BackButton from "@dashboard/components/BackButton";
+import Checkbox from "@dashboard/components/Checkbox";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { SearchProductsQuery, ShippingPriceExcludeProductMutation } from "@dashboard/graphql";
+import useSearchQuery from "@dashboard/hooks/useSearchQuery";
+import { renderCollection } from "@dashboard/misc";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
 import {
   CircularProgress,
   Dialog,
@@ -9,21 +21,7 @@ import {
   TableCell,
   TextField,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import Checkbox from "@saleor/components/Checkbox";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableRowLink from "@saleor/components/TableRowLink";
-import {
-  SearchProductsQuery,
-  ShippingPriceExcludeProductMutation,
-} from "@saleor/graphql";
-import useSearchQuery from "@saleor/hooks/useSearchQuery";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { renderCollection } from "@saleor/misc";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
+import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -36,10 +34,6 @@ const useStyles = makeStyles(
     },
     colName: {
       paddingLeft: 0,
-    },
-    content: {
-      overflowY: "scroll",
-      height: 450,
     },
     searchBar: {
       marginBottom: theme.spacing(3),
@@ -70,32 +64,23 @@ export interface ShippingMethodProductsAddDialogProps extends FetchMoreProps {
   products: RelayToFlat<SearchProductsQuery["search"]>;
   onClose: () => void;
   onFetch: (query: string) => void;
-  onSubmit: (
-    ids: string[],
-  ) => Promise<FetchResult<ShippingPriceExcludeProductMutation>>;
+  onSubmit: (ids: string[]) => Promise<FetchResult<ShippingPriceExcludeProductMutation>>;
 }
 
 const handleProductAssign = (
   product: RelayToFlat<SearchProductsQuery["search"]>[0],
   isSelected: boolean,
   selectedProducts: RelayToFlat<SearchProductsQuery["search"]>,
-  setSelectedProducts: (
-    data: RelayToFlat<SearchProductsQuery["search"]>,
-  ) => void,
+  setSelectedProducts: (data: RelayToFlat<SearchProductsQuery["search"]>) => void,
 ) => {
   if (isSelected) {
     setSelectedProducts(
-      selectedProducts.filter(
-        selectedProduct => selectedProduct.id !== product.id,
-      ),
+      selectedProducts.filter(selectedProduct => selectedProduct.id !== product.id),
     );
   } else {
     setSelectedProducts([...selectedProducts, product]);
   }
 };
-
-const scrollableTargetId = "shippingMethodProductsAddScrollableDialog";
-
 const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogProps> = props => {
   const {
     confirmButtonState,
@@ -108,21 +93,18 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
     onClose,
     onSubmit,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
   const [query, onQueryChange, resetQuery] = useSearchQuery(onFetch);
   const [selectedProducts, setSelectedProducts] = React.useState<
     RelayToFlat<SearchProductsQuery["search"]>
   >([]);
-
   const handleSubmit = () => {
     onSubmit(selectedProducts.map(product => product.id)).then(() => {
       setSelectedProducts([]);
       resetQuery();
     });
   };
-
   const handleClose = () => {
     onClose();
     setSelectedProducts([]);
@@ -131,7 +113,7 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
 
   return (
     <Dialog onClose={handleClose} open={open} fullWidth maxWidth="sm">
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
           id="xZhxBJ"
           defaultMessage="Assign Products"
@@ -139,8 +121,9 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
         />
       </DialogTitle>
       <DialogContent>
-        <div className={classes.searchBar}>
+        <div data-test-id="assign-products-dialog-content" className={classes.searchBar}>
           <TextField
+            data-test-id="search-bar"
             name="query"
             value={query}
             onChange={onQueryChange}
@@ -159,9 +142,9 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
             }}
           />
         </div>
-        <div className={classes.content} id={scrollableTargetId}>
+        <div>
           <InfiniteScroll
-            dataLength={products?.length}
+            dataLength={products?.length ?? 0}
             next={onFetchMore}
             hasMore={hasMore}
             scrollThreshold="100px"
@@ -170,7 +153,7 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
                 <CircularProgress size={16} />
               </div>
             }
-            scrollableTarget={scrollableTargetId}
+            height={450}
           >
             <ResponsiveTable key="table">
               <TableBody>
@@ -180,15 +163,11 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
                     const isSelected = selectedProducts.some(
                       selectedProduct => selectedProduct.id === product.id,
                     );
+
                     return (
-                      <React.Fragment
-                        key={product ? product.id : `skeleton-${productIndex}`}
-                      >
-                        <TableRowLink>
-                          <TableCell
-                            padding="checkbox"
-                            className={classes.productCheckboxCell}
-                          >
+                      <React.Fragment key={product ? product.id : `skeleton-${productIndex}`}>
+                        <TableRowLink data-test-id="product-row">
+                          <TableCell padding="checkbox" className={classes.productCheckboxCell}>
                             {product && (
                               <Checkbox
                                 checked={isSelected}
@@ -234,6 +213,7 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
       <DialogActions>
         <BackButton onClick={handleClose} />
         <ConfirmButton
+          data-test-id="assign-and-save-button"
           transitionState={confirmButtonState}
           type="submit"
           disabled={loading || !selectedProducts?.length}
@@ -249,5 +229,6 @@ const ShippingMethodProductsAddDialog: React.FC<ShippingMethodProductsAddDialogP
     </Dialog>
   );
 };
+
 ShippingMethodProductsAddDialog.displayName = "ShippingMethodProductsAddDialog";
 export default ShippingMethodProductsAddDialog;

@@ -1,36 +1,26 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import CompanyAddressForm from "@saleor/components/CompanyAddressInput/CompanyAddressForm";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import Hr from "@saleor/components/Hr";
-import { AddressTypeInput } from "@saleor/customers/types";
-import {
-  CountryWithCodeFragment,
-  WarehouseErrorFragment,
-} from "@saleor/graphql";
-import useAddressValidation from "@saleor/hooks/useAddressValidation";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import useModalDialogOpen from "@saleor/hooks/useModalDialogOpen";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { DialogProps } from "@saleor/types";
-import createSingleAutocompleteSelectHandler from "@saleor/utils/handlers/singleAutocompleteSelectChangeHandler";
-import { mapCountriesToChoices } from "@saleor/utils/maps";
+import BackButton from "@dashboard/components/BackButton";
+import CompanyAddressForm from "@dashboard/components/CompanyAddressInput/CompanyAddressForm";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import Hr from "@dashboard/components/Hr";
+import { AddressTypeInput } from "@dashboard/customers/types";
+import { CountryWithCodeFragment, WarehouseErrorFragment } from "@dashboard/graphql";
+import useAddressValidation from "@dashboard/hooks/useAddressValidation";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import useModalDialogOpen from "@dashboard/hooks/useModalDialogOpen";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { buttonMessages } from "@dashboard/intl";
+import { DialogProps } from "@dashboard/types";
+import createSingleAutocompleteSelectHandler from "@dashboard/utils/handlers/singleAutocompleteSelectChangeHandler";
+import { mapCountriesToChoices } from "@dashboard/utils/maps";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
+import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-export interface ShippingZoneAddWarehouseDialogSubmitData
-  extends AddressTypeInput {
+export interface ShippingZoneAddWarehouseDialogSubmitData extends AddressTypeInput {
   name: string;
 }
 export interface ShippingZoneAddWarehouseDialogProps extends DialogProps {
@@ -55,7 +45,6 @@ const initialForm: ShippingZoneAddWarehouseDialogSubmitData = {
   streetAddress1: "",
   streetAddress2: "",
 };
-
 const useStyles = makeStyles(
   {
     overflow: {
@@ -66,7 +55,6 @@ const useStyles = makeStyles(
     name: "ShippingZoneAddWarehouseDialog",
   },
 );
-
 const ShippingZoneAddWarehouseDialog: React.FC<ShippingZoneAddWarehouseDialogProps> = ({
   confirmButtonState,
   countries,
@@ -78,17 +66,12 @@ const ShippingZoneAddWarehouseDialog: React.FC<ShippingZoneAddWarehouseDialogPro
 }) => {
   const classes = useStyles({});
   const [countryDisplayName, setCountryDisplayName] = useStateFromProps("");
-  const {
-    errors: validationErrors,
-    submit: handleSubmit,
-  } = useAddressValidation(onSubmit);
-  const errors = useModalDialogErrors(
-    [...apiErrors, ...validationErrors],
-    open,
-  );
-  useModalDialogOpen(open, {});
-  const intl = useIntl();
+  const { errors: validationErrors, submit: handleSubmit } = useAddressValidation(onSubmit);
+  const errors = useModalDialogErrors([...apiErrors, ...validationErrors], open);
 
+  useModalDialogOpen(open, {});
+
+  const intl = useIntl();
   const countryChoices = mapCountriesToChoices(countries);
 
   return (
@@ -99,7 +82,7 @@ const ShippingZoneAddWarehouseDialog: React.FC<ShippingZoneAddWarehouseDialogPro
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
           id="yzYXW/"
           defaultMessage="Create New Warehouse"
@@ -142,10 +125,7 @@ const ShippingZoneAddWarehouseDialog: React.FC<ShippingZoneAddWarehouseDialogPro
               </DialogContent>
               <DialogActions>
                 <BackButton onClick={onClose} />
-                <ConfirmButton
-                  transitionState={confirmButtonState}
-                  type="submit"
-                >
+                <ConfirmButton transitionState={confirmButtonState} type="submit">
                   <FormattedMessage {...buttonMessages.create} />
                 </ConfirmButton>
               </DialogActions>

@@ -1,4 +1,4 @@
-import { ChannelData } from "@saleor/channels/utils";
+import { ChannelData } from "@dashboard/channels/utils";
 import { act, renderHook } from "@testing-library/react-hooks";
 
 import useChannels from "./useChannels";
@@ -27,7 +27,7 @@ describe("useChannels", () => {
           closeModal: jest.fn,
           openModal: jest.fn,
         },
-        { formId: Symbol() },
+        { formId: Symbol("channel-test-form-id") },
       ),
     );
 
@@ -35,11 +35,9 @@ describe("useChannels", () => {
     act(() => {
       result.current.channelsToggle(channels[0]);
     });
-
     act(() => {
       result.current.handleChannelsConfirm();
     });
-
     // Then
     expect(result.current.currentChannels).toStrictEqual([channels[1]]);
     expect(result.current.currentChannels[0].id).toBe(channels[1].id);
@@ -54,7 +52,7 @@ describe("useChannels", () => {
           closeModal: jest.fn,
           openModal: jest.fn,
         },
-        { formId: Symbol() },
+        { formId: Symbol("channel-test-form-id") },
       ),
     );
 
@@ -62,19 +60,15 @@ describe("useChannels", () => {
     act(() => {
       result.current.channelsToggle(channels[0]);
     });
-
     act(() => {
       result.current.channelsToggle(channels[1]);
     });
-
     act(() => {
       result.current.handleChannelsConfirm();
     });
-
     // Then
     expect(result.current.currentChannels).toStrictEqual([]);
   });
-
   it("doesn't not save changes if closed without confirm", () => {
     // Given
     const { result } = renderHook(() =>
@@ -85,7 +79,7 @@ describe("useChannels", () => {
           closeModal: jest.fn,
           openModal: jest.fn,
         },
-        { formId: Symbol() },
+        { formId: Symbol("channel-test-form-id") },
       ),
     );
 
@@ -93,11 +87,9 @@ describe("useChannels", () => {
     act(() => {
       result.current.channelsToggle(channels[0]);
     });
-
     act(() => {
       result.current.handleChannelsModalClose();
     });
-
     // Then
     expect(result.current.currentChannels).toStrictEqual(channels);
   });

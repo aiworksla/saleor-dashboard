@@ -1,17 +1,18 @@
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { useChannelsSearch } from "@dashboard/components/ChannelsAvailabilityDialog/utils";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import { IMessage } from "@dashboard/components/messages";
+import SingleAutocompleteSelectField from "@dashboard/components/SingleAutocompleteSelectField";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import { useChannelsQuery, useGiftCardResendMutation } from "@dashboard/graphql";
+import useForm from "@dashboard/hooks/useForm";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { getBySlug } from "@dashboard/misc";
+import { DialogProps } from "@dashboard/types";
+import commonErrorMessages from "@dashboard/utils/errors/common";
+import { mapSlugNodeToChoice } from "@dashboard/utils/maps";
 import { CircularProgress, TextField, Typography } from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { useChannelsSearch } from "@saleor/components/ChannelsAvailabilityDialog/utils";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import { IMessage } from "@saleor/components/messages";
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import { useChannelsQuery, useGiftCardResendMutation } from "@saleor/graphql";
-import useForm from "@saleor/hooks/useForm";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { getBySlug } from "@saleor/misc";
-import { DialogProps } from "@saleor/types";
-import commonErrorMessages from "@saleor/utils/errors/common";
-import { mapSlugNodeToChoice } from "@saleor/utils/maps";
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 
@@ -32,39 +33,27 @@ const GiftCardResendCodeDialog: React.FC<DialogProps> = ({ open, onClose }) => {
   const notify = useNotifier();
   const classes = useStyles();
   const progressClasses = useProgressStyles();
-
   const {
     giftCard: { boughtInChannel: initialChannelSlug },
   } = useGiftCardDetails();
-
   const [consentSelected, setConsentSelected] = useState(false);
-
   const { data: channelsData, loading: loadingChannels } = useChannelsQuery({});
-
   const channels = channelsData?.channels;
-
   const activeChannels = channels?.filter(({ isActive }) => isActive);
-
   const { onQueryChange, filteredChannels } = useChannelsSearch(activeChannels);
-
   const initialFormData: GiftCardResendCodeFormData = {
     email: "",
     channelSlug: initialChannelSlug || "",
   };
-
   const {
     giftCard: { id },
   } = useGiftCardDetails();
-
-  const handleSubmit = async ({
-    email,
-    channelSlug,
-  }: GiftCardResendCodeFormData) => {
+  const handleSubmit = async ({ email, channelSlug }: GiftCardResendCodeFormData) => {
     const result = await resendGiftCardCode({
       variables: {
         input: {
           id,
-          email: email ? email : null,
+          email: email || null,
           channel: channelSlug,
         },
       },
@@ -72,20 +61,11 @@ const GiftCardResendCodeDialog: React.FC<DialogProps> = ({ open, onClose }) => {
 
     return result?.data?.giftCardResend?.errors;
   };
-
-  const { data, change, submit, reset } = useForm(
-    initialFormData,
-    handleSubmit,
-  );
-
-  const [
-    resendGiftCardCode,
-    resendGiftCardCodeOpts,
-  ] = useGiftCardResendMutation({
+  const { data, change, submit, reset } = useForm(initialFormData, handleSubmit);
+  const [resendGiftCardCode, resendGiftCardCodeOpts] = useGiftCardResendMutation({
     onCompleted: data => {
       const errors = data?.giftCardResend?.errors;
-
-      const notifierData: IMessage = !!errors?.length
+      const notifierData: IMessage = errors?.length
         ? {
             status: "error",
             text: intl.formatMessage(commonErrorMessages.unknownError),
@@ -103,9 +83,7 @@ const GiftCardResendCodeDialog: React.FC<DialogProps> = ({ open, onClose }) => {
       }
     },
   });
-
   const { loading, status, data: submitData } = resendGiftCardCodeOpts;
-
   const { formErrors } = useDialogFormReset({
     open,
     reset,
@@ -148,8 +126,8 @@ const GiftCardResendCodeDialog: React.FC<DialogProps> = ({ open, onClose }) => {
             name="differentMailConsent"
             label={intl.formatMessage(messages.consentCheckboxLabel)}
             checked={consentSelected}
-            onChange={(event: React.ChangeEvent<any>) =>
-              setConsentSelected(event.target.value)
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setConsentSelected(!!event.target.value)
             }
           />
           <VerticalSpacer />

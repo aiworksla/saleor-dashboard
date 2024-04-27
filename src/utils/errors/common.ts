@@ -1,4 +1,4 @@
-import { commonMessages } from "@saleor/intl";
+import { commonMessages } from "@dashboard/intl";
 import { defineMessages, IntlShape } from "react-intl";
 
 const commonErrorMessages = defineMessages({
@@ -16,17 +16,24 @@ const commonErrorMessages = defineMessages({
   },
 });
 
-type CommonErrorCode = "GRAPHQL_ERROR" | "INVALID" | "REQUIRED";
+export const CommonErrorCode = {
+  GRAPHQL_ERROR: "GRAPHQL_ERROR",
+  INVALID: "INVALID",
+  REQUIRED: "REQUIRED",
+} as const;
 
-interface CommonError<ErrorCode> {
-  code: ErrorCode | CommonErrorCode;
-  field?: string | null;
+export type CommonErrorCode = (typeof CommonErrorCode)[keyof typeof CommonErrorCode];
+
+export interface CommonError<ErrorCode> {
+  code?: ErrorCode | CommonErrorCode;
+  field: string | null;
+  message?: string | null;
 }
 
 export function getCommonFormFieldErrorMessage<ErrorCode>(
   error: CommonError<ErrorCode> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (error) {
     switch (error.code) {
       case "GRAPHQL_ERROR":

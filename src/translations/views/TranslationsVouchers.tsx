@@ -1,13 +1,14 @@
+// @ts-strict-ignore
 import {
   LanguageCodeEnum,
   useUpdateVoucherTranslationsMutation,
   useVoucherTranslationDetailsQuery,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages } from "@saleor/intl";
-import { stringifyQs } from "@saleor/utils/urls";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages } from "@dashboard/intl";
+import { stringifyQs } from "@dashboard/utils/urls";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -34,15 +35,10 @@ const TranslationsVouchers: React.FC<TranslationsVouchersProps> = ({
   const notify = useNotifier();
   const shop = useShop();
   const intl = useIntl();
-
   const voucherTranslations = useVoucherTranslationDetailsQuery({
     variables: { id, language: languageCode },
   });
-
-  const [
-    updateTranslations,
-    updateTranslationsOpts,
-  ] = useUpdateVoucherTranslationsMutation({
+  const [updateTranslations, updateTranslationsOpts] = useUpdateVoucherTranslationsMutation({
     onCompleted: data => {
       if (data.voucherTranslate.errors.length === 0) {
         voucherTranslations.refetch();
@@ -54,7 +50,6 @@ const TranslationsVouchers: React.FC<TranslationsVouchersProps> = ({
       }
     },
   });
-
   const onEdit = (field: string) =>
     navigate(
       "?" +
@@ -63,11 +58,9 @@ const TranslationsVouchers: React.FC<TranslationsVouchersProps> = ({
         }),
       { replace: true },
     );
-
   const onDiscard = () => {
     navigate("?", { replace: true });
   };
-
   const handleSubmit = (
     { name: fieldName }: TranslationField<TranslationInputFieldName>,
     data: string,
@@ -84,7 +77,6 @@ const TranslationsVouchers: React.FC<TranslationsVouchersProps> = ({
         },
       }),
     );
-
   const translation = voucherTranslations?.data?.translation;
 
   return (
@@ -98,13 +90,10 @@ const TranslationsVouchers: React.FC<TranslationsVouchersProps> = ({
       onEdit={onEdit}
       onDiscard={onDiscard}
       onSubmit={handleSubmit}
-      data={
-        translation?.__typename === "VoucherTranslatableContent"
-          ? translation
-          : null
-      }
+      data={translation?.__typename === "VoucherTranslatableContent" ? translation : null}
     />
   );
 };
+
 TranslationsVouchers.displayName = "TranslationsVouchers";
 export default TranslationsVouchers;

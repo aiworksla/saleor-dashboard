@@ -1,18 +1,15 @@
+import GiftCardListPageDeleteDialog from "@dashboard/giftCards/components/GiftCardDeleteDialog/GiftCardListPageDeleteDialog";
+import GiftCardBulkCreateDialog from "@dashboard/giftCards/GiftCardBulkCreateDialog";
+import GiftCardCreateDialogContent from "@dashboard/giftCards/GiftCardCreateDialog";
+import GiftCardExportDialogContent from "@dashboard/giftCards/GiftCardExportDialogContent";
+import { giftCardListUrl } from "@dashboard/giftCards/urls";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
 import { Dialog } from "@material-ui/core";
-import GiftCardListPageDeleteDialog from "@saleor/giftCards/components/GiftCardDeleteDialog/GiftCardListPageDeleteDialog";
-import GiftCardBulkCreateDialog from "@saleor/giftCards/GiftCardBulkCreateDialog";
-import GiftCardCreateDialogContent from "@saleor/giftCards/GiftCardCreateDialog";
-import GiftCardExportDialogContent from "@saleor/giftCards/GiftCardExportDialogContent";
-import { giftCardListUrl } from "@saleor/giftCards/urls";
-import useNavigator from "@saleor/hooks/useNavigator";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
 import React, { createContext, useContext } from "react";
 
 import { GIFT_CARD_LIST_QUERY } from "../../queries";
-import {
-  GiftCardListActionParamsEnum,
-  GiftCardListUrlQueryParams,
-} from "../../types";
+import { GiftCardListActionParamsEnum, GiftCardListUrlQueryParams } from "../../types";
 
 interface GiftCardListDialogsProviderProps {
   children: React.ReactNode;
@@ -30,44 +27,38 @@ export interface GiftCardListDialogsConsumerProps {
   id: string;
 }
 
-export const GiftCardListDialogsContext = createContext<
-  GiftCardListDialogsConsumerProps
->(null);
+export const GiftCardListDialogsContext = createContext<GiftCardListDialogsConsumerProps | null>(
+  null,
+);
 
-export const useGiftCardListDialogs = () =>
-  useContext(GiftCardListDialogsContext);
+export const useGiftCardListDialogs = () => {
+  const context = useContext(GiftCardListDialogsContext);
+
+  if (!context) {
+    throw new Error("You are trying to use GiftCardListDialogsContext outside of its provider");
+  }
+
+  return context;
+};
 
 const GiftCardListDialogsProvider: React.FC<GiftCardListDialogsProviderProps> = ({
   children,
   params,
 }) => {
   const navigate = useNavigator();
-
   const id = params?.id;
-
   const { CREATE, DELETE, EXPORT, BULK_CREATE } = GiftCardListActionParamsEnum;
-
   const [openDialog, onClose] = createDialogActionHandlers<
     GiftCardListActionParamsEnum,
     GiftCardListUrlQueryParams
   >(navigate, giftCardListUrl, params);
-
-  const handleOpenDialog = (type: GiftCardListActionParamsEnum) => () =>
-    openDialog(type);
-
-  const isDialogOpen = (type: GiftCardListActionParamsEnum) =>
-    params?.action === type;
-
-  const handleDeleteDialogOpen = (id?: string) => {
-    openDialog(DELETE, id ? { id } : undefined);
+  const handleOpenDialog = (type: GiftCardListActionParamsEnum) => () => openDialog(type);
+  const isDialogOpen = (type: GiftCardListActionParamsEnum) => params?.action === type;
+  const handleDeleteDialogOpen = () => {
+    openDialog(DELETE);
   };
-
-  const openSearchDeleteDialog = () =>
-    openDialog(GiftCardListActionParamsEnum.DELETE_SEARCH);
-
-  const openSearchSaveDialog = () =>
-    openDialog(GiftCardListActionParamsEnum.SAVE_SEARCH);
-
+  const openSearchDeleteDialog = () => openDialog(GiftCardListActionParamsEnum.DELETE_SEARCH);
+  const openSearchSaveDialog = () => openDialog(GiftCardListActionParamsEnum.SAVE_SEARCH);
   const providerValues: GiftCardListDialogsConsumerProps = {
     openCreateDialog: handleOpenDialog(CREATE),
     openExportDialog: handleOpenDialog(EXPORT),
@@ -76,39 +67,20 @@ const GiftCardListDialogsProvider: React.FC<GiftCardListDialogsProviderProps> = 
     openSearchSaveDialog,
     openSearchDeleteDialog,
     onClose,
-    id,
+    id: id ?? "",
   };
 
   return (
     <GiftCardListDialogsContext.Provider value={providerValues}>
       {children}
-      <Dialog
-        open={isDialogOpen(CREATE)}
-        maxWidth="sm"
-        onClose={onClose}
-        fullWidth
-      >
-        <GiftCardCreateDialogContent
-          onClose={onClose}
-          refetchQueries={[GIFT_CARD_LIST_QUERY]}
-        />
+      <Dialog open={isDialogOpen(CREATE)} maxWidth="sm" onClose={onClose} fullWidth>
+        <GiftCardCreateDialogContent onClose={onClose} refetchQueries={[GIFT_CARD_LIST_QUERY]} />
       </Dialog>
-      <GiftCardListPageDeleteDialog
-        open={isDialogOpen(DELETE)}
-        onClose={onClose}
-      />
-      <Dialog
-        open={isDialogOpen(EXPORT)}
-        maxWidth="sm"
-        onClose={onClose}
-        fullWidth
-      >
+      <GiftCardListPageDeleteDialog open={isDialogOpen(DELETE)} onClose={onClose} />
+      <Dialog open={isDialogOpen(EXPORT)} maxWidth="sm" onClose={onClose} fullWidth>
         <GiftCardExportDialogContent onClose={onClose} />
       </Dialog>
-      <GiftCardBulkCreateDialog
-        open={isDialogOpen(BULK_CREATE)}
-        onClose={onClose}
-      />
+      <GiftCardBulkCreateDialog open={isDialogOpen(BULK_CREATE)} onClose={onClose} />
     </GiftCardListDialogsContext.Provider>
   );
 };

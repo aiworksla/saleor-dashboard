@@ -1,16 +1,12 @@
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Button } from "@dashboard/components/Button";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import SearchBar from "@dashboard/components/SearchBar";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { PageTypeFragment } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { pageTypeAddUrl, PageTypeListUrlSortField } from "@dashboard/pageTypes/urls";
 import { Card } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import PageHeader from "@saleor/components/PageHeader";
-import SearchBar from "@saleor/components/SearchBar";
-import { configurationMenuUrl } from "@saleor/configuration";
-import { PageTypeFragment } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import {
-  pageTypeAddUrl,
-  PageTypeListUrlSortField,
-} from "@saleor/pageTypes/urls";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -44,24 +40,14 @@ const PageTypeListPage: React.FC<PageTypeListPageProps> = ({
   ...listProps
 }) => {
   const intl = useIntl();
+
   return (
-    <Container>
-      <Backlink href={configurationMenuUrl}>
-        {intl.formatMessage(sectionNames.configuration)}
-      </Backlink>
-      <PageHeader title={intl.formatMessage(sectionNames.pageTypes)}>
-        <Button
-          variant="primary"
-          href={pageTypeAddUrl}
-          data-test-id="create-page-type"
-        >
-          <FormattedMessage
-            id="6JlXeD"
-            defaultMessage="Create page type"
-            description="button"
-          />
+    <ListPageLayout>
+      <TopNav href={configurationMenuUrl} title={intl.formatMessage(sectionNames.pageTypes)}>
+        <Button variant="primary" href={pageTypeAddUrl} data-test-id="create-page-type">
+          <FormattedMessage id="6JlXeD" defaultMessage="Create page type" description="button" />
         </Button>
-      </PageHeader>
+      </TopNav>
       <Card>
         <SearchBar
           allTabLabel={intl.formatMessage({
@@ -84,8 +70,9 @@ const PageTypeListPage: React.FC<PageTypeListPageProps> = ({
         />
         <PageTypeList {...listProps} />
       </Card>
-    </Container>
+    </ListPageLayout>
   );
 };
+
 PageTypeListPage.displayName = "PageTypeListPage";
 export default PageTypeListPage;

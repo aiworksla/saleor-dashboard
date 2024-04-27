@@ -1,7 +1,7 @@
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { LanguageFragment } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
 import { OutputData } from "@editorjs/editorjs";
-import { LanguageFragment } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 
 export enum TranslationInputFieldName {
   description = "description",
@@ -19,12 +19,20 @@ export enum PageTranslationInputFieldName {
   richText = "richText",
 }
 
+export const TranslationFieldType = {
+  SHORT: "short",
+  LONG: "long",
+  RICH: "rich",
+} as const;
+
+export type TranslationFieldType = (typeof TranslationFieldType)[keyof typeof TranslationFieldType];
+
 export interface TranslationField<T extends string = string> {
   id?: string;
   displayName: string;
   name: T;
   translation: string;
-  type: "short" | "long" | "rich";
+  type: TranslationFieldType;
   value: string;
 }
 
@@ -37,8 +45,5 @@ export interface TranslationsEntitiesPageProps {
   saveButtonState: ConfirmButtonTransitionState;
   onEdit: (field: string) => void;
   onDiscard: () => void;
-  onSubmit: (
-    field: TranslationField,
-    data: string | OutputData,
-  ) => SubmitPromise<any[]>;
+  onSubmit: (field: TranslationField, data: string | OutputData) => SubmitPromise<any[]>;
 }

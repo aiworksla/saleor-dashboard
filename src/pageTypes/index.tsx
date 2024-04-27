@@ -1,5 +1,5 @@
-import { sectionNames } from "@saleor/intl";
-import { asSortParams } from "@saleor/utils/sort";
+import { sectionNames } from "@dashboard/intl";
+import { asSortParams } from "@dashboard/utils/sort";
 import { parse as parseQs } from "qs";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -19,29 +19,21 @@ import PageTypeDetailsComponent from "./views/PageTypeDetails";
 import PageTypeListComponent from "./views/PageTypeList";
 
 const PageTypeList: React.FC<RouteComponentProps<{}>> = ({ location }) => {
-  const qs = parseQs(location.search.substr(1));
-  const params: PageTypeListUrlQueryParams = asSortParams(
-    qs,
-    PageTypeListUrlSortField,
-  );
+  const qs = parseQs(location.search.substr(1)) as any;
+  const params: PageTypeListUrlQueryParams = asSortParams(qs, PageTypeListUrlSortField);
+
   return <PageTypeListComponent params={params} />;
 };
 
 interface PageTypeDetailsRouteParams {
   id: string;
 }
-const PageTypeDetails: React.FC<RouteComponentProps<
-  PageTypeDetailsRouteParams
->> = ({ match }) => {
+
+const PageTypeDetails: React.FC<RouteComponentProps<PageTypeDetailsRouteParams>> = ({ match }) => {
   const qs = parseQs(location.search.substr(1));
   const params: PageTypeUrlQueryParams = qs;
 
-  return (
-    <PageTypeDetailsComponent
-      id={decodeURIComponent(match.params.id)}
-      params={params}
-    />
-  );
+  return <PageTypeDetailsComponent id={decodeURIComponent(match.params.id)} params={params} />;
 };
 
 export const PageTypeRouter: React.FC = () => {

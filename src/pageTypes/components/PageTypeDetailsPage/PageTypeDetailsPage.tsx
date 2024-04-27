@@ -1,26 +1,24 @@
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import Grid from "@dashboard/components/Grid";
+import Hr from "@dashboard/components/Hr";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata";
+import { MetadataFormData } from "@dashboard/components/Metadata/types";
+import Savebar from "@dashboard/components/Savebar";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { AttributeTypeEnum, PageErrorFragment, PageTypeDetailsFragment } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { commonMessages } from "@dashboard/intl";
+import { pageTypeListUrl } from "@dashboard/pageTypes/urls";
+import { ListActions, ReorderEvent } from "@dashboard/types";
+import { mapMetadataItemToInput } from "@dashboard/utils/maps";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
 import { Typography } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import Hr from "@saleor/components/Hr";
-import Metadata from "@saleor/components/Metadata/Metadata";
-import { MetadataFormData } from "@saleor/components/Metadata/types";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
-import {
-  AttributeTypeEnum,
-  PageErrorFragment,
-  PageTypeDetailsFragment,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { commonMessages, sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { pageTypeListUrl } from "@saleor/pageTypes/urls";
-import { ListActions, ReorderEvent } from "@saleor/types";
-import { mapMetadataItemToInput } from "@saleor/utils/maps";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
+import { makeStyles } from "@saleor/macaw-ui";
+import { Box, sprinkles } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -57,7 +55,6 @@ const useStyles = makeStyles(
     name: "PageTypeDetailsPage",
   },
 );
-
 const PageTypeDetailsPage: React.FC<PageTypeDetailsPageProps> = props => {
   const {
     disabled,
@@ -75,13 +72,11 @@ const PageTypeDetailsPage: React.FC<PageTypeDetailsPageProps> = props => {
   const classes = useStyles(props);
   const intl = useIntl();
   const navigate = useNavigator();
-
   const {
     isMetadataModified,
     isPrivateMetadataModified,
     makeChangeHandler: makeMetadataChangeHandler,
   } = useMetadataChangeTrigger();
-
   const formInitialData: PageTypeForm = {
     attributes:
       pageType?.attributes?.map(attribute => ({
@@ -92,12 +87,9 @@ const PageTypeDetailsPage: React.FC<PageTypeDetailsPageProps> = props => {
     name: pageType?.name || "",
     privateMetadata: pageType?.privateMetadata?.map(mapMetadataItemToInput),
   };
-
   const handleSubmit = (data: PageTypeForm) => {
     const metadata = isMetadataModified ? data.metadata : undefined;
-    const privateMetadata = isPrivateMetadataModified
-      ? data.privateMetadata
-      : undefined;
+    const privateMetadata = isPrivateMetadataModified ? data.privateMetadata : undefined;
 
     onSubmit({
       ...data,
@@ -107,78 +99,77 @@ const PageTypeDetailsPage: React.FC<PageTypeDetailsPageProps> = props => {
   };
 
   return (
-    <Form
-      confirmLeave
-      initial={formInitialData}
-      onSubmit={handleSubmit}
-      disabled={disabled}
-    >
+    <Form confirmLeave initial={formInitialData} onSubmit={handleSubmit} disabled={disabled}>
       {({ change, data, isSaveDisabled, submit }) => {
         const changeMetadata = makeMetadataChangeHandler(change);
 
         return (
-          <Container>
-            <Backlink href={pageTypeListUrl()}>
-              {intl.formatMessage(sectionNames.pageTypes)}
-            </Backlink>
-            <PageHeader title={pageTitle} />
-            <Grid variant="inverted">
-              <div>
-                <Typography>
-                  {intl.formatMessage(commonMessages.generalInformations)}
-                </Typography>
-                <Typography variant="body2">
-                  <FormattedMessage
-                    id="kZfIl/"
-                    defaultMessage="These are general information about this Content Type."
-                  />
-                </Typography>
-              </div>
-              <PageTypeDetails
-                data={data}
-                disabled={disabled}
-                errors={errors}
-                onChange={change}
-              />
-              <Hr className={classes.hr} />
-              <div>
-                <Typography>
-                  <FormattedMessage
-                    id="iQxjow"
-                    defaultMessage="Content Attributes"
-                    description="section header"
-                  />
-                </Typography>
-                <Typography variant="body2">
-                  <FormattedMessage
-                    id="lct0qd"
-                    defaultMessage="This list shows all attributes that will be assigned to pages that have this page type assigned."
-                  />
-                </Typography>
-              </div>
-              <PageTypeAttributes
-                attributes={pageType?.attributes}
-                disabled={disabled}
-                type={AttributeTypeEnum.PAGE_TYPE}
-                onAttributeAssign={onAttributeAdd}
-                onAttributeReorder={(event: ReorderEvent) =>
-                  onAttributeReorder(event, AttributeTypeEnum.PAGE_TYPE)
-                }
-                onAttributeUnassign={onAttributeUnassign}
-                {...attributeList}
-              />
-              <Hr className={classes.hr} />
-              <div>
-                <Typography>
-                  <FormattedMessage
-                    id="OVOU1z"
-                    defaultMessage="Metadata"
-                    description="section header"
-                  />
-                </Typography>
-              </div>
-              <Metadata data={data} onChange={changeMetadata} />
-            </Grid>
+          <DetailPageLayout gridTemplateColumns={1}>
+            <TopNav href={pageTypeListUrl()} title={pageTitle} />
+            <DetailPageLayout.Content>
+              <Grid
+                variant="inverted"
+                className={sprinkles({
+                  paddingLeft: 9,
+                  height: "100vh",
+                  margin: "auto",
+                })}
+              >
+                <Box paddingTop={6}>
+                  <Typography>{intl.formatMessage(commonMessages.generalInformations)}</Typography>
+                  <Typography variant="body2">
+                    <FormattedMessage
+                      id="kZfIl/"
+                      defaultMessage="These are general information about this Content Type."
+                    />
+                  </Typography>
+                </Box>
+                <PageTypeDetails
+                  data={data}
+                  disabled={disabled}
+                  errors={errors}
+                  onChange={change}
+                />
+                <Hr className={classes.hr} />
+                <div>
+                  <Typography>
+                    <FormattedMessage
+                      id="iQxjow"
+                      defaultMessage="Content Attributes"
+                      description="section header"
+                    />
+                  </Typography>
+                  <Typography variant="body2">
+                    <FormattedMessage
+                      id="lct0qd"
+                      defaultMessage="This list shows all attributes that will be assigned to pages that have this page type assigned."
+                    />
+                  </Typography>
+                </div>
+                <PageTypeAttributes
+                  attributes={pageType?.attributes}
+                  disabled={disabled}
+                  type={AttributeTypeEnum.PAGE_TYPE}
+                  onAttributeAssign={onAttributeAdd}
+                  onAttributeReorder={(event: ReorderEvent) =>
+                    onAttributeReorder(event, AttributeTypeEnum.PAGE_TYPE)
+                  }
+                  onAttributeUnassign={onAttributeUnassign}
+                  {...attributeList}
+                />
+                <Hr className={classes.hr} />
+                <div>
+                  <Typography>
+                    <FormattedMessage
+                      id="OVOU1z"
+                      defaultMessage="Metadata"
+                      description="section header"
+                    />
+                  </Typography>
+                </div>
+                <Metadata data={data} onChange={changeMetadata} />
+              </Grid>
+            </DetailPageLayout.Content>
             <Savebar
               onCancel={() => navigate(pageTypeListUrl())}
               onDelete={onDelete}
@@ -186,11 +177,12 @@ const PageTypeDetailsPage: React.FC<PageTypeDetailsPageProps> = props => {
               disabled={isSaveDisabled}
               state={saveButtonBarState}
             />
-          </Container>
+          </DetailPageLayout>
         );
       }}
     </Form>
   );
 };
+
 PageTypeDetailsPage.displayName = "PageTypeDetailsPage";
 export default PageTypeDetailsPage;

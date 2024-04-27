@@ -1,5 +1,5 @@
-import { DEFAULT_INITIAL_PAGINATION_DATA } from "@saleor/config";
-import { Pagination } from "@saleor/types";
+import { DEFAULT_INITIAL_PAGINATION_DATA } from "@dashboard/config";
+import { Pagination } from "@dashboard/types";
 import { useEffect } from "react";
 
 import useNavigator from "./useNavigator";
@@ -22,7 +22,6 @@ export function usePaginationReset<T extends Pagination>(
       ),
     [rowNumber],
   );
-
   useEffect(
     () =>
       navigate(

@@ -1,10 +1,9 @@
-import { OrderSortField } from "@saleor/graphql";
-import { OrderDraftListUrlSortField } from "@saleor/orders/urls";
-import { createGetSortQueryVariables } from "@saleor/utils/sort";
+// @ts-strict-ignore
+import { OrderSortField } from "@dashboard/graphql";
+import { OrderDraftListUrlSortField } from "@dashboard/orders/urls";
+import { createGetSortQueryVariables } from "@dashboard/utils/sort";
 
-export function getSortQueryField(
-  sort: OrderDraftListUrlSortField,
-): OrderSortField {
+export function getSortQueryField(sort: OrderDraftListUrlSortField): OrderSortField {
   switch (sort) {
     case OrderDraftListUrlSortField.number:
       return OrderSortField.NUMBER;
@@ -17,6 +16,4 @@ export function getSortQueryField(
   }
 }
 
-export const getSortQueryVariables = createGetSortQueryVariables(
-  getSortQueryField,
-);
+export const getSortQueryVariables = createGetSortQueryVariables(getSortQueryField);

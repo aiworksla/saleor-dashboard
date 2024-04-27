@@ -1,4 +1,4 @@
-import { stringifyQs } from "@saleor/utils/urls";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import {
@@ -54,9 +54,7 @@ export interface PageCreateUrlPageType {
   "page-type-id"?: string;
 }
 export type PageUrlQueryParams = Dialog<PageUrlDialog> & SingleAction;
-export type PageCreateUrlQueryParams = Dialog<PageUrlDialog> &
-  SingleAction &
-  PageCreateUrlPageType;
+export type PageCreateUrlQueryParams = Dialog<PageUrlDialog> & SingleAction & PageCreateUrlPageType;
 export const pageUrl = (id: string, params?: PageUrlQueryParams) =>
   pagePath(encodeURIComponent(id)) + "?" + stringifyQs(params);
 

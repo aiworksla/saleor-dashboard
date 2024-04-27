@@ -1,12 +1,12 @@
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import useAppChannel from "@saleor/components/AppLayout/AppChannelContext";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import SingleSelectField from "@saleor/components/SingleSelectField";
-import GiftCardCustomerSelectField from "@saleor/giftCards/GiftCardCreateDialog/GiftCardCustomerSelectField";
-import { GiftCardCreateFormCustomer } from "@saleor/giftCards/GiftCardCreateDialog/types";
-import { FormChange } from "@saleor/hooks/useForm";
-import Label from "@saleor/orders/components/OrderHistory/Label";
-import { mapSlugNodeToChoice } from "@saleor/utils/maps";
+import useAppChannel from "@dashboard/components/AppLayout/AppChannelContext";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import SingleSelectField from "@dashboard/components/SingleSelectField";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import GiftCardCustomerSelectField from "@dashboard/giftCards/GiftCardCreateDialog/GiftCardCustomerSelectField";
+import { GiftCardCreateFormCustomer } from "@dashboard/giftCards/GiftCardCreateDialog/types";
+import { FormChange } from "@dashboard/hooks/useForm";
+import Label from "@dashboard/orders/components/OrderHistory/Label";
+import { mapSlugNodeToChoice } from "@dashboard/utils/maps";
 import React, { useEffect } from "react";
 import { useIntl } from "react-intl";
 
@@ -30,13 +30,9 @@ const GiftCardSendToCustomer: React.FC<GiftCardSendToCustomerProps> = ({
   disabled = false,
 }) => {
   const { channel, availableChannels } = useAppChannel(false);
-
   const channelsChoices = mapSlugNodeToChoice(availableChannels);
 
-  useEffect(
-    () => change({ target: { name: "channelSlug", value: channel?.slug } }),
-    [],
-  );
+  useEffect(() => change({ target: { name: "channelSlug", value: channel?.slug } }), []);
 
   const intl = useIntl();
 
@@ -44,6 +40,7 @@ const GiftCardSendToCustomer: React.FC<GiftCardSendToCustomerProps> = ({
     <>
       <VerticalSpacer />
       <ControlledCheckbox
+        data-test-id="send-to-customer-section"
         name={"sendToCustomerSelected"}
         label={intl.formatMessage(messages.sendToCustomerSelectedLabel)}
         checked={sendToCustomerSelected}

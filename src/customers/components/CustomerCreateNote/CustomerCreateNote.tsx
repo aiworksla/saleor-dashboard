@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import { FormSpacer } from "@dashboard/components/FormSpacer";
+import { AccountErrorFragment } from "@dashboard/graphql";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAccountErrorMessage from "@dashboard/utils/errors/account";
 import { Card, CardContent, TextField, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { FormSpacer } from "@saleor/components/FormSpacer";
-import { AccountErrorFragment } from "@saleor/graphql";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -44,6 +45,7 @@ const CustomerCreateNote: React.FC<CustomerCreateNoteProps> = ({
         </Typography>
         <FormSpacer />
         <TextField
+          data-test-id="customer-note"
           disabled={disabled}
           error={!!formErrors.note}
           fullWidth
@@ -62,5 +64,6 @@ const CustomerCreateNote: React.FC<CustomerCreateNoteProps> = ({
     </Card>
   );
 };
+
 CustomerCreateNote.displayName = "CustomerCreateNote";
 export default CustomerCreateNote;

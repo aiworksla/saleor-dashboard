@@ -110,6 +110,45 @@ export const orderDetailsQuery = gql`
       defaultWeightUnit
       fulfillmentAllowUnpaid
       fulfillmentAutoApprove
+      availablePaymentGateways {
+        ...PaymentGateway
+      }
+    }
+  }
+`;
+
+export const orderDetailsWithMetadataQuery = gql`
+  query OrderDetailsWithMetadata($id: ID!, $isStaffUser: Boolean!) {
+    order(id: $id) {
+      ...OrderDetailsWithMetadata
+    }
+    shop {
+      countries {
+        code
+        country
+      }
+      defaultWeightUnit
+      fulfillmentAllowUnpaid
+      fulfillmentAutoApprove
+      availablePaymentGateways {
+        ...PaymentGateway
+      }
+    }
+  }
+`;
+
+export const orderDetailsGrantedRefund = gql`
+  query OrderDetailsGrantRefund($id: ID!) {
+    order(id: $id) {
+      ...OrderDetailsGrantRefund
+    }
+  }
+`;
+
+export const orderDetailsGrantedRefundEdit = gql`
+  query OrderDetailsGrantRefundEdit($id: ID!) {
+    order(id: $id) {
+      ...OrderDetailsGrantRefund
     }
   }
 `;
@@ -193,10 +232,64 @@ export const orderRefundData = gql`
   }
 `;
 
+export const orderTransationsData = gql`
+  query OrderTransationsData($orderId: ID!) {
+    order(id: $orderId) {
+      id
+      transactions {
+        ...TransactionBaseItem
+      }
+      total {
+        gross {
+          ...Money
+        }
+      }
+    }
+  }
+`;
+
 export const channelUsabilityData = gql`
   query ChannelUsabilityData($channel: String!) {
     products(channel: $channel) {
       totalCount
+    }
+  }
+`;
+
+export const defaultGraphiQLQuery = /* GraphQL */ `
+  query OrderDetailsGraphiQL($id: ID!) {
+    order(id: $id) {
+      id
+      number
+      status
+      isShippingRequired
+      canFinalize
+      created
+      customerNote
+      paymentStatus
+      userEmail
+      isPaid
+    }
+  }
+`;
+
+export const DevModeQuery = /* GraphQL */ `
+  query DevModeRun($filter: OrderFilterInput, $sortBy: OrderSortingInput) {
+    orders(first: 10, filter: $filter, sortBy: $sortBy) {
+      edges {
+        node {
+          id
+          number
+          status
+          isShippingRequired
+          canFinalize
+          created
+          customerNote
+          paymentStatus
+          userEmail
+          isPaid
+        }
+      }
     }
   }
 `;

@@ -1,28 +1,29 @@
-import { ChannelsAction } from "@saleor/channels/urls";
-import { createSortedSaleData } from "@saleor/channels/utils";
-import useAppChannel from "@saleor/components/AppLayout/AppChannelContext";
-import ChannelsAvailabilityDialog from "@saleor/components/ChannelsAvailabilityDialog";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import SaleCreatePage from "@saleor/discounts/components/SaleCreatePage";
-import { ChannelSaleFormData } from "@saleor/discounts/components/SaleDetailsPage";
+// @ts-strict-ignore
+import { ChannelsAction } from "@dashboard/channels/urls";
+import { createSortedSaleData } from "@dashboard/channels/utils";
+import useAppChannel from "@dashboard/components/AppLayout/AppChannelContext";
+import ChannelsAvailabilityDialog from "@dashboard/components/ChannelsAvailabilityDialog";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import SaleCreatePage from "@dashboard/discounts/components/SaleCreatePage";
+import { ChannelSaleFormData } from "@dashboard/discounts/components/SaleDetailsPage";
 import {
   saleAddUrl,
   SaleCreateUrlQueryParams,
   saleListUrl,
   saleUrl,
-} from "@saleor/discounts/urls";
+} from "@dashboard/discounts/urls";
 import {
   useSaleChannelListingUpdateMutation,
   useSaleCreateMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useChannels from "@saleor/hooks/useChannels";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { sectionNames } from "@saleor/intl";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createMetadataCreateHandler from "@saleor/utils/handlers/metadataCreateHandler";
+} from "@dashboard/graphql";
+import useChannels from "@dashboard/hooks/useChannels";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import createMetadataCreateHandler from "@dashboard/utils/handlers/metadataCreateHandler";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -37,19 +38,14 @@ export const SaleCreateView: React.FC<SaleCreateProps> = ({ params }) => {
   const navigate = useNavigator();
   const pushMessage = useNotifier();
   const intl = useIntl();
-
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
   const [openModal, closeModal] = createDialogActionHandlers<
     ChannelsAction,
     SaleCreateUrlQueryParams
   >(navigate, params => saleAddUrl(params), params);
-
   const { availableChannels } = useAppChannel(false);
-  const allChannels: ChannelSaleFormData[] = createSortedSaleData(
-    availableChannels,
-  );
-
+  const allChannels: ChannelSaleFormData[] = createSortedSaleData(availableChannels);
   const {
     channelListElements,
     channelsToggle,
@@ -67,12 +63,7 @@ export const SaleCreateView: React.FC<SaleCreateProps> = ({ params }) => {
     { closeModal, openModal },
     { formId: SALE_CREATE_FORM_ID },
   );
-
-  const [
-    updateChannels,
-    updateChannelsOpts,
-  ] = useSaleChannelListingUpdateMutation({});
-
+  const [updateChannels, updateChannelsOpts] = useSaleChannelListingUpdateMutation({});
   const [saleCreate, saleCreateOpts] = useSaleCreateMutation({
     onCompleted: data => {
       if (data.saleCreate.errors.length === 0) {
@@ -87,11 +78,7 @@ export const SaleCreateView: React.FC<SaleCreateProps> = ({ params }) => {
       }
     },
   });
-
-  const handleCreate = createHandler(
-    variables => saleCreate({ variables }),
-    updateChannels,
-  );
+  const handleCreate = createHandler(variables => saleCreate({ variables }), updateChannels);
   const handleSubmit = createMetadataCreateHandler(
     handleCreate,
     updateMetadata,
@@ -100,7 +87,7 @@ export const SaleCreateView: React.FC<SaleCreateProps> = ({ params }) => {
 
   return (
     <>
-      <WindowTitle title={intl.formatMessage(sectionNames.sales)} />
+      <WindowTitle title={intl.formatMessage(commonMessages.discounts)} />
       {!!allChannels?.length && (
         <ChannelsAvailabilityDialog
           isSelected={isChannelSelected}

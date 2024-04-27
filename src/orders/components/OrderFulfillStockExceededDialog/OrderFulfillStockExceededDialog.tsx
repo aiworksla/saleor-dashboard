@@ -1,16 +1,17 @@
-import { TableBody, TableCell, TableHead, Typography } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { CardSpacer } from "@saleor/components/CardSpacer";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { FulfillmentFragment, OrderFulfillLineFragment } from "@saleor/graphql";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { renderCollection } from "@saleor/misc";
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { CardSpacer } from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { FulfillmentFragment, OrderFulfillLineFragment } from "@dashboard/graphql";
+import { renderCollection } from "@dashboard/misc";
 import {
   getFulfillmentFormsetQuantity,
   getOrderLineAvailableQuantity,
   OrderFulfillStockFormsetData,
-} from "@saleor/orders/utils/data";
+} from "@dashboard/orders/utils/data";
+import { TableBody, TableCell, TableHead, Typography } from "@material-ui/core";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -23,34 +24,21 @@ export interface OrderFulfillStockExceededDialogProps {
   open: boolean;
   formsetData: OrderFulfillStockFormsetData;
   confirmButtonState: ConfirmButtonTransitionState;
-  onSubmit();
-  onClose();
+  onSubmit: () => any;
+  onClose: () => any;
 }
 
 const OrderFulfillStockExceededDialog: React.FC<OrderFulfillStockExceededDialogProps> = props => {
-  const {
-    lines,
-    open,
-    formsetData,
-    confirmButtonState,
-    onClose,
-    onSubmit,
-  } = props;
-
+  const { lines, open, formsetData, confirmButtonState, onClose, onSubmit } = props;
   const intl = useIntl();
   const classes = useStyles(props);
-
   const exceededLines = lines?.filter(el => {
     const line = "orderLine" in el ? el.orderLine : el;
-    const lineFormWarehouse = formsetData?.find(item => item.id === el.id)
-      ?.value?.[0]?.warehouse;
-    const stock = line.variant?.stocks.find(
-      stock => stock.warehouse.id === lineFormWarehouse?.id,
-    );
+    const lineFormWarehouse = formsetData?.find(item => item.id === el.id)?.value?.[0]?.warehouse;
+    const stock = line.variant?.stocks.find(stock => stock.warehouse.id === lineFormWarehouse?.id);
 
     return (
-      getFulfillmentFormsetQuantity(formsetData, line) >
-      getOrderLineAvailableQuantity(line, stock)
+      getFulfillmentFormsetQuantity(formsetData, line) > getOrderLineAvailableQuantity(line, stock)
     );
   });
 
@@ -87,9 +75,8 @@ const OrderFulfillStockExceededDialog: React.FC<OrderFulfillStockExceededDialogP
 
             <TableBody>
               {renderCollection(exceededLines, line => {
-                const lineFormWarehouse = formsetData?.find(
-                  item => item.id === line.id,
-                )?.value?.[0]?.warehouse;
+                const lineFormWarehouse = formsetData?.find(item => item.id === line.id)?.value?.[0]
+                  ?.warehouse;
 
                 return (
                   <OrderFulfillStockExceededDialogLine

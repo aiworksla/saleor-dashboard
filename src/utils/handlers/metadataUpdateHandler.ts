@@ -1,5 +1,5 @@
 import { FetchResult } from "@apollo/client";
-import { MetadataFormData } from "@saleor/components/Metadata/types";
+import { MetadataFormData } from "@dashboard/components/Metadata/types";
 import {
   MetadataErrorFragment,
   MetadataInput,
@@ -7,14 +7,14 @@ import {
   UpdateMetadataMutationVariables,
   UpdatePrivateMetadataMutation,
   UpdatePrivateMetadataMutationVariables,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { arrayDiff } from "@saleor/utils/arrays";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { arrayDiff } from "@dashboard/utils/arrays";
 
 import { filterMetadataArray } from "./filterMetadataArray";
 import { areMetadataArraysEqual } from "./metadataUpdateHelpers";
 
-interface ObjectWithMetadata {
+export interface ObjectWithMetadata {
   id: string;
   metadata: MetadataInput[];
   privateMetadata: MetadataInput[];
@@ -22,7 +22,7 @@ interface ObjectWithMetadata {
 
 function createMetadataUpdateHandler<TData extends MetadataFormData, TError>(
   initial: ObjectWithMetadata,
-  update: (data: TData) => SubmitPromise<TError[]>,
+  update: (data: TData) => SubmitPromise<TError[] | undefined>,
   updateMetadata: (
     variables: UpdateMetadataMutationVariables,
   ) => Promise<FetchResult<UpdateMetadataMutation>>,
@@ -30,66 +30,62 @@ function createMetadataUpdateHandler<TData extends MetadataFormData, TError>(
     variables: UpdatePrivateMetadataMutationVariables,
   ) => Promise<FetchResult<UpdatePrivateMetadataMutation>>,
 ) {
-  return async (
-    data: TData,
-  ): Promise<Array<MetadataErrorFragment | TError>> => {
+  return async (data: TData): Promise<Array<MetadataErrorFragment | TError>> => {
     const errors = await update(data);
-
-    const hasMetadataChanged = !areMetadataArraysEqual(
-      initial.metadata,
-      data.metadata,
-    );
+    const hasMetadataChanged = !areMetadataArraysEqual(initial.metadata, data.metadata);
     const hasPrivateMetadataChanged = !areMetadataArraysEqual(
       initial.privateMetadata,
       data.privateMetadata,
     );
 
-    if (errors.length > 0) {
+    if (errors && errors.length > 0) {
       return errors;
     }
 
-    if (errors.length === 0) {
+    if (errors?.length === 0) {
       if (data.metadata && hasMetadataChanged) {
         const initialKeys = initial.metadata.map(m => m.key);
         const modifiedKeys = data.metadata.map(m => m.key);
-
         const keyDiff = arrayDiff(initialKeys, modifiedKeys);
+        const metadataInput = filterMetadataArray(data.metadata);
 
-        const updateMetaResult = await updateMetadata({
-          id: initial.id,
-          input: filterMetadataArray(data.metadata),
-          keysToDelete: keyDiff.removed,
-        });
+        if (metadataInput.length || keyDiff.removed.length) {
+          const updateMetaResult = await updateMetadata({
+            id: initial.id,
+            input: metadataInput,
+            keysToDelete: keyDiff.removed,
+          });
+          const updateMetaErrors = [
+            ...(updateMetaResult.data?.deleteMetadata?.errors || []),
+            ...(updateMetaResult.data?.updateMetadata?.errors || []),
+          ];
 
-        const updateMetaErrors = [
-          ...(updateMetaResult.data.deleteMetadata.errors || []),
-          ...(updateMetaResult.data.updateMetadata.errors || []),
-        ];
-
-        if (updateMetaErrors.length > 0) {
-          return updateMetaErrors;
+          if (updateMetaErrors.length > 0) {
+            return updateMetaErrors;
+          }
         }
       }
 
       if (data.privateMetadata && hasPrivateMetadataChanged) {
         const initialKeys = initial.privateMetadata.map(m => m.key);
         const modifiedKeys = data.privateMetadata.map(m => m.key);
-
         const keyDiff = arrayDiff(initialKeys, modifiedKeys);
+        const privateMetadataInput = filterMetadataArray(data.privateMetadata);
 
-        const updatePrivateMetaResult = await updatePrivateMetadata({
-          id: initial.id,
-          input: filterMetadataArray(data.privateMetadata),
-          keysToDelete: keyDiff.removed,
-        });
+        if (privateMetadataInput.length || keyDiff.removed.length) {
+          const updatePrivateMetaResult = await updatePrivateMetadata({
+            id: initial.id,
+            input: privateMetadataInput,
+            keysToDelete: keyDiff.removed,
+          });
+          const updatePrivateMetaErrors = [
+            ...(updatePrivateMetaResult.data?.deletePrivateMetadata?.errors || []),
+            ...(updatePrivateMetaResult.data?.updatePrivateMetadata?.errors || []),
+          ];
 
-        const updatePrivateMetaErrors = [
-          ...(updatePrivateMetaResult.data.deletePrivateMetadata.errors || []),
-          ...(updatePrivateMetaResult.data.updatePrivateMetadata.errors || []),
-        ];
-
-        if (updatePrivateMetaErrors.length > 0) {
-          return updatePrivateMetaErrors;
+          if (updatePrivateMetaErrors.length > 0) {
+            return updatePrivateMetaErrors;
+          }
         }
       }
     }

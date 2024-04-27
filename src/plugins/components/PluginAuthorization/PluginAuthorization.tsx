@@ -1,14 +1,11 @@
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Hr from "@dashboard/components/Hr";
+import { ConfigurationItemFragment, ConfigurationTypeFieldEnum } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
+import { isSecretField } from "@dashboard/plugins/utils";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Hr from "@saleor/components/Hr";
-import {
-  ConfigurationItemFragment,
-  ConfigurationTypeFieldEnum,
-} from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { isSecretField } from "@saleor/plugins/utils";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -36,16 +33,11 @@ const useStyles = makeStyles(
   }),
   { name: "PluginAuthorization" },
 );
-
 const PluginAuthorization: React.FC<PluginAuthorizationProps> = props => {
   const { fields, onClear, onEdit } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
-
-  const secretFields = fields.filter(field =>
-    isSecretField(fields, field.name),
-  );
+  const secretFields = fields.filter(field => isSecretField(fields, field.name));
 
   return (
     <Card>
@@ -64,19 +56,14 @@ const PluginAuthorization: React.FC<PluginAuthorizationProps> = props => {
               field.type === ConfigurationTypeFieldEnum.SECRETMULTILINE ? (
                 <div>
                   <Typography variant="body1">{field.label}</Typography>
-                  {field.value !== null && (
-                    <Typography>**** {field.value}</Typography>
-                  )}
+                  {field.value !== null && <Typography>**** {field.value}</Typography>}
                 </div>
               ) : (
                 <Typography variant="body1">{field.label}</Typography>
               )}
               <div className={classes.spacer} />
               {field.value === null ? (
-                <Button
-                  className={classes.button}
-                  onClick={() => onEdit(field.name)}
-                >
+                <Button className={classes.button} onClick={() => onEdit(field.name)}>
                   <FormattedMessage {...buttonMessages.create} />
                 </Button>
               ) : (
@@ -84,18 +71,13 @@ const PluginAuthorization: React.FC<PluginAuthorizationProps> = props => {
                   <Button onClick={() => onClear(field.name)}>
                     <FormattedMessage {...buttonMessages.clear} />
                   </Button>
-                  <Button
-                    className={classes.button}
-                    onClick={() => onEdit(field.name)}
-                  >
+                  <Button className={classes.button} onClick={() => onEdit(field.name)}>
                     <FormattedMessage {...buttonMessages.edit} />
                   </Button>
                 </>
               )}
             </div>
-            {fieldIndex !== secretFields.length - 1 && (
-              <Hr className={classes.hr} />
-            )}
+            {fieldIndex !== secretFields.length - 1 && <Hr className={classes.hr} />}
           </React.Fragment>
         ))}
       </CardContent>

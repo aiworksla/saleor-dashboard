@@ -1,14 +1,12 @@
-import { getAttributesAfterFileAttributesUpdate } from "@saleor/attributes/utils/data";
+// @ts-strict-ignore
+import { getAttributesAfterFileAttributesUpdate } from "@dashboard/attributes/utils/data";
 import {
   handleUploadMultipleFiles,
   prepareAttributesInput,
-} from "@saleor/attributes/utils/handlers";
-import { AttributeInput } from "@saleor/components/Attributes";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import {
-  DEFAULT_INITIAL_SEARCH_DATA,
-  VALUES_PAGINATE_BY,
-} from "@saleor/config";
+} from "@dashboard/attributes/utils/handlers";
+import { AttributeInput } from "@dashboard/components/Attributes";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { DEFAULT_INITIAL_SEARCH_DATA, VALUES_PAGINATE_BY } from "@dashboard/config";
 import {
   PageErrorWithAttributesFragment,
   useFileUploadMutation,
@@ -16,17 +14,17 @@ import {
   usePageTypeQuery,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { getMutationErrors } from "@saleor/misc";
-import usePageSearch from "@saleor/searches/usePageSearch";
-import usePageTypeSearch from "@saleor/searches/usePageTypeSearch";
-import useProductSearch from "@saleor/searches/useProductSearch";
-import useAttributeValueSearchHandler from "@saleor/utils/handlers/attributeValueSearchHandler";
-import createMetadataCreateHandler from "@saleor/utils/handlers/metadataCreateHandler";
-import { mapEdgesToItems } from "@saleor/utils/maps";
-import { getParsedDataForJsonStringField } from "@saleor/utils/richText/misc";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { getMutationErrors } from "@dashboard/misc";
+import usePageSearch from "@dashboard/searches/usePageSearch";
+import usePageTypeSearch from "@dashboard/searches/usePageTypeSearch";
+import useProductSearch from "@dashboard/searches/useProductSearch";
+import useAttributeValueSearchHandler from "@dashboard/utils/handlers/attributeValueSearchHandler";
+import createMetadataCreateHandler from "@dashboard/utils/handlers/metadataCreateHandler";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { getParsedDataForJsonStringField } from "@dashboard/utils/richText/misc";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -45,9 +43,7 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
   const intl = useIntl();
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-
   const selectedPageTypeId = params["page-type-id"];
-
   const handleSelectPageTypeId = (pageTypeId: string) =>
     navigate(
       pageCreateUrl({
@@ -55,7 +51,6 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
         "page-type-id": pageTypeId,
       }),
     );
-
   const {
     loadMore: loadMorePageTypes,
     search: searchPageTypes,
@@ -83,7 +78,6 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
     result: searchAttributeValuesOpts,
     reset: searchAttributeReset,
   } = useAttributeValueSearchHandler(DEFAULT_INITIAL_SEARCH_DATA);
-
   const { data: selectedPageType } = usePageTypeQuery({
     variables: {
       id: selectedPageTypeId,
@@ -91,12 +85,8 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
     },
     skip: !selectedPageTypeId,
   });
-
-  const attributeValues =
-    mapEdgesToItems(searchAttributeValuesOpts?.data?.attribute.choices) || [];
-
+  const attributeValues = mapEdgesToItems(searchAttributeValuesOpts?.data?.attribute.choices) || [];
   const [uploadFile, uploadFileOpts] = useFileUploadMutation({});
-
   const [pageCreate, pageCreateOpts] = usePageCreateMutation({
     onCompleted: data => {
       if (data.pageCreate.errors.length === 0) {
@@ -111,18 +101,15 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
       }
     },
   });
-
   const handleCreate = async (formData: PageSubmitData) => {
     const uploadFilesResult = await handleUploadMultipleFiles(
       formData.attributesWithNewFileValue,
       variables => uploadFile({ variables }),
     );
-
     const updatedFileAttributes = getAttributesAfterFileAttributesUpdate(
       formData.attributesWithNewFileValue,
       uploadFilesResult,
     );
-
     const result = await pageCreate({
       variables: {
         input: {
@@ -150,21 +137,19 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
       errors: getMutationErrors(result),
     };
   };
-
   const handleSubmit = createMetadataCreateHandler(
     handleCreate,
     updateMetadata,
     updatePrivateMetadata,
   );
-
   const handleAssignAttributeReferenceClick = (attribute: AttributeInput) =>
     navigate(
       pageCreateUrl({
+        ...params,
         action: "assign-attribute-value",
         id: attribute.id,
       }),
     );
-
   const fetchMorePageTypes = {
     hasMore: searchPageTypesOpts.data?.search?.pageInfo?.hasNextPage,
     loading: searchPageTypesOpts.loading,
@@ -181,15 +166,11 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
     onFetchMore: loadMoreProducts,
   };
   const fetchMoreAttributeValues = {
-    hasMore: !!searchAttributeValuesOpts.data?.attribute?.choices?.pageInfo
-      ?.hasNextPage,
+    hasMore: !!searchAttributeValuesOpts.data?.attribute?.choices?.pageInfo?.hasNextPage,
     loading: !!searchAttributeValuesOpts.loading,
     onFetchMore: loadMoreAttributeValues,
   };
-
-  const errors = getMutationErrors(
-    pageCreateOpts,
-  ) as PageErrorWithAttributesFragment[];
+  const errors = getMutationErrors(pageCreateOpts) as PageErrorWithAttributesFragment[];
 
   return (
     <>
@@ -211,21 +192,17 @@ export const PageCreate: React.FC<PageCreateProps> = ({ params }) => {
         onSubmit={handleSubmit}
         fetchPageTypes={searchPageTypes}
         fetchMorePageTypes={fetchMorePageTypes}
-        assignReferencesAttributeId={
-          params.action === "assign-attribute-value" && params.id
-        }
+        assignReferencesAttributeId={params.action === "assign-attribute-value" && params.id}
         onAssignReferencesClick={handleAssignAttributeReferenceClick}
         referencePages={mapEdgesToItems(searchPagesOpts?.data?.search) || []}
-        referenceProducts={
-          mapEdgesToItems(searchProductsOpts?.data?.search) || []
-        }
+        referenceProducts={mapEdgesToItems(searchProductsOpts?.data?.search) || []}
         fetchReferencePages={searchPages}
         fetchMoreReferencePages={fetchMoreReferencePages}
         fetchReferenceProducts={searchProducts}
         fetchMoreReferenceProducts={fetchMoreReferenceProducts}
         fetchAttributeValues={searchAttributeValues}
         fetchMoreAttributeValues={fetchMoreAttributeValues}
-        onCloseDialog={() => navigate(pageCreateUrl())}
+        onCloseDialog={() => navigate(pageCreateUrl({ ...params, action: undefined }))}
         selectedPageType={selectedPageType?.pageType}
         onSelectPageType={handleSelectPageTypeId}
         onAttributeSelectBlur={searchAttributeReset}

@@ -1,3 +1,9 @@
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import Grid from "@dashboard/components/Grid";
+import { commonMessages } from "@dashboard/intl";
+import { DialogProps, MinMax } from "@dashboard/types";
 import {
   Dialog,
   DialogActions,
@@ -6,13 +12,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import { commonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { DialogProps, MinMax } from "@saleor/types";
+import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -31,7 +31,6 @@ const useStyles = makeStyles(
     name: "ShippingZonePostalCodeRangeDialog",
   },
 );
-
 const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDialogProps> = ({
   confirmButtonState,
   open,
@@ -40,7 +39,6 @@ const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDia
 }) => {
   const classes = useStyles({});
   const intl = useIntl();
-
   const initial: MinMax = {
     max: "",
     min: "",
@@ -48,7 +46,7 @@ const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDia
 
   return (
     <Dialog open={open}>
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
           id="2Xt+sw"
           defaultMessage="Add postal codes"
@@ -67,6 +65,7 @@ const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDia
               </Typography>
               <Grid variant="uniform">
                 <TextField
+                  data-test-id="zip-code-starts-with-input"
                   label={intl.formatMessage({
                     id: "1T1fP8",
                     defaultMessage: "Postal codes (start)",
@@ -77,6 +76,7 @@ const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDia
                   onChange={change}
                 />
                 <TextField
+                  data-test-id="zip-code-ends-with-input"
                   label={intl.formatMessage({
                     id: "axFFaD",
                     defaultMessage: "Postal codes (end)",
@@ -111,6 +111,5 @@ const ShippingZonePostalCodeRangeDialog: React.FC<ShippingZonePostalCodeRangeDia
   );
 };
 
-ShippingZonePostalCodeRangeDialog.displayName =
-  "ShippingZonePostalCodeRangeDialog";
+ShippingZonePostalCodeRangeDialog.displayName = "ShippingZonePostalCodeRangeDialog";
 export default ShippingZonePostalCodeRangeDialog;

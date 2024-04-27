@@ -2,25 +2,40 @@
 /// <reference types="../../../support"/>
 import faker from "faker";
 
-import { PRODUCTS_LIST } from "../../../elements/catalog/products/products-list";
-import { ADD_CHANNEL_FORM_SELECTORS } from "../../../elements/channels/add-channel-form-selectors";
-import { AVAILABLE_CHANNELS_FORM } from "../../../elements/channels/available-channels-form";
-import { CHANNELS_SELECTORS } from "../../../elements/channels/channels-selectors";
-import { SELECT_CHANNELS_TO_ASSIGN } from "../../../elements/channels/select-channels-to-assign";
+import {
+  ADD_CHANNEL_FORM_SELECTORS,
+} from "../../../elements/channels/add-channel-form-selectors";
+import {
+  AVAILABLE_CHANNELS_FORM,
+} from "../../../elements/channels/available-channels-form";
+import {
+  CHANNELS_SELECTORS,
+} from "../../../elements/channels/channels-selectors";
+import {
+  SELECT_CHANNELS_TO_ASSIGN,
+} from "../../../elements/channels/select-channels-to-assign";
 import { HEADER_SELECTORS } from "../../../elements/header/header-selectors";
 import { BUTTON_SELECTORS } from "../../../elements/shared/button-selectors";
-import { urlList } from "../../../fixtures/urlList";
+import { MESSAGES } from "../../../fixtures/";
+import {
+  productDetailsUrl,
+  urlList,
+} from "../../../fixtures/urlList";
 import { ONE_PERMISSION_USERS } from "../../../fixtures/users";
 import { createChannel } from "../../../support/api/requests/Channels";
+import { getFirstProducts } from "../../../support/api/requests/Product";
 import {
   createShippingZoneWithoutWarehouse,
   getShippingZone,
 } from "../../../support/api/requests/ShippingMethod";
-import { createWarehouse as createWarehouseViaApi } from "../../../support/api/requests/Warehouse";
-import { deleteChannelsStartsWith } from "../../../support/api/utils/channelsUtils";
-import { deleteShippingStartsWith } from "../../../support/api/utils/shippingUtils";
-import { deleteWarehouseStartsWith } from "../../../support/api/utils/warehouseUtils";
-import { createChannelByView } from "../../../support/pages/channelsPage";
+import {
+  createWarehouse as createWarehouseViaApi,
+} from "../../../support/api/requests/Warehouse";
+import {
+  createChannelByView,
+  setChannelRequiredFields,
+  typeExpirationDays,
+} from "../../../support/pages/channelsPage";
 
 describe("Channels", () => {
   const channelStartsWith = `CyChannels`;
@@ -30,29 +45,27 @@ describe("Channels", () => {
   let usAddress;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteChannelsStartsWith(channelStartsWith);
-    deleteShippingStartsWith(channelStartsWith);
-    deleteWarehouseStartsWith(channelStartsWith);
+    cy.loginUserViaRequest();
     createShippingZoneWithoutWarehouse(randomName, "US").then(
       shippingZoneResp => {
         shippingZone = shippingZoneResp;
       },
     );
-    cy.fixture("addresses").then(addresses => {
-      usAddress = addresses.usAddress;
-      createWarehouseViaApi({
-        name: randomName,
-        address: usAddress,
+    cy.fixture("addresses")
+      .then(addresses => {
+        usAddress = addresses.usAddress;
+        createWarehouseViaApi({
+          name: randomName,
+          address: usAddress,
+        });
+      })
+      .then(warehouse => {
+        cy.checkIfDataAreNotNull({ shippingZone, usAddress, warehouse });
       });
-    });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest(
-      "auth",
-      ONE_PERMISSION_USERS.channel,
-    );
+    cy.loginUserViaRequest("auth", ONE_PERMISSION_USERS.channel);
   });
 
   it(
@@ -83,19 +96,73 @@ describe("Channels", () => {
 
       // new channel should be visible at product availability form
       cy.clearSessionData().loginUserViaRequest();
-      cy.addAliasToGraphRequest("InitialProductFilterAttributes");
-      cy.visit(urlList.products)
-        .waitForRequestAndCheckIfNoErrors("@InitialProductFilterAttributes")
-        .waitForProgressBarToNotExist()
-        .get(PRODUCTS_LIST.emptyProductRow)
-        .should("not.exist")
-        .get(PRODUCTS_LIST.productsNames)
-        .first()
-        .click()
-        .get(AVAILABLE_CHANNELS_FORM.menageChannelsButton)
-        .click()
-        .get(SELECT_CHANNELS_TO_ASSIGN.listOfChannels)
-        .contains(randomChannel);
+      getFirstProducts(1).then(resp => {
+        const product = resp[0].node;
+        cy.visit(productDetailsUrl(product.id))
+          .get(AVAILABLE_CHANNELS_FORM.manageChannelsButton)
+          .click()
+          .get(SELECT_CHANNELS_TO_ASSIGN.listOfChannels)
+          .contains(randomChannel);
+      });
+    },
+  );
+  it(
+    "should create new channel with expired orders functionality set. TC: SALEOR_0713",
+    { tags: ["@channel", "@allEnv", "@stable"] },
+    () => {
+      const randomChannel = `${channelStartsWith} ${faker.datatype.number()}`;
+      const orderExpiresAfter = 120;
+      cy.addAliasToGraphRequest("Channels");
+      cy.addAliasToGraphRequest("ChannelCreate");
+      cy.visit(urlList.channels);
+      cy.waitForRequestAndCheckIfNoErrors("@Channels");
+      setChannelRequiredFields({ name: randomChannel, currency });
+      typeExpirationDays(orderExpiresAfter);
+      cy.clickConfirmButton();
+      cy.waitForRequestAndCheckIfNoErrors("@ChannelCreate").then(
+        channelCreate => {
+          expect(
+            channelCreate.response.body.data.channelCreate.channel
+              .orderSettings,
+          ).to.have.property("deleteExpiredOrdersAfter", orderExpiresAfter);
+          cy.get(CHANNELS_SELECTORS.orderExpirationInput)
+            .invoke("val")
+            .should("contain", orderExpiresAfter.toString());
+        },
+      );
+    },
+  );
+  it(
+    "should not be able to create new channel with expired orders functionality with values outside boundary conditions. TC: SALEOR_0714",
+    { tags: ["@channel", "@allEnv"] },
+    () => {
+      const randomChannel = `${channelStartsWith} ${faker.datatype.number()}`;
+      const underBoundaryConditions = 0;
+      const overBoundaryConditions = 121;
+      cy.addAliasToGraphRequest("Channels");
+      cy.addAliasToGraphRequest("ChannelCreate");
+      cy.visit(urlList.channels);
+      cy.waitForRequestAndCheckIfNoErrors("@Channels");
+      setChannelRequiredFields({ name: randomChannel, currency });
+      typeExpirationDays(underBoundaryConditions);
+
+      cy.clickConfirmButton();
+      cy.wait("@ChannelCreate").then(createChannelResponse => {
+        cy.log(createChannelResponse);
+        expect(
+          createChannelResponse.response.body.data.channelCreate.errors.length,
+        ).to.eq(1);
+        cy.confirmationErrorMessageShouldAppear();
+      });
+      typeExpirationDays(overBoundaryConditions);
+      cy.clickConfirmButton();
+      cy.wait("@ChannelCreate").then(createChannelResponse => {
+        cy.log(createChannelResponse);
+        expect(
+          createChannelResponse.response.body.data.channelCreate.errors.length,
+        ).to.eq(1);
+        cy.confirmationErrorMessageShouldAppear();
+      });
     },
   );
   it(
@@ -108,7 +175,6 @@ describe("Channels", () => {
       const randomChannel = `${channelStartsWith} ${faker.datatype.number()}`;
       cy.addAliasToGraphRequest("Channels");
       cy.visit(urlList.channels);
-      cy.expectSkeletonIsVisible();
       cy.wait("@Channels");
       createChannelByView({
         name: randomChannel,
@@ -127,7 +193,7 @@ describe("Channels", () => {
   );
 
   it(
-    "should validate slug name. TC: SALEOR_0703",
+    "should validate that creating channels with same slug name as other is not possible. TC: SALEOR_0703",
     { tags: ["@channel", "@allEnv", "@stable"] },
     () => {
       const randomChannel = `${channelStartsWith} ${faker.datatype.number()}`;
@@ -140,8 +206,10 @@ describe("Channels", () => {
       cy.visit(urlList.channels);
       cy.expectSkeletonIsVisible();
       createChannelByView({ name: randomChannel, currency });
-      cy.get(ADD_CHANNEL_FORM_SELECTORS.slugValidationMessage).should(
-        "be.visible",
+      cy.confirmationErrorMessageShouldAppear();
+      cy.get(ADD_CHANNEL_FORM_SELECTORS.generalInformationSection).should(
+        "contain.text",
+        MESSAGES.slugMustBeUnique,
       );
     },
   );

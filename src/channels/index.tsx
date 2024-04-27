@@ -1,5 +1,5 @@
-import { sectionNames } from "@saleor/intl";
-import { asSortParams } from "@saleor/utils/sort";
+import { sectionNames } from "@dashboard/intl";
+import { asSortParams } from "@dashboard/utils/sort";
 import { parse as parseQs } from "qs";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -20,20 +20,12 @@ import ChannelsListComponent from "./views/ChannelsList";
 const ChannelDetails: React.FC<RouteComponentProps<any>> = ({ match }) => {
   const params = parseQs(location.search.substr(1));
 
-  return (
-    <ChannelDetailsComponent
-      id={decodeURIComponent(match.params.id)}
-      params={params}
-    />
-  );
+  return <ChannelDetailsComponent id={decodeURIComponent(match.params.id)} params={params} />;
 };
-
 const ChannelsList: React.FC<RouteComponentProps> = ({ location }) => {
-  const qs = parseQs(location.search.substr(1));
-  const params: ChannelsListUrlQueryParams = asSortParams(
-    qs,
-    ChannelsListUrlSortField,
-  );
+  const qs = parseQs(location.search.substr(1)) as any;
+  const params: ChannelsListUrlQueryParams = asSortParams(qs, ChannelsListUrlSortField);
+
   return <ChannelsListComponent params={params} />;
 };
 

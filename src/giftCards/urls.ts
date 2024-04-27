@@ -1,4 +1,4 @@
-import { stringifyQs } from "@saleor/utils/urls";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import { GiftCardListUrlQueryParams } from "./GiftCardsList/types";
@@ -13,9 +13,7 @@ export const giftCardListUrl = (params?: GiftCardListUrlQueryParams) =>
 
 export const giftCardPath = (id: string) => urlJoin(giftCardsListPath, id);
 
-export const giftCardUrl = (
-  id: string,
-  params?: GiftCardUpdatePageUrlQueryParams,
-) => giftCardPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
+export const giftCardUrl = (id: string, params?: GiftCardUpdatePageUrlQueryParams) =>
+  giftCardPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
 
 export const giftCardSettingsUrl = urlJoin(giftCardsListPath, "settings");

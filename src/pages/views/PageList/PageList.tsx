@@ -1,40 +1,40 @@
-import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { Button } from "@saleor/components/Button";
-import { DEFAULT_INITIAL_SEARCH_DATA } from "@saleor/config";
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import DeleteFilterTabDialog from "@dashboard/components/DeleteFilterTabDialog";
+import SaveFilterTabDialog from "@dashboard/components/SaveFilterTabDialog";
+import { DEFAULT_INITIAL_SEARCH_DATA } from "@dashboard/config";
 import {
   usePageBulkPublishMutation,
   usePageBulkRemoveMutation,
   usePageListQuery,
-} from "@saleor/graphql";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useListSettings from "@saleor/hooks/useListSettings";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { usePaginationReset } from "@saleor/hooks/usePaginationReset";
+} from "@dashboard/graphql";
+import { getSearchFetchMoreProps } from "@dashboard/hooks/makeTopLevelSearch/utils";
+import { useFilterPresets } from "@dashboard/hooks/useFilterPresets";
+import useListSettings from "@dashboard/hooks/useListSettings";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { usePaginationReset } from "@dashboard/hooks/usePaginationReset";
 import usePaginator, {
   createPaginationState,
   PaginatorContext,
-} from "@saleor/hooks/usePaginator";
-import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import PageTypePickerDialog from "@saleor/pages/components/PageTypePickerDialog";
-import usePageTypeSearch from "@saleor/searches/usePageTypeSearch";
-import { ListViews } from "@saleor/types";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createSortHandler from "@saleor/utils/handlers/sortHandler";
-import { mapEdgesToItems, mapNodeToChoice } from "@saleor/utils/maps";
-import { getSortParams } from "@saleor/utils/sort";
-import React from "react";
+} from "@dashboard/hooks/usePaginator";
+import { useRowSelection } from "@dashboard/hooks/useRowSelection";
+import PageTypePickerDialog from "@dashboard/pages/components/PageTypePickerDialog";
+import usePageTypeSearch from "@dashboard/searches/usePageTypeSearch";
+import { ListViews } from "@dashboard/types";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import createFilterHandlers from "@dashboard/utils/handlers/filterHandlers";
+import createSortHandler from "@dashboard/utils/handlers/sortHandler";
+import { mapEdgesToItems, mapNodeToChoice } from "@dashboard/utils/maps";
+import { getSortParams } from "@dashboard/utils/sort";
+import { DialogContentText } from "@material-ui/core";
+import isEqual from "lodash/isEqual";
+import React, { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import PageListPage from "../../components/PageListPage/PageListPage";
-import {
-  pageCreateUrl,
-  pageListUrl,
-  PageListUrlDialog,
-  PageListUrlQueryParams,
-} from "../../urls";
+import { pageCreateUrl, pageListUrl, PageListUrlDialog, PageListUrlQueryParams } from "../../urls";
+import { getFilterOpts, getFilterQueryParam, storageUtils } from "./filters";
 import { getFilterVariables, getSortQueryVariables } from "./sort";
 
 interface PageListProps {
@@ -44,17 +44,41 @@ interface PageListProps {
 export const PageList: React.FC<PageListProps> = ({ params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
-  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(
-    params.ids,
-  );
-  const { updateListSettings, settings } = useListSettings(
-    ListViews.PAGES_LIST,
-  );
+  const intl = useIntl();
+  const { updateListSettings, settings } = useListSettings(ListViews.PAGES_LIST);
 
   usePaginationReset(pageListUrl, params, settings.rowNumber);
 
-  const intl = useIntl();
-
+  const {
+    clearRowSelection,
+    selectedRowIds,
+    setClearDatagridRowSelectionCallback,
+    setSelectedRowIds,
+  } = useRowSelection(params);
+  const [changeFilters, resetFilters, handleSearchChange] = createFilterHandlers({
+    cleanupFn: clearRowSelection,
+    createUrl: pageListUrl,
+    getFilterQueryParam,
+    navigate,
+    params,
+    keepActiveTab: true,
+  });
+  const {
+    selectedPreset,
+    presets,
+    hasPresetsChanged,
+    onPresetChange,
+    onPresetDelete,
+    onPresetSave,
+    onPresetUpdate,
+    setPresetIdToDelete,
+    getPresetNameToDelete,
+  } = useFilterPresets({
+    params,
+    reset: clearRowSelection,
+    getUrl: pageListUrl,
+    storageUtils,
+  });
   const paginationState = createPaginationState(settings.rowNumber, params);
   const queryVariables = React.useMemo(
     () => ({
@@ -68,21 +92,19 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
     displayLoader: true,
     variables: queryVariables,
   });
-
+  const pages = mapEdgesToItems(data?.pages);
   const paginationValues = usePaginator({
-    pageInfo: maybe(() => data.pages.pageInfo),
+    pageInfo: data?.pages?.pageInfo,
     paginationState,
     queryString: params,
   });
-
   const [openModal, closeModal] = createDialogActionHandlers<
     PageListUrlDialog,
     PageListUrlQueryParams
   >(navigate, pageListUrl, params);
-
   const [bulkPageRemove, bulkPageRemoveOpts] = usePageBulkRemoveMutation({
     onCompleted: data => {
-      if (data.pageBulkDelete.errors.length === 0) {
+      if (data.pageBulkDelete?.errors.length === 0) {
         closeModal();
         notify({
           status: "success",
@@ -92,15 +114,14 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
             description: "notification",
           }),
         });
-        reset();
+        clearRowSelection();
         refetch();
       }
     },
   });
-
   const [bulkPagePublish, bulkPagePublishOpts] = usePageBulkPublishMutation({
     onCompleted: data => {
-      if (data.pageBulkPublish.errors.length === 0) {
+      if (data.pageBulkPublish?.errors.length === 0) {
         closeModal();
         notify({
           status: "success",
@@ -110,14 +131,12 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
             description: "notification",
           }),
         });
-        reset();
+        clearRowSelection();
         refetch();
       }
     },
   });
-
   const handleSort = createSortHandler(navigate, pageListUrl, params);
-
   const {
     loadMore: loadMoreDialogPageTypes,
     search: searchDialogPageTypes,
@@ -125,73 +144,68 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
   } = usePageTypeSearch({
     variables: DEFAULT_INITIAL_SEARCH_DATA,
   });
-
   const fetchMoreDialogPageTypes = {
     hasMore: searchDialogPageTypesOpts.data?.search?.pageInfo?.hasNextPage,
     loading: searchDialogPageTypesOpts.loading,
     onFetchMore: loadMoreDialogPageTypes,
   };
+  const filterOpts = getFilterOpts({
+    params,
+    pageTypes: mapEdgesToItems(searchDialogPageTypesOpts?.data?.search),
+    pageTypesProps: {
+      ...getSearchFetchMoreProps(searchDialogPageTypesOpts, loadMoreDialogPageTypes),
+      onSearchChange: searchDialogPageTypes,
+    },
+  });
+  const handleSetSelectedPageIds = useCallback(
+    (rows: number[], clearSelection: () => void) => {
+      if (!pages) {
+        return;
+      }
+
+      const rowsIds = rows.map(row => pages[row].id);
+      const haveSaveValues = isEqual(rowsIds, selectedRowIds);
+
+      if (!haveSaveValues) {
+        setSelectedRowIds(rowsIds);
+      }
+
+      setClearDatagridRowSelectionCallback(clearSelection);
+    },
+    [pages, selectedRowIds, setClearDatagridRowSelectionCallback, setSelectedRowIds],
+  );
 
   return (
     <PaginatorContext.Provider value={paginationValues}>
       <PageListPage
         disabled={loading}
+        loading={loading}
         settings={settings}
-        pages={mapEdgesToItems(data?.pages)}
+        pages={pages}
         onUpdateListSettings={updateListSettings}
-        onAdd={() => openModal("create-page")}
+        onPageCreate={() => openModal("create-page")}
         onSort={handleSort}
-        actionDialogOpts={{
-          open: openModal,
-          close: closeModal,
-        }}
-        params={params}
-        toolbar={
-          <>
-            <Button
-              onClick={() =>
-                openModal("unpublish", {
-                  ids: listElements,
-                })
-              }
-            >
-              <FormattedMessage
-                id="F8gsds"
-                defaultMessage="Unpublish"
-                description="unpublish page, button"
-              />
-            </Button>
-            <Button
-              onClick={() =>
-                openModal("publish", {
-                  ids: listElements,
-                })
-              }
-            >
-              <FormattedMessage
-                id="yEmwxD"
-                defaultMessage="Publish"
-                description="publish page, button"
-              />
-            </Button>
-            <IconButton
-              variant="secondary"
-              color="primary"
-              onClick={() =>
-                openModal("remove", {
-                  ids: listElements,
-                })
-              }
-            >
-              <DeleteIcon />
-            </IconButton>
-          </>
-        }
-        isChecked={isSelected}
-        selected={listElements.length}
         sort={getSortParams(params)}
-        toggle={toggle}
-        toggleAll={toggleAll}
+        selectedPageIds={selectedRowIds}
+        onPagesDelete={() => openModal("remove", { ids: selectedRowIds })}
+        onPagesPublish={() => openModal("publish", { ids: selectedRowIds })}
+        onPagesUnpublish={() => openModal("unpublish", { ids: selectedRowIds })}
+        onSelectPageIds={handleSetSelectedPageIds}
+        filterOpts={filterOpts}
+        onFilterChange={changeFilters}
+        initialSearch={params?.query ?? ""}
+        onSearchChange={handleSearchChange}
+        onFilterPresetChange={onPresetChange}
+        onFilterPresetDelete={(id: number) => {
+          setPresetIdToDelete(id);
+          openModal("delete-search");
+        }}
+        onFilterPresetUpdate={onPresetUpdate}
+        onFilterPresetPresetSave={() => openModal("save-search")}
+        selectedFilterPreset={selectedPreset}
+        filterPresets={presets.map(preset => preset.name)}
+        hasPresetsChanged={hasPresetsChanged}
+        onFilterPresetsAll={resetFilters}
       />
       <ActionDialog
         open={params.action === "publish"}
@@ -200,7 +214,7 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
         onConfirm={() =>
           bulkPagePublish({
             variables: {
-              ids: params.ids,
+              ids: selectedRowIds,
               isPublished: true,
             },
           })
@@ -217,10 +231,8 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
             defaultMessage="{counter,plural,one{Are you sure you want to publish this page?} other{Are you sure you want to publish {displayQuantity} pages?}}"
             description="dialog content"
             values={{
-              counter: maybe(() => params.ids.length),
-              displayQuantity: (
-                <strong>{maybe(() => params.ids.length)}</strong>
-              ),
+              counter: selectedRowIds.length,
+              displayQuantity: <strong>{selectedRowIds.length}</strong>,
             }}
           />
         </DialogContentText>
@@ -232,7 +244,7 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
         onConfirm={() =>
           bulkPagePublish({
             variables: {
-              ids: params.ids,
+              ids: selectedRowIds,
               isPublished: false,
             },
           })
@@ -248,8 +260,8 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
           defaultMessage="{counter,plural,one{Are you sure you want to unpublish this page?} other{Are you sure you want to unpublish {displayQuantity} pages?}}"
           description="dialog content"
           values={{
-            counter: maybe(() => params.ids.length),
-            displayQuantity: <strong>{maybe(() => params.ids.length)}</strong>,
+            counter: selectedRowIds.length,
+            displayQuantity: <strong>{selectedRowIds.length}</strong>,
           }}
         />
       </ActionDialog>
@@ -260,7 +272,7 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
         onConfirm={() =>
           bulkPageRemove({
             variables: {
-              ids: params.ids,
+              ids: selectedRowIds,
             },
           })
         }
@@ -276,17 +288,15 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
           defaultMessage="{counter,plural,one{Are you sure you want to delete this page?} other{Are you sure you want to delete {displayQuantity} pages?}}"
           description="dialog content"
           values={{
-            counter: maybe(() => params.ids.length),
-            displayQuantity: <strong>{maybe(() => params.ids.length)}</strong>,
+            counter: selectedRowIds.length,
+            displayQuantity: <strong>{selectedRowIds.length}</strong>,
           }}
         />
       </ActionDialog>
       <PageTypePickerDialog
         confirmButtonState="success"
         open={params.action === "create-page"}
-        pageTypes={mapNodeToChoice(
-          mapEdgesToItems(searchDialogPageTypesOpts?.data?.search),
-        )}
+        pageTypes={mapNodeToChoice(mapEdgesToItems(searchDialogPageTypesOpts?.data?.search))}
         fetchPageTypes={searchDialogPageTypes}
         fetchMorePageTypes={fetchMoreDialogPageTypes}
         onClose={closeModal}
@@ -297,6 +307,19 @@ export const PageList: React.FC<PageListProps> = ({ params }) => {
             }),
           )
         }
+      />
+      <SaveFilterTabDialog
+        open={params.action === "save-search"}
+        confirmButtonState="default"
+        onClose={closeModal}
+        onSubmit={onPresetSave}
+      />
+      <DeleteFilterTabDialog
+        open={params.action === "delete-search"}
+        confirmButtonState="default"
+        onClose={closeModal}
+        onSubmit={onPresetDelete}
+        tabName={getPresetNameToDelete()}
       />
     </PaginatorContext.Provider>
   );

@@ -1,12 +1,13 @@
+// @ts-strict-ignore
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import {
   AddressFragment,
   CustomerAddressesQuery,
   OrderDetailsQuery,
   OrderErrorFragment,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { transformAddressToForm } from "@saleor/misc";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { transformAddressToForm } from "@dashboard/misc";
 import React from "react";
 
 import OrderCustomerAddressesEditDialog, {
@@ -44,10 +45,7 @@ const OrderAddressFields: React.FC<OrderAddressFieldsProps> = ({
   orderShippingAddress,
   orderBillingAddress,
 }) => {
-  const addressFieldCommonProps: Omit<
-    OrderCustomerAddressesEditDialogProps,
-    "open" | "variant"
-  > = {
+  const addressFieldCommonProps: Omit<OrderCustomerAddressesEditDialogProps, "open" | "variant"> = {
     loading: customerAddressesLoading,
     confirmButtonState,
     countries,

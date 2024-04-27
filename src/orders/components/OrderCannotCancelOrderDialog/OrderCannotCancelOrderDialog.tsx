@@ -1,3 +1,6 @@
+import { Button } from "@dashboard/components/Button";
+import { buttonMessages } from "@dashboard/intl";
+import { DialogProps } from "@dashboard/types";
 import {
   Dialog,
   DialogActions,
@@ -5,10 +8,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import { buttonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { DialogProps } from "@saleor/types";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -22,16 +22,12 @@ const useStyles = makeStyles(
     name: "OrderCannotCancelOrderDialog",
   },
 );
-
-const OrderCannotCancelOrderDialog: React.FC<DialogProps> = ({
-  open,
-  onClose,
-}) => {
+const OrderCannotCancelOrderDialog: React.FC<DialogProps> = ({ open, onClose }) => {
   const classes = useStyles({});
 
   return (
     <Dialog onClose={onClose} open={open} maxWidth="sm">
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
           id="NhQboB"
           defaultMessage="Saleor couldn’t cancel order"
@@ -54,5 +50,6 @@ const OrderCannotCancelOrderDialog: React.FC<DialogProps> = ({
     </Dialog>
   );
 };
+
 OrderCannotCancelOrderDialog.displayName = "OrderCannotCancelOrderDialog";
 export default OrderCannotCancelOrderDialog;

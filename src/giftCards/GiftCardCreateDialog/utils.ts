@@ -1,6 +1,7 @@
-import { IMessage } from "@saleor/components/messages";
-import { GiftCardCreateMutation, TimePeriodTypeEnum } from "@saleor/graphql";
-import commonErrorMessages from "@saleor/utils/errors/common";
+// @ts-strict-ignore
+import { IMessage } from "@dashboard/components/messages";
+import { GiftCardCreateMutation, TimePeriodTypeEnum } from "@dashboard/graphql";
+import commonErrorMessages from "@dashboard/utils/errors/common";
 import moment from "moment-timezone";
 import { IntlShape } from "react-intl";
 
@@ -17,7 +18,7 @@ const addToCurrentDate = (
 export const getExpiryPeriodTerminationDate = (
   currentDate: number,
   expiryPeriodType: TimePeriodTypeEnum,
-  expiryPeriodAmount: number = 0,
+  expiryPeriodAmount = 0,
 ): moment.Moment | null => {
   switch (expiryPeriodType) {
     case TimePeriodTypeEnum.DAY:
@@ -34,12 +35,8 @@ export const getExpiryPeriodTerminationDate = (
 };
 
 export const getGiftCardExpiryError = (intl: IntlShape): IMessage => ({
-  title: intl.formatMessage(
-    giftCardUpdateFormMessages.giftCardInvalidExpiryDateHeader,
-  ),
-  text: intl.formatMessage(
-    giftCardUpdateFormMessages.giftCardInvalidExpiryDateContent,
-  ),
+  title: intl.formatMessage(giftCardUpdateFormMessages.giftCardInvalidExpiryDateHeader),
+  text: intl.formatMessage(giftCardUpdateFormMessages.giftCardInvalidExpiryDateContent),
   status: "error",
 });
 
@@ -58,7 +55,7 @@ export const getGiftCardCreateOnCompletedMessage = (
     return getGiftCardExpiryError(intl);
   }
 
-  return !!errors?.length
+  return errors?.length
     ? {
         status: "error",
         text: intl.formatMessage(commonErrorMessages.unknownError),

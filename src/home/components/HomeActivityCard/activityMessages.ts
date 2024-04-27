@@ -1,4 +1,5 @@
-import { HomeQuery, OrderEventsEnum } from "@saleor/graphql";
+// @ts-strict-ignore
+import { HomeActivitiesQuery, OrderEventsEnum } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 const messages = defineMessages({
@@ -21,7 +22,7 @@ const messages = defineMessages({
 });
 
 export const getActivityMessage = (
-  activity: HomeQuery["activities"]["edges"][0]["node"],
+  activity: HomeActivitiesQuery["activities"]["edges"][0]["node"],
   intl: IntlShape,
 ) => {
   switch (activity.type) {
@@ -34,7 +35,7 @@ export const getActivityMessage = (
         orderId: activity.orderNumber,
       });
     case OrderEventsEnum.PLACED_FROM_DRAFT:
-      if (!!activity.user?.email) {
+      if (activity.user?.email) {
         return intl.formatMessage(messages.draft, {
           orderId: activity.orderNumber,
           userEmail: activity.user?.email,

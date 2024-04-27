@@ -1,14 +1,15 @@
+// @ts-strict-ignore
 import {
   LanguageCodeEnum,
   useMenuItemTranslationDetailsQuery,
   useUpdateMenuItemTranslationsMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors } from "@saleor/misc";
-import { stringifyQs } from "@saleor/utils/urls";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors } from "@dashboard/misc";
+import { stringifyQs } from "@dashboard/utils/urls";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -34,15 +35,10 @@ const TranslationsMenuItem: React.FC<TranslationsMenuItemProps> = ({
   const notify = useNotifier();
   const shop = useShop();
   const intl = useIntl();
-
   const menuItemTranslations = useMenuItemTranslationDetailsQuery({
     variables: { id, language: languageCode },
   });
-
-  const [
-    updateTranslations,
-    updateTranslationsOpts,
-  ] = useUpdateMenuItemTranslationsMutation({
+  const [updateTranslations, updateTranslationsOpts] = useUpdateMenuItemTranslationsMutation({
     onCompleted: data => {
       if (data.menuItemTranslate.errors.length === 0) {
         menuItemTranslations.refetch();
@@ -54,7 +50,6 @@ const TranslationsMenuItem: React.FC<TranslationsMenuItemProps> = ({
       }
     },
   });
-
   const onEdit = (field: string) =>
     navigate(
       "?" +
@@ -63,11 +58,9 @@ const TranslationsMenuItem: React.FC<TranslationsMenuItemProps> = ({
         }),
       { replace: true },
     );
-
   const onDiscard = () => {
     navigate("?", { replace: true });
   };
-
   const handleSubmit = (
     { name: fieldName }: TranslationField<TranslationInputFieldName>,
     data: string,
@@ -81,7 +74,6 @@ const TranslationsMenuItem: React.FC<TranslationsMenuItemProps> = ({
         },
       }),
     );
-
   const translation = menuItemTranslations?.data?.translation;
 
   return (
@@ -95,13 +87,10 @@ const TranslationsMenuItem: React.FC<TranslationsMenuItemProps> = ({
       onEdit={onEdit}
       onDiscard={onDiscard}
       onSubmit={handleSubmit}
-      data={
-        translation?.__typename === "MenuItemTranslatableContent"
-          ? translation
-          : null
-      }
+      data={translation?.__typename === "MenuItemTranslatableContent" ? translation : null}
     />
   );
 };
+
 TranslationsMenuItem.displayName = "TranslationsMenuItem";
 export default TranslationsMenuItem;

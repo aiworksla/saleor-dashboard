@@ -1,7 +1,8 @@
+// @ts-strict-ignore
+import InlineAlert from "@dashboard/components/Alert/InlineAlert";
+import errorTracker from "@dashboard/services/errorTracking";
 import { Typography } from "@material-ui/core";
-import { fade, makeStyles } from "@material-ui/core/styles";
-import InlineAlert from "@saleor/components/Alert/InlineAlert";
-import errorTracker from "@saleor/services/errorTracking";
+import { alpha, makeStyles } from "@material-ui/core/styles";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -11,7 +12,7 @@ import { FilterElement, FilterErrorMessages, FilterErrors } from "../types";
 const useStyles = makeStyles(
   theme => ({
     container: {
-      backgroundColor: fade(theme.palette.primary.main, 0.1),
+      backgroundColor: alpha(theme.palette.primary.main, 0.1),
       padding: theme.spacing(3, 3, 0, 3),
     },
     listItemTitle: {
@@ -47,16 +48,15 @@ const FilterErrorsList: React.FC<FilterErrorsListProps> = ({
 }) => {
   const classes = useStyles({});
   const intl = useIntl();
-
   const getErrorMessage = (code: string) => {
     try {
-      return intl.formatMessage(
-        errorMessages?.[code] || validationMessages[code],
-        { dependencies: dependencies?.join() },
-      );
+      return intl.formatMessage(errorMessages?.[code] || validationMessages[code], {
+        dependencies: dependencies?.join(),
+      });
     } catch (e) {
-      errorTracker.captureException(e);
+      errorTracker.captureException(e as Error);
       console.warn("Translation missing for filter error code: ", code);
+
       return intl.formatMessage(validationMessages.UNKNOWN_ERROR);
     }
   };
@@ -72,9 +72,7 @@ const FilterErrorsList: React.FC<FilterErrorsListProps> = ({
           {errors.map(code => (
             <div className={classes.itemContainer} key={code}>
               <div className={classes.dot} />
-              <Typography className={classes.listItemTitle}>
-                {getErrorMessage(code)}
-              </Typography>
+              <Typography className={classes.listItemTitle}>{getErrorMessage(code)}</Typography>
             </div>
           ))}
         </InlineAlert>

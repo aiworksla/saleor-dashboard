@@ -1,5 +1,5 @@
-import { OrderDirection } from "@saleor/graphql";
-import { findValueInEnum, parseBoolean } from "@saleor/misc";
+import { OrderDirection } from "@dashboard/graphql";
+import { findValueInEnum, parseBoolean } from "@dashboard/misc";
 
 import { TableCellHeaderArrowDirection } from "../components/TableCellHeader";
 import { Sort } from "../types";
@@ -30,10 +30,9 @@ export function getArrowDirection(asc: boolean): TableCellHeaderArrowDirection {
 }
 
 // Extracts Sort object from the querystring
-export function getSortParams<
-  TParams extends Sort<TFields>,
-  TFields extends string
->(params: TParams): Sort<TFields> {
+export function getSortParams<TParams extends Sort<TFields>, TFields extends string>(
+  params: TParams,
+): Sort<TFields> {
   return {
     asc: params.asc,
     sort: params.sort,
@@ -43,7 +42,7 @@ export function getSortParams<
 // Appends Sort object to the querystring params
 export function asSortParams<
   TParams extends Record<any, string>,
-  TFields extends Record<any, string>
+  TFields extends Record<any, string>,
 >(
   params: TParams,
   fields: TFields,
@@ -52,13 +51,8 @@ export function asSortParams<
 ): TParams & Sort {
   return {
     ...params,
-    asc: parseBoolean(
-      params.asc,
-      defaultOrder === undefined ? true : defaultOrder,
-    ),
-    sort: params.sort
-      ? findValueInEnum(params.sort, fields)
-      : defaultField?.toString() || "name",
+    asc: parseBoolean(params.asc, defaultOrder === undefined ? true : defaultOrder),
+    sort: params.sort ? findValueInEnum(params.sort, fields) : defaultField?.toString() || "name",
   };
 }
 
@@ -68,22 +62,21 @@ interface SortingInput<T extends string> {
 }
 type GetSortQueryField<TUrlField extends string, TSortField extends string> = (
   sort: TUrlField,
-) => TSortField;
-type GetSortQueryVariables<
-  TSortField extends string,
-  TParams extends Record<any, any>
-> = (params: TParams) => SortingInput<TSortField>;
+) => TSortField | undefined;
+type GetSortQueryVariables<TSortField extends string, TParams extends Record<any, any>> = (
+  params: TParams,
+) => SortingInput<TSortField> | undefined;
 export function createGetSortQueryVariables<
   TUrlField extends string,
   TSortField extends string,
-  TParams extends Record<any, any>
+  TParams extends Record<any, any>,
 >(
   getSortQueryField: GetSortQueryField<TUrlField, TSortField>,
 ): GetSortQueryVariables<TSortField, TParams> {
   return (params: TParams) => {
     const field = getSortQueryField(params.sort);
 
-    if (!!field) {
+    if (field) {
       return {
         direction: getOrderDirection(params.asc),
         field,
@@ -93,3 +86,20 @@ export function createGetSortQueryVariables<
     return undefined;
   };
 }
+
+export const sortAlphabetically =
+  <T>(field: keyof T) =>
+  (a: T, b: T) => {
+    const aField = a[field];
+    const bField = b[field];
+
+    if (aField < bField) {
+      return -1;
+    }
+
+    if (aField > bField) {
+      return 1;
+    }
+
+    return 0;
+  };

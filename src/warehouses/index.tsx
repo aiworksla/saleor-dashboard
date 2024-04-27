@@ -1,5 +1,5 @@
-import { sectionNames } from "@saleor/intl";
-import { asSortParams } from "@saleor/utils/sort";
+import { sectionNames } from "@dashboard/intl";
+import { asSortParams } from "@dashboard/utils/sort";
 import { parse as parseQs } from "qs";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -19,27 +19,16 @@ import WarehouseDetailsComponent from "./views/WarehouseDetails";
 import WarehouseListComponent from "./views/WarehouseList";
 
 const WarehouseList: React.FC<RouteComponentProps> = ({ location }) => {
-  const qs = parseQs(location.search.substr(1));
-  const params: WarehouseListUrlQueryParams = asSortParams(
-    qs,
-    WarehouseListUrlSortField,
-  );
+  const qs = parseQs(location.search.substr(1)) as any;
+  const params: WarehouseListUrlQueryParams = asSortParams(qs, WarehouseListUrlSortField);
 
   return <WarehouseListComponent params={params} />;
 };
-
-const WarehouseDetails: React.FC<RouteComponentProps<{ id: string }>> = ({
-  location,
-  match,
-}) => {
+const WarehouseDetails: React.FC<RouteComponentProps<{ id: string }>> = ({ location, match }) => {
   const qs = parseQs(location.search.substr(1));
   const params: WarehouseUrlQueryParams = qs;
-  return (
-    <WarehouseDetailsComponent
-      id={decodeURIComponent(match.params.id)}
-      params={params}
-    />
-  );
+
+  return <WarehouseDetailsComponent id={decodeURIComponent(match.params.id)} params={params} />;
 };
 
 export const WarehouseSection: React.FC = () => {

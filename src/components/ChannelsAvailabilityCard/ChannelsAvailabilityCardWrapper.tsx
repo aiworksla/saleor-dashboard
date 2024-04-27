@@ -1,13 +1,10 @@
-import { Card, CardContent, Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Hr from "@saleor/components/Hr";
-import RequirePermissions from "@saleor/components/RequirePermissions";
-import { PermissionEnum } from "@saleor/graphql";
+import RequirePermissions from "@dashboard/components/RequirePermissions";
+import { PermissionEnum } from "@dashboard/graphql";
+import { Box, Button, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
-import { useStyles } from "./styles";
+import { DashboardCard } from "../Card";
 
 export interface ChannelsAvailabilityWrapperProps {
   selectedChannelsCount: number;
@@ -17,21 +14,16 @@ export interface ChannelsAvailabilityWrapperProps {
   openModal: () => void;
 }
 
-export const ChannelsAvailabilityWrapper: React.FC<ChannelsAvailabilityWrapperProps> = props => {
-  const {
-    selectedChannelsCount,
-    allChannelsCount,
-    children,
-    managePermissions,
-    openModal,
-  } = props;
+export const ChannelsAvailabilityCardWrapper: React.FC<
+  ChannelsAvailabilityWrapperProps
+> = props => {
+  const { selectedChannelsCount, allChannelsCount, children, managePermissions, openModal } = props;
   const intl = useIntl();
-  const classes = useStyles({});
   const channelsAvailabilityText = intl.formatMessage(
     {
-      id: "vY2lpx",
+      id: "AD1PlC",
       defaultMessage:
-        "Available at {selectedChannelsCount} out of {allChannelsCount, plural, one {# channel} other {# channels}}",
+        "In {selectedChannelsCount} out of {allChannelsCount, plural, one {# channel} other {# channels}}",
       description: "channels availability text",
     },
     {
@@ -41,43 +33,44 @@ export const ChannelsAvailabilityWrapper: React.FC<ChannelsAvailabilityWrapperPr
   );
 
   return (
-    <>
-      <Card>
-        <CardTitle
-          title={intl.formatMessage({
-            id: "5A6/2C",
-            defaultMessage: "Availability",
-            description: "section header",
-          })}
-          toolbar={
-            <RequirePermissions requiredPermissions={managePermissions}>
-              <Button
-                onClick={openModal}
-                data-test-id="channels-availability-manage-button"
-              >
-                {intl.formatMessage({
-                  id: "2i81/P",
-                  defaultMessage: "Manage",
-                  description: "section header button",
-                })}
-              </Button>
-            </RequirePermissions>
-          }
-        />
-        <CardContent className={classes.card}>
-          {!!channelsAvailabilityText && (
-            <>
-              <Typography className={classes.channelInfo}>
+    <DashboardCard>
+      <DashboardCard.Title>
+        <Box display="flex" justifyContent="space-between">
+          <Box display={"flex"} flexDirection={"column"} gap={1}>
+            <div>
+              {intl.formatMessage({
+                id: "5A6/2C",
+                defaultMessage: "Availability",
+                description: "section header",
+              })}
+            </div>
+            {!!channelsAvailabilityText && (
+              <Text size={2} color="default2" data-test-id="product-available-in-channels-text">
                 {channelsAvailabilityText}
-              </Typography>
-              <Hr className={classes.hr} />
-            </>
-          )}
+              </Text>
+            )}
+          </Box>
+          <RequirePermissions requiredPermissions={managePermissions}>
+            <Button
+              onClick={openModal}
+              data-test-id="channels-availability-manage-button"
+              type="button"
+              variant="secondary"
+            >
+              {intl.formatMessage({
+                id: "2i81/P",
+                defaultMessage: "Manage",
+                description: "section header button",
+              })}
+            </Button>
+          </RequirePermissions>
+        </Box>
+      </DashboardCard.Title>
+      <DashboardCard.Content gap={1} display="flex" flexDirection="column">
+        <Box display="flex" flexDirection="column" gap={5}>
           {children}
-        </CardContent>
-      </Card>
-    </>
+        </Box>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-
-export default ChannelsAvailabilityWrapper;

@@ -1,14 +1,8 @@
-import {
-  Card,
-  CardContent,
-  TableCell,
-  TextField,
-  Typography,
-} from "@material-ui/core";
+import useForm from "@dashboard/hooks/useForm";
+import { Card, CardContent, TableCell, TextField, Typography } from "@material-ui/core";
 import { TextFieldProps } from "@material-ui/core/TextField";
-import useForm from "@saleor/hooks/useForm";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 const useStyles = makeStyles(
@@ -50,7 +44,7 @@ interface EditableTableCellProps {
   focused?: boolean;
   InputProps?: TextFieldProps;
   value: string;
-  onConfirm(value: string): any;
+  onConfirm: (value: string) => any;
 }
 
 export const EditableTableCell: React.FC<EditableTableCellProps> = props => {
@@ -70,14 +64,12 @@ export const EditableTableCell: React.FC<EditableTableCellProps> = props => {
   // };
 
   const [opened, setOpenStatus] = React.useState(focused);
-  const { change, data } = useForm(
-    { value } /* commenting out temporarily handleConfirm */,
-  );
+  const { change, data } = useForm({ value } /* commenting out temporarily handleConfirm */);
   const enable = () => setOpenStatus(true);
   const disable = () => setOpenStatus(false);
 
   return (
-    <TableCell className={classNames(classes.container, className)}>
+    <TableCell className={clsx(classes.container, className)}>
       {opened && <div className={classes.overlay} onClick={disable} />}
       <Typography variant="caption" onClick={enable} className={classes.text}>
         {value || defaultValue}

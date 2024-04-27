@@ -1,5 +1,6 @@
-import { ShippingErrorCode, ShippingErrorFragment } from "@saleor/graphql";
-import getShippingErrorMessage from "@saleor/utils/errors/shipping";
+// @ts-strict-ignore
+import { ShippingErrorCode, ShippingErrorFragment } from "@dashboard/graphql";
+import getShippingErrorMessage from "@dashboard/utils/errors/shipping";
 import { defineMessages, IntlShape } from "react-intl";
 
 const messages = defineMessages({

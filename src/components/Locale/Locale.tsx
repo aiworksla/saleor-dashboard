@@ -1,4 +1,5 @@
-import useLocalStorage from "@saleor/hooks/useLocalStorage";
+// @ts-strict-ignore
+import useLocalStorage from "@dashboard/hooks/useLocalStorage";
 import React from "react";
 import { IntlProvider, ReactIntlErrorCode } from "react-intl";
 
@@ -104,28 +105,17 @@ const sepRegExp = new RegExp(dotSeparator, "g");
 function getKeyValueJson(messages: LocaleMessages): Record<string, string> {
   if (messages) {
     const keyValueMessages: Record<string, string> = {};
+
     return Object.entries(messages).reduce((acc, [id, msg]) => {
       acc[id.replace(sepRegExp, ".")] = msg.string;
+
       return acc;
     }, keyValueMessages);
   }
 }
 
-export function getMatchingLocale(languages: readonly string[]): Locale {
-  const localeEntries = Object.entries(Locale);
-
-  for (const preferredLocale of languages) {
-    for (const localeEntry of localeEntries) {
-      if (localeEntry[1].toLowerCase() === preferredLocale.toLowerCase()) {
-        return Locale[localeEntry[0]];
-      }
-    }
-  }
-
-  return undefined;
-}
-
-const defaultLocale = Locale.EN;
+const localeCode = process.env.LOCALE_CODE || "EN";
+const defaultLocale = Locale[localeCode];
 
 export interface LocaleContextType {
   locale: Locale;
@@ -137,19 +127,16 @@ export const LocaleContext = React.createContext<LocaleContextType>({
 });
 
 const { Consumer: LocaleConsumer, Provider: RawLocaleProvider } = LocaleContext;
-
 const LocaleProvider: React.FC = ({ children }) => {
-  const [locale, setLocale] = useLocalStorage(
-    "locale",
-    getMatchingLocale(navigator.languages) || defaultLocale,
-  );
+  const [locale, setLocale] = useLocalStorage("locale", defaultLocale);
   const [messages, setMessages] = React.useState(undefined);
 
   React.useEffect(() => {
     async function changeLocale() {
-      if (locale !== defaultLocale) {
+      if (locale !== Locale.EN) {
         // It seems like Webpack is unable to use aliases for lazy imports
         const mod = await import(`../../../locale/${locale}.json`);
+
         setMessages(mod.default);
       } else {
         setMessages(undefined);

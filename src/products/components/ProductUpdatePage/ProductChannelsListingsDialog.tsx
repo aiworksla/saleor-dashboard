@@ -1,9 +1,9 @@
-import ChannelsAvailabilityDialog from "@saleor/components/ChannelsAvailabilityDialog";
-import { ChannelFragment } from "@saleor/graphql";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { DialogProps } from "@saleor/types";
-import { arrayDiff } from "@saleor/utils/arrays";
-import { toggle } from "@saleor/utils/lists";
+import ChannelsAvailabilityDialog from "@dashboard/components/ChannelsAvailabilityDialog";
+import { ChannelFragment } from "@dashboard/graphql";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { DialogProps } from "@dashboard/types";
+import { arrayDiff } from "@dashboard/utils/arrays";
+import { toggle } from "@dashboard/utils/lists";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -27,21 +27,15 @@ const ProductChannelsListingsDialog: React.FC<ProductChannelsListingsDialogProps
   onConfirm,
 }) => {
   const intl = useIntl();
-
   const [selected, setSelected] = useStateFromProps(
-    data.channels.updateChannels.map(listing => listing.channelId),
+    data.channels.updateChannels?.map(listing => listing.channelId) ?? [],
   );
-
   const handleConfirm = () => {
     onConfirm(
-      arrayDiff(
-        data.channels.updateChannels.map(({ channelId }) => channelId),
-        selected,
-      ),
+      arrayDiff(data.channels.updateChannels?.map(({ channelId }) => channelId) ?? [], selected),
     );
     onClose();
   };
-
   const handleToggleAll = () =>
     selected.length !== channels.length
       ? setSelected(channels.map(({ id }) => id))
@@ -52,9 +46,7 @@ const ProductChannelsListingsDialog: React.FC<ProductChannelsListingsDialogProps
       toggleAll={handleToggleAll}
       isSelected={({ id }) => selected.includes(id)}
       channels={channels}
-      onChange={({ id }) =>
-        setSelected(toggle(id, selected, (a, b) => a === b))
-      }
+      onChange={({ id }) => setSelected(toggle(id, selected, (a, b) => a === b))}
       onClose={onClose}
       open={open}
       title={intl.formatMessage({
@@ -62,7 +54,7 @@ const ProductChannelsListingsDialog: React.FC<ProductChannelsListingsDialogProps
         defaultMessage: "Manage Products Channel Availability",
       })}
       confirmButtonState="default"
-      selected={selected.length}
+      selected={selected?.length}
       onConfirm={handleConfirm}
     />
   );

@@ -1,4 +1,4 @@
-export const APPS_LIST = {
+export const APPS_LIST_SELECTORS = {
   createLocalAppButton: '[data-test-id="create-app"]',
-  webhookAndEventsTab: '[id="WEBHOOKS_AND_EVENTS"]',
+  createExternalAppButton: '[data-test-id="add-app-from-manifest"]',
 };

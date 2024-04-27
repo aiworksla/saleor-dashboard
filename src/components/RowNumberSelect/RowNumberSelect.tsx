@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { MenuItem, Select } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
@@ -33,7 +34,7 @@ interface RowNumberSelectProps {
   choices: number[];
   className?: string;
   rowNumber: number;
-  onChange(value: number);
+  onChange: (value: number) => any;
 }
 
 const RowNumberSelect: React.FC<RowNumberSelectProps> = ({
@@ -57,11 +58,7 @@ const RowNumberSelect: React.FC<RowNumberSelectProps> = ({
       >
         {choices.length > 0 &&
           choices.map(choice => (
-            <MenuItem
-              value={choice}
-              key={choice}
-              data-test-id="row-number-option"
-            >
+            <MenuItem value={choice} key={choice} data-test-id="row-number-option">
               {choice}
             </MenuItem>
           ))}

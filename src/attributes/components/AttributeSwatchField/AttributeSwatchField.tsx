@@ -1,13 +1,13 @@
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import { inputTypeMessages } from "@saleor/attributes/components/AttributeDetails/messages";
-import { AttributeValueEditDialogFormData } from "@saleor/attributes/utils/data";
-import { ColorPicker } from "@saleor/components/ColorPicker";
-import FileUploadField from "@saleor/components/FileUploadField";
-import { RadioGroupField } from "@saleor/components/RadioGroupField";
-import { useFileUploadMutation } from "@saleor/graphql";
-import { UseFormResult } from "@saleor/hooks/useForm";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { errorMessages } from "@saleor/intl";
+import { inputTypeMessages } from "@dashboard/attributes/components/AttributeDetails/messages";
+import { AttributeValueEditDialogFormData } from "@dashboard/attributes/utils/data";
+import { ColorPicker, ColorPickerProps } from "@dashboard/components/ColorPicker";
+import FileUploadField from "@dashboard/components/FileUploadField";
+import { RadioGroupField } from "@dashboard/components/RadioGroupField";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import { useFileUploadMutation } from "@dashboard/graphql";
+import { UseFormResult } from "@dashboard/hooks/useForm";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { errorMessages } from "@dashboard/intl";
 import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -21,9 +21,9 @@ type AttributeSwatchFieldProps<T> = Pick<
 
 type SwatchType = "picker" | "image";
 
-const AttributeSwatchField: React.FC<AttributeSwatchFieldProps<
-  AttributeValueEditDialogFormData
->> = ({ set, ...props }) => {
+const AttributeSwatchField: React.FC<
+  AttributeSwatchFieldProps<AttributeValueEditDialogFormData>
+> = ({ set, ...props }) => {
   const { data } = props;
   const notify = useNotifier();
   const intl = useIntl();
@@ -31,21 +31,15 @@ const AttributeSwatchField: React.FC<AttributeSwatchFieldProps<
   const classes = useStyles();
   const [processing, setProcessing] = useState(false);
   const [uploadFile] = useFileUploadMutation({});
-  const [type, setType] = useState<SwatchType>(
-    data.fileUrl ? "image" : "picker",
-  );
-
+  const [type, setType] = useState<SwatchType>(data.fileUrl ? "image" : "picker");
   const handleColorChange = (hex: string) =>
     set({ value: hex, fileUrl: undefined, contentType: undefined });
-
   const handleFileUpload = async (file: File) => {
     setProcessing(true);
 
-    const {
-      data: { fileUpload },
-    } = await uploadFile({ variables: { file } });
+    const { data } = await uploadFile({ variables: { file } });
 
-    if (fileUpload.errors?.length) {
+    if (data?.fileUpload?.errors?.length) {
       notify({
         status: "error",
         title: intl.formatMessage(errorMessages.imgageUploadErrorTitle),
@@ -53,15 +47,14 @@ const AttributeSwatchField: React.FC<AttributeSwatchFieldProps<
       });
     } else {
       set({
-        fileUrl: fileUpload.uploadedFile.url,
-        contentType: fileUpload.uploadedFile.contentType,
+        fileUrl: data?.fileUpload?.uploadedFile?.url,
+        contentType: data?.fileUpload?.uploadedFile?.contentType ?? "",
         value: undefined,
       });
     }
 
     setProcessing(false);
   };
-
   const handleFileDelete = () =>
     set({
       fileUrl: undefined,
@@ -95,7 +88,7 @@ const AttributeSwatchField: React.FC<AttributeSwatchFieldProps<
           <FileUploadField
             disabled={processing}
             loading={processing}
-            file={{ label: null, value: null, file: null }}
+            file={{ label: "", value: "", file: undefined }}
             onFileUpload={handleFileUpload}
             onFileDelete={handleFileDelete}
             inputProps={{
@@ -111,7 +104,7 @@ const AttributeSwatchField: React.FC<AttributeSwatchFieldProps<
           )}
         </>
       ) : (
-        <ColorPicker {...props} onColorChange={handleColorChange} />
+        <ColorPicker {...(props as ColorPickerProps)} onColorChange={handleColorChange} />
       )}
     </>
   );

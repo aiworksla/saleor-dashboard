@@ -1,9 +1,9 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import { MenuErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getMenuErrorMessage from "@dashboard/utils/errors/menu";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { MenuErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors } from "@saleor/utils/errors";
-import getMenuErrorMessage from "@saleor/utils/errors/menu";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -16,23 +16,16 @@ export interface MenuPropertiesProps {
   onChange: (event: React.ChangeEvent<any>) => void;
 }
 
-const MenuProperties: React.FC<MenuPropertiesProps> = ({
-  data,
-  disabled,
-  errors,
-  onChange,
-}) => {
+const MenuProperties: React.FC<MenuPropertiesProps> = ({ data, disabled, errors, onChange }) => {
   const intl = useIntl();
-
   const formErrors = getFormErrors(["name"], errors);
 
   return (
     <Card>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
+          data-test-id="menu-name"
           disabled={disabled}
           error={!!formErrors.name}
           name={"name" as keyof MenuDetailsFormData}
@@ -49,5 +42,6 @@ const MenuProperties: React.FC<MenuPropertiesProps> = ({
     </Card>
   );
 };
+
 MenuProperties.displayName = "MenuProperties";
 export default MenuProperties;

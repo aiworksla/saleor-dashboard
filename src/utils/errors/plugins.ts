@@ -1,4 +1,4 @@
-import { PluginErrorCode, PluginErrorFragment } from "@saleor/graphql";
+import { PluginErrorCode, PluginErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -14,10 +14,7 @@ const messages = defineMessages({
   },
 });
 
-function getPluginErrorMessage(
-  err: PluginErrorFragment,
-  intl: IntlShape,
-): string {
+function getPluginErrorMessage(err: PluginErrorFragment, intl: IntlShape): string | undefined {
   if (err) {
     switch (err.code) {
       case PluginErrorCode.PLUGIN_MISCONFIGURED:

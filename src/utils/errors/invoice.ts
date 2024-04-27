@@ -1,4 +1,4 @@
-import { InvoiceErrorCode, InvoiceErrorFragment } from "@saleor/graphql";
+import { InvoiceErrorCode, InvoiceErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -21,8 +21,7 @@ const messages = defineMessages({
   },
   notReady: {
     id: "Fz3kic",
-    defaultMessage:
-      "Billing address is not set or invoice is not ready to be send",
+    defaultMessage: "Billing address is not set or invoice is not ready to be send",
     description: "error message",
   },
   numberNotSet: {
@@ -37,10 +36,7 @@ const messages = defineMessages({
   },
 });
 
-function getInvoiceErrorMessage(
-  err: InvoiceErrorFragment,
-  intl: IntlShape,
-): string {
+function getInvoiceErrorMessage(err: InvoiceErrorFragment, intl: IntlShape): string | undefined {
   if (err) {
     switch (err.code) {
       case InvoiceErrorCode.EMAIL_NOT_SET:

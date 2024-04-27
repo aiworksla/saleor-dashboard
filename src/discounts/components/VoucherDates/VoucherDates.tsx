@@ -1,11 +1,11 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import { ControlledCheckbox } from "@dashboard/components/ControlledCheckbox";
+import Grid from "@dashboard/components/Grid";
+import { DiscountErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getDiscountErrorMessage from "@dashboard/utils/errors/discounts";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { ControlledCheckbox } from "@saleor/components/ControlledCheckbox";
-import Grid from "@saleor/components/Grid";
-import { DiscountErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors } from "@saleor/utils/errors";
-import getDiscountErrorMessage from "@saleor/utils/errors/discounts";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -18,14 +18,8 @@ interface VoucherDatesProps {
   onChange: (event: React.ChangeEvent<any>) => void;
 }
 
-const VoucherDates = ({
-  data,
-  disabled,
-  errors,
-  onChange,
-}: VoucherDatesProps) => {
+const VoucherDates = ({ data, disabled, errors, onChange }: VoucherDatesProps) => {
   const intl = useIntl();
-
   const formErrors = getFormErrors(["startDate", "endDate"], errors);
 
   return (
@@ -114,4 +108,5 @@ const VoucherDates = ({
     </Card>
   );
 };
+
 export default VoucherDates;

@@ -1,7 +1,7 @@
+import { Channel } from "@dashboard/channels/utils";
+import { ControlledCheckbox } from "@dashboard/components/ControlledCheckbox";
+import Hr from "@dashboard/components/Hr";
 import { TextField, Typography } from "@material-ui/core";
-import { Channel } from "@saleor/channels/utils";
-import { ControlledCheckbox } from "@saleor/components/ControlledCheckbox";
-import Hr from "@saleor/components/Hr";
 import { filter } from "fuzzaldrin";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -66,10 +66,7 @@ export const ChannelsAvailabilityContent: React.FC<ChannelsAvailabilityContentPr
               label={
                 toggleAllText || (
                   <Typography className={classes.label}>
-                    <FormattedMessage
-                      id="2/L4zZ"
-                      defaultMessage="Select all channels"
-                    />
+                    <FormattedMessage id="2/L4zZ" defaultMessage="Select all channels" />
                   </Typography>
                 )
               }
@@ -87,19 +84,11 @@ export const ChannelsAvailabilityContent: React.FC<ChannelsAvailabilityContentPr
         >
           {filteredChannels?.length ? (
             filteredChannels.map(option => (
-              <div
-                key={option.id}
-                className={classes.option}
-                data-test-id="channel-row"
-              >
+              <div key={option.id} className={classes.option} data-test-id="channel-row">
                 <ControlledCheckbox
                   checked={isSelected(option)}
                   name={option.name}
-                  label={
-                    <Typography className={classes.label}>
-                      {option.name}
-                    </Typography>
-                  }
+                  label={<Typography className={classes.label}>{option.name}</Typography>}
                   onChange={() => onChange(option)}
                 />
                 <Hr />
@@ -107,10 +96,7 @@ export const ChannelsAvailabilityContent: React.FC<ChannelsAvailabilityContentPr
             ))
           ) : (
             <div className={classes.notFound}>
-              <FormattedMessage
-                id="B9yrkK"
-                defaultMessage="No Channels found"
-              />
+              <FormattedMessage id="B9yrkK" defaultMessage="No Channels found" />
             </div>
           )}
         </div>

@@ -9,14 +9,15 @@ import { createVariant } from "../../../support/api/requests/Product";
 import * as channelsUtils from "../../../support/api/utils/channelsUtils";
 import {
   createSaleInChannel,
-  deleteSalesStartsWith,
+  getVariantWithSaleStatus,
 } from "../../../support/api/utils/discounts/salesUtils";
-import * as productsUtils from "../../../support/api/utils/products/productsUtils";
+import * as productsUtils
+  from "../../../support/api/utils/products/productsUtils";
+import { createShipping } from "../../../support/api/utils/shippingUtils";
 import {
-  createShipping,
-  deleteShippingStartsWith,
-} from "../../../support/api/utils/shippingUtils";
-import { deleteWarehouseStartsWith } from "../../../support/api/utils/warehouseUtils";
+  getDefaultTaxClass,
+  updateTaxConfigurationForChannel,
+} from "../../../support/api/utils/taxesUtils";
 import {
   createSaleWithNewVariant,
   discountOptions,
@@ -31,18 +32,21 @@ describe("Sales discounts for variant", () => {
   let warehouse;
   let productData;
   let address;
+  let taxClass;
 
   before(() => {
     const name = `${startsWith}${faker.datatype.number()}`;
 
-    cy.clearSessionData().loginUserViaRequest();
-    productsUtils.deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
-    deleteSalesStartsWith(startsWith);
-    deleteWarehouseStartsWith(startsWith);
-    channelsUtils.getDefaultChannel().then(channel => {
-      defaultChannel = channel;
-    });
+    cy.loginUserViaRequest();
+    channelsUtils
+      .getDefaultChannel()
+      .then(channel => {
+        defaultChannel = channel;
+        getDefaultTaxClass();
+      })
+      .then(taxResp => {
+        taxClass = taxResp;
+      });
     cy.fixture("addresses")
       .then(addresses => {
         address = addresses.usAddress;
@@ -51,6 +55,7 @@ describe("Sales discounts for variant", () => {
           channelId: defaultChannel.id,
           address,
           name,
+          taxClassId: taxClass.id,
         });
       })
       .then(({ warehouse: warehouseResp }) => {
@@ -70,12 +75,23 @@ describe("Sales discounts for variant", () => {
           channelId: defaultChannel.id,
           warehouseId: warehouse.id,
           price: productPrice,
+          taxClassId: taxClass.id,
         };
+        cy.checkIfDataAreNotNull({
+          productData,
+          defaultChannel,
+          warehouse,
+          address,
+        });
       });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
+    updateTaxConfigurationForChannel({
+      channelSlug: defaultChannel.slug,
+      pricesEnteredWithTax: true,
+    });
   });
 
   it(
@@ -83,6 +99,10 @@ describe("Sales discounts for variant", () => {
     { tags: ["@sales", "@allEnv", "@stable"] },
     () => {
       const saleName = `${startsWith}${faker.datatype.number()}`;
+      const variantSku = `${startsWith}${faker.datatype.number()}`;
+      const productSku = `${startsWith}${faker.datatype.number()}`;
+      const productName = faker.commerce.product();
+      const productSlug = productName + faker.datatype.number();
       const productPriceOnSale = productPrice - discountValue;
 
       let sale;
@@ -95,13 +115,18 @@ describe("Sales discounts for variant", () => {
         channelId: defaultChannel.id,
       }).then(saleResp => (sale = saleResp));
       productsUtils
-        .createProductInChannel(productData)
+        .createProductInChannel({
+          ...productData,
+          name: productName,
+          slug: productSlug,
+          sku: productSku,
+        })
         .then(({ product, variantsList }) => {
           variantNotOnSale = variantsList;
 
           createVariant({
             productId: product.id,
-            sku: saleName,
+            sku: variantSku,
             attributeId: productData.attributeId,
             attributeName: "value2",
             warehouseId: warehouse.id,
@@ -113,6 +138,11 @@ describe("Sales discounts for variant", () => {
         })
         .then(variantsList => {
           updateSale({ saleId: sale.id, variants: variantsList });
+          getVariantWithSaleStatus({
+            channelSlug: defaultChannel.slug,
+            variantId: variantsList[0].id,
+            onSaleStatus: true,
+          });
           createCheckout({
             channelSlug: defaultChannel.slug,
             email: "example@example.com",
@@ -152,6 +182,7 @@ describe("Sales discounts for variant", () => {
         price: productPrice,
         discountOption: discountOptions.PERCENTAGE,
         discountValue,
+        taxClassId: taxClass.id,
       })
         .its("pricing.price.gross.amount")
         .should("eq", expectedPrice);

@@ -1,10 +1,10 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import { DialogContentText, TextField } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -43,10 +43,7 @@ const OrderMarkAsPaidDialog: React.FC<OrderMarkAsPaidDialogProps> = ({
       onConfirm={onConfirm}
     >
       <DialogContentText>
-        <FormattedMessage
-          id="sfEbeB"
-          defaultMessage="You're going to mark this order as paid."
-        />
+        <FormattedMessage id="sfEbeB" defaultMessage="You're going to mark this order as paid." />
         <br />
         <FormattedMessage
           id="rwOx2s"
@@ -63,6 +60,7 @@ const OrderMarkAsPaidDialog: React.FC<OrderMarkAsPaidDialogProps> = ({
         })}
         value={transactionReference}
         onChange={handleTransactionReference}
+        data-test-id="transaction-reference-input"
       />
       {errors.length > 0 && (
         <>
@@ -77,5 +75,6 @@ const OrderMarkAsPaidDialog: React.FC<OrderMarkAsPaidDialogProps> = ({
     </ActionDialog>
   );
 };
+
 OrderMarkAsPaidDialog.displayName = "OrderMarkAsPaidDialog";
 export default OrderMarkAsPaidDialog;

@@ -1,9 +1,10 @@
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import { DEFAULT_INITIAL_SEARCH_DATA } from "@saleor/config";
-import { commonMessages } from "@saleor/intl";
-import { getFullName } from "@saleor/misc";
-import useCustomerSearch from "@saleor/searches/useCustomerSearch";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+// @ts-strict-ignore
+import SingleAutocompleteSelectField from "@dashboard/components/SingleAutocompleteSelectField";
+import { DEFAULT_INITIAL_SEARCH_DATA } from "@dashboard/config";
+import { commonMessages } from "@dashboard/intl";
+import { getFullName } from "@dashboard/misc";
+import useCustomerSearch from "@dashboard/searches/useCustomerSearch";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -22,25 +23,20 @@ const GiftCardCustomerSelectField: React.FC<GiftCardCustomerSelectFieldProps> = 
   disabled = false,
 }) => {
   const intl = useIntl();
-
   const { loadMore, search, result } = useCustomerSearch({
     variables: DEFAULT_INITIAL_SEARCH_DATA,
   });
-
   const customers = mapEdgesToItems(result?.data?.search);
-
   const choices = customers?.map(({ email, firstName, lastName }) => ({
     value: email,
     label: getFullName({ firstName, lastName }),
   }));
-
-  const handleSelect = (event: React.ChangeEvent<any>) => {
+  const handleSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const label = choices?.find(category => category.value === value)?.label;
 
     setSelectedCustomer({ email: value, name: label });
   };
-
   const label = `${intl.formatMessage(
     messages.customerLabel,
   )} *${intl.formatMessage(commonMessages.optionalField)}`;

@@ -1,11 +1,9 @@
-import { ChannelShippingZonesQuery, WarehouseFragment } from "@saleor/graphql";
-import { RelayToFlat } from "@saleor/types";
+import { ChannelShippingZonesQuery, WarehouseFragment } from "@dashboard/graphql";
+import { RelayToFlat } from "@dashboard/types";
 
-export type ChannelShippingZones = RelayToFlat<
-  ChannelShippingZonesQuery["shippingZones"]
->;
+export type ChannelShippingZones = RelayToFlat<ChannelShippingZonesQuery["shippingZones"]>;
 
-export type ChannelShippingZone = ChannelShippingZones[0];
+export type ChannelShippingZone = NonNullable<ChannelShippingZones>[number];
 
 export type ChannelWarehouses = WarehouseFragment[];
 

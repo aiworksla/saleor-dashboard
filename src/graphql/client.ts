@@ -4,7 +4,7 @@ import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { createFetch, createSaleorClient } from "@saleor/sdk";
 import { createUploadLink } from "apollo-upload-client";
 
-import { API_URI } from "../config";
+import { getApiUrl } from "../config";
 import introspectionQueryResultData from "./fragmentTypes.generated";
 import { TypedTypePolicies } from "./typePolicies.generated";
 
@@ -21,9 +21,9 @@ const attachVariablesLink = new ApolloLink((operation, forward) =>
 export const link = attachVariablesLink.concat(
   createUploadLink({
     credentials: "include",
-    uri: API_URI,
+    uri: getApiUrl(),
     fetch: createFetch(),
-  }),
+  }) as unknown as ApolloLink, // type mismatch between apollo-upload-client and @apollo/cient
 );
 
 export const apolloClient = new ApolloClient({
@@ -70,6 +70,6 @@ export const apolloClient = new ApolloClient({
 });
 
 export const saleorClient = createSaleorClient({
-  apiUrl: API_URI,
+  apiUrl: getApiUrl(),
   channel: "",
 });

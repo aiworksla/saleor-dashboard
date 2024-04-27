@@ -1,7 +1,7 @@
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import { Typography } from "@material-ui/core";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -11,9 +11,7 @@ interface AddressTextErrorProps {
   orderError: OrderErrorFragment;
 }
 
-export const AddressTextError: React.FC<AddressTextErrorProps> = ({
-  orderError,
-}) => {
+export const AddressTextError: React.FC<AddressTextErrorProps> = ({ orderError }) => {
   const intl = useIntl();
   const classes = useAddressTextErrorStyles();
 

@@ -1,8 +1,8 @@
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButton } from "@dashboard/components/ConfirmButton";
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import useNavigator from "@dashboard/hooks/useNavigator";
 import { CardContent } from "@material-ui/core";
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import useNavigator from "@saleor/hooks/useNavigator";
 import React, { useState } from "react";
 import { MessageDescriptor, useIntl } from "react-intl";
 
@@ -37,15 +37,10 @@ const TypeDeleteWarningDialogContent: React.FC<TypeDeleteWarningDialogContentPro
   const classes = useStyles({});
   const intl = useIntl();
   const navigate = useNavigator();
-
   const [isConsentChecked, setIsConsentChecked] = useState(false);
-
   const handleViewAssignedItems = () => navigate(viewAssignedItemsUrl);
-
   const isDisbled = hasAssignedItems ? !isConsentChecked : false;
-
-  const shouldShowViewAssignedItemsButton =
-    showViewAssignedItemsButton && hasAssignedItems;
+  const shouldShowViewAssignedItemsButton = showViewAssignedItemsButton && hasAssignedItems;
 
   return (
     <CardContent>
@@ -63,20 +58,13 @@ const TypeDeleteWarningDialogContent: React.FC<TypeDeleteWarningDialogContentPro
       <div className={classes.buttonsSection}>
         {shouldShowViewAssignedItemsButton && (
           <>
-            <ConfirmButton
-              onClick={handleViewAssignedItems}
-              transitionState="default"
-            >
+            <ConfirmButton onClick={handleViewAssignedItems} transitionState="default">
               {intl.formatMessage(viewAssignedItemsButtonLabel)}
             </ConfirmButton>
             <HorizontalSpacer spacing={3} />
           </>
         )}
-        <DeleteButton
-          onClick={onDelete}
-          disabled={isDisbled}
-          testId="confirm-delete"
-        />
+        <DeleteButton onClick={onDelete} disabled={isDisbled} testId="confirm-delete" />
       </div>
     </CardContent>
   );

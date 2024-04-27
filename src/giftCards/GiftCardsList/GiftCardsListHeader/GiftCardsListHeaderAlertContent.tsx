@@ -1,28 +1,28 @@
-import Link from "@saleor/components/Link";
-import { ProductTypeKindEnum } from "@saleor/graphql";
-import { productAddUrl } from "@saleor/products/urls";
-import { productTypeAddUrl } from "@saleor/productTypes/urls";
+import Link from "@dashboard/components/Link";
+import { ProductTypeKindEnum } from "@dashboard/graphql";
+import { productAddUrl } from "@dashboard/products/urls";
+import { productTypeAddUrl } from "@dashboard/productTypes/urls";
+import { sprinkles } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { giftCardsListHeaderMenuItemsMessages as messages } from "../messages";
-import { useHeaderStyles as useStyles } from "../styles";
 
 interface GiftCardsListHeaderAlertContentProps {
   giftCardProductTypesExist: boolean;
   giftCardProductsExist: boolean;
 }
 
+const alertLinkClassName = sprinkles({
+  fontSize: 1,
+});
 const GiftCardsListHeaderAlertContent: React.FC<GiftCardsListHeaderAlertContentProps> = ({
   giftCardProductTypesExist,
   giftCardProductsExist,
 }) => {
-  const classes = useStyles({});
-
   const giftCardProductTypeUrl = productTypeAddUrl({
     kind: ProductTypeKindEnum.GIFT_CARD,
   });
-
   const giftCardCreateGiftCardProductUrl = productAddUrl();
 
   if (!giftCardProductTypesExist) {
@@ -31,7 +31,7 @@ const GiftCardsListHeaderAlertContent: React.FC<GiftCardsListHeaderAlertContentP
         {...messages.noGiftCardsProductTypes}
         values={{
           createGiftCardProductType: (
-            <Link href={giftCardProductTypeUrl} className={classes.alertLink}>
+            <Link href={giftCardProductTypeUrl} className={alertLinkClassName}>
               <FormattedMessage {...messages.createGiftCardProductType} />
             </Link>
           ),
@@ -46,10 +46,7 @@ const GiftCardsListHeaderAlertContent: React.FC<GiftCardsListHeaderAlertContentP
         {...messages.noGiftCardsProducts}
         values={{
           createGiftCardProduct: (
-            <Link
-              href={giftCardCreateGiftCardProductUrl}
-              className={classes.alertLink}
-            >
+            <Link href={giftCardCreateGiftCardProductUrl} className={alertLinkClassName}>
               <FormattedMessage {...messages.createGiftCardProduct} />
             </Link>
           ),

@@ -1,11 +1,9 @@
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import PageHeader from "@saleor/components/PageHeader";
-import GiftCardStatusChip from "@saleor/giftCards/components/GiftCardStatusChip/GiftCardStatusChip";
-import { giftCardsListPath } from "@saleor/giftCards/urls";
-import { sectionNames } from "@saleor/intl";
-import { getStringOrPlaceholder } from "@saleor/misc";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Button } from "@dashboard/components/Button";
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import GiftCardStatusChip from "@dashboard/giftCards/components/GiftCardStatusChip/GiftCardStatusChip";
+import { giftCardsListPath } from "@dashboard/giftCards/urls";
+import { getStringOrPlaceholder } from "@dashboard/misc";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -20,27 +18,21 @@ const GiftCardUpdatePageHeader: React.FC = () => {
   const classes = useStyles();
   const intl = useIntl();
   const { giftCard } = useGiftCardDetails();
-
   const { openResendCodeDialog } = useGiftCardUpdateDialogs();
 
   if (!giftCard) {
-    return <PageHeader preview title={getStringOrPlaceholder(undefined)} />;
+    return <TopNav title={getStringOrPlaceholder(undefined)} />;
   }
 
   const { last4CodeChars, isExpired } = giftCard;
-
   const title = intl.formatMessage(tableMessages.codeEndingWithLabel, {
     last4CodeChars,
   });
 
   return (
     <>
-      <Backlink href={giftCardsListPath}>
-        {intl.formatMessage(sectionNames.giftCards)}
-      </Backlink>
-      <PageHeader
-        preview
-        inline
+      <TopNav
+        href={giftCardsListPath}
         title={
           <div className={classes.title}>
             {title}
@@ -52,11 +44,11 @@ const GiftCardUpdatePageHeader: React.FC = () => {
         <GiftCardEnableDisableSection />
         <HorizontalSpacer />
         {!isExpired && (
-          <Button variant="primary" onClick={openResendCodeDialog}>
+          <Button variant="primary" onClick={openResendCodeDialog} data-test-id="resend-code">
             {intl.formatMessage(messages.resendButtonLabel)}
           </Button>
         )}
-      </PageHeader>
+      </TopNav>
     </>
   );
 };

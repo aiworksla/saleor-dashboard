@@ -1,5 +1,5 @@
-import { sectionNames } from "@saleor/intl";
-import { asSortParams } from "@saleor/utils/sort";
+import { sectionNames } from "@dashboard/intl";
+import { asSortParams } from "@dashboard/utils/sort";
 import { parse as parseQs } from "qs";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -17,28 +17,20 @@ import PluginsListComponent from "./views/PluginList";
 import PluginsDetailsComponent from "./views/PluginsDetails";
 
 const PluginList: React.FC<RouteComponentProps<any>> = ({ location }) => {
-  const qs = parseQs(location.search.substr(1));
-  const params: PluginListUrlQueryParams = asSortParams(
-    qs,
-    PluginListUrlSortField,
-  );
+  const qs = parseQs(location.search.substr(1)) as any;
+  const params: PluginListUrlQueryParams = asSortParams(qs, PluginListUrlSortField);
+
   return <PluginsListComponent params={params} />;
 };
-
 const PageDetails: React.FC<RouteComponentProps<any>> = ({ match }) => {
   const qs = parseQs(location.search.substr(1));
   const params: PluginUrlQueryParams = qs;
 
-  return (
-    <PluginsDetailsComponent
-      id={decodeURIComponent(match.params.id)}
-      params={params}
-    />
-  );
+  return <PluginsDetailsComponent id={decodeURIComponent(match.params.id)} params={params} />;
 };
-
 const Component = () => {
   const intl = useIntl();
+
   return (
     <>
       <WindowTitle title={intl.formatMessage(sectionNames.plugins)} />

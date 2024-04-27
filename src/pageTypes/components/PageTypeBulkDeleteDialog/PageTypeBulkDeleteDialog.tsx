@@ -1,6 +1,6 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -62,5 +62,6 @@ const PageTypeBulkDeleteDialog: React.FC<PageTypeBulkDeleteDialogProps> = ({
     </ActionDialog>
   );
 };
+
 PageTypeBulkDeleteDialog.displayName = "PageTypeBulkDeleteDialog";
 export default PageTypeBulkDeleteDialog;

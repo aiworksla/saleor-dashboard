@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import AddressEdit from "@dashboard/components/AddressEdit";
+import CardTitle from "@dashboard/components/CardTitle";
+import { FormSpacer } from "@dashboard/components/FormSpacer";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { AccountErrorFragment } from "@dashboard/graphql";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import AddressEdit from "@saleor/components/AddressEdit";
-import CardTitle from "@saleor/components/CardTitle";
-import { FormSpacer } from "@saleor/components/FormSpacer";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
-import { AccountErrorFragment } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -25,22 +26,14 @@ export interface CustomerCreateAddressProps {
   data: AddressTypeInput;
   disabled: boolean;
   errors: AccountErrorFragment[];
-  onChange(event: React.ChangeEvent<any>);
-  onCountryChange(event: React.ChangeEvent<any>);
+  onChange: (event: React.ChangeEvent<any>) => any;
+  onCountryChange: (event: React.ChangeEvent<any>) => any;
 }
 
 const CustomerCreateAddress: React.FC<CustomerCreateAddressProps> = props => {
-  const {
-    countries,
-    countryDisplayName,
-    data,
-    disabled,
-    errors,
-    onChange,
-    onCountryChange,
-  } = props;
+  const { countries, countryDisplayName, data, disabled, errors, onChange, onCountryChange } =
+    props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
@@ -54,10 +47,7 @@ const CustomerCreateAddress: React.FC<CustomerCreateAddressProps> = props => {
       />
       <CardContent className={classes.overflow}>
         <Typography>
-          <FormattedMessage
-            id="wNQzS/"
-            defaultMessage="The primary address of this customer."
-          />
+          <FormattedMessage id="wNQzS/" defaultMessage="The primary address of this customer." />
         </Typography>
         <FormSpacer />
         <AddressEdit
@@ -73,5 +63,6 @@ const CustomerCreateAddress: React.FC<CustomerCreateAddressProps> = props => {
     </Card>
   );
 };
+
 CustomerCreateAddress.displayName = "CustomerCreateAddress";
 export default CustomerCreateAddress;

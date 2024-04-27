@@ -1,10 +1,28 @@
 import { MockedProvider, MockedResponse } from "@apollo/client/testing";
-// mocks
-import { mocks as appMocks } from "@saleor/apps/apolloMocks";
 import React from "react";
 
-const mocks: MockedResponse[] = [...appMocks];
+import {
+  addressMocks,
+  appsMocks,
+  introspectionMocks,
+  pageTypesMocks,
+  warehousesMocks,
+} from "./mocks";
 
-export const ApolloMockedProvider = ({ children }) => (
-  <MockedProvider mocks={mocks}>{children}</MockedProvider>
+const mocks: MockedResponse[] = [
+  ...appsMocks,
+  ...addressMocks,
+  ...warehousesMocks,
+  ...pageTypesMocks,
+  ...introspectionMocks,
+];
+
+interface ApolloMockedProviderProps {
+  children: React.ReactNode
+}
+
+export const ApolloMockedProvider = ({ children }: ApolloMockedProviderProps) => (
+  <MockedProvider mocks={mocks} addTypename={false}>
+    {children}
+  </MockedProvider>
 );

@@ -1,17 +1,18 @@
+// @ts-strict-ignore
+import { categoryUrl } from "@dashboard/categories/urls";
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Checkbox from "@dashboard/components/Checkbox";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import { TableButtonWrapper } from "@dashboard/components/TableButtonWrapper/TableButtonWrapper";
+import TableHead from "@dashboard/components/TableHead";
+import { TablePaginationWithContext } from "@dashboard/components/TablePagination";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { SaleDetailsFragment, VoucherDetailsFragment } from "@dashboard/graphql";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import { Card, TableBody, TableCell, TableFooter } from "@material-ui/core";
-import { categoryUrl } from "@saleor/categories/urls";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Checkbox from "@saleor/components/Checkbox";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import { TableButtonWrapper } from "@saleor/components/TableButtonWrapper/TableButtonWrapper";
-import TableHead from "@saleor/components/TableHead";
-import { TablePaginationWithContext } from "@saleor/components/TablePagination";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { SaleDetailsFragment, VoucherDetailsFragment } from "@saleor/graphql";
 import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import { mapEdgesToItems } from "@saleor/utils/maps";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -27,7 +28,6 @@ export interface DiscountCategoriesProps extends ListProps, ListActions {
 }
 
 const numberOfColumns = 4;
-
 const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
   const {
     discount,
@@ -41,15 +41,14 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
     isChecked,
   } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
-    <Card>
+    <Card data-test-id="assign-category-section">
       <CardTitle
         title={intl.formatMessage(messages.discountCategoriesHeader)}
         toolbar={
-          <Button onClick={onCategoryAssign}>
+          <Button onClick={onCategoryAssign} data-test-id="assign-category-button">
             <FormattedMessage {...messages.discountCategoriesButton} />
           </Button>
         }
@@ -71,14 +70,10 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
         >
           <>
             <TableCell className={classes.colName}>
-              <FormattedMessage
-                {...messages.discountCategoriesTableProductHeader}
-              />
+              <FormattedMessage {...messages.discountCategoriesTableProductHeader} />
             </TableCell>
             <TableCell className={classes.colProducts}>
-              <FormattedMessage
-                {...messages.discountCategoriesTableProductNumber}
-              />
+              <FormattedMessage {...messages.discountCategoriesTableProductNumber} />
             </TableCell>
             <TableCell />
           </>
@@ -88,7 +83,7 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
             <TablePaginationWithContext colSpan={numberOfColumns} />
           </TableRowLink>
         </TableFooter>
-        <TableBody>
+        <TableBody data-test-id="assigned-specific-products-table">
           {renderCollection(
             mapEdgesToItems(discount?.categories),
             category => {
@@ -101,6 +96,7 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
                   href={category && categoryUrl(category.id)}
                   className={classes.tableRow}
                   selected={isSelected}
+                  data-test-id="assigned-specific-product"
                 >
                   <TableCell padding="checkbox">
                     <Checkbox
@@ -110,14 +106,9 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
                       onChange={() => toggle(category.id)}
                     />
                   </TableCell>
-                  <TableCell>
-                    {maybe<React.ReactNode>(() => category.name, <Skeleton />)}
-                  </TableCell>
+                  <TableCell>{maybe<React.ReactNode>(() => category.name, <Skeleton />)}</TableCell>
                   <TableCell className={classes.colProducts}>
-                    {maybe<React.ReactNode>(
-                      () => category.products.totalCount,
-                      <Skeleton />,
-                    )}
+                    {maybe<React.ReactNode>(() => category.products.totalCount, <Skeleton />)}
                   </TableCell>
                   <TableCell className={classes.colActions}>
                     <TableButtonWrapper>
@@ -149,5 +140,6 @@ const DiscountCategories: React.FC<DiscountCategoriesProps> = props => {
     </Card>
   );
 };
+
 DiscountCategories.displayName = "DiscountCategories";
 export default DiscountCategories;

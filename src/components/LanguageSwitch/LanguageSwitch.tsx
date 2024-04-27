@@ -1,3 +1,5 @@
+// @ts-strict-ignore
+import { LanguageCodeEnum, LanguageFragment } from "@dashboard/graphql";
 import {
   Card,
   ClickAwayListener,
@@ -9,9 +11,8 @@ import {
   Typography,
 } from "@material-ui/core";
 import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
-import { LanguageCodeEnum, LanguageFragment } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router-dom";
@@ -55,23 +56,18 @@ const useStyles = makeStyles(
   }),
   { name: "LanguageSwitch" },
 );
-
 const LanguageSwitch: React.FC<LanguageSwitchProps> = props => {
   const { currentLanguage, languages, getLanguageUrl } = props;
   const classes = useStyles(props);
-
   const [isExpanded, setExpandedState] = React.useState(false);
   const anchor = React.useRef();
 
   return (
     <div className={classes.container} ref={anchor}>
-      <Card
-        className={classes.menuContainer}
-        onClick={() => setExpandedState(!isExpanded)}
-      >
+      <Card className={classes.menuContainer} onClick={() => setExpandedState(!isExpanded)}>
         <Typography>{currentLanguage}</Typography>
         <ArrowDropDown
-          className={classNames(classes.arrow, {
+          className={clsx(classes.arrow, {
             [classes.rotate]: isExpanded,
           })}
         />
@@ -87,15 +83,11 @@ const LanguageSwitch: React.FC<LanguageSwitchProps> = props => {
           <Grow
             {...TransitionProps}
             style={{
-              transformOrigin:
-                placement === "bottom" ? "right top" : "right bottom",
+              transformOrigin: placement === "bottom" ? "right top" : "right bottom",
             }}
           >
             <Paper className={classes.menuPaper} elevation={8}>
-              <ClickAwayListener
-                onClickAway={() => setExpandedState(false)}
-                mouseEvent="onClick"
-              >
+              <ClickAwayListener onClickAway={() => setExpandedState(false)} mouseEvent="onClick">
                 <Menu>
                   {languages.map(lang => (
                     <MenuItem
@@ -127,5 +119,6 @@ const LanguageSwitch: React.FC<LanguageSwitchProps> = props => {
     </div>
   );
 };
+
 LanguageSwitch.displayName = "LanguageSwitch";
 export default LanguageSwitch;

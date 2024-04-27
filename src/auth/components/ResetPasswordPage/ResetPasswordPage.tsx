@@ -1,12 +1,12 @@
+import { Button } from "@dashboard/components/Button";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { IconButton } from "@dashboard/components/IconButton";
+import { getAppMountUri } from "@dashboard/config";
+import { AccountErrorCode } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
 import { TextField, Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { IconButton } from "@saleor/components/IconButton";
-import { APP_MOUNT_URI } from "@saleor/config";
-import { RequestPasswordResetMutation } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
 import { ArrowRightIcon } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -19,16 +19,11 @@ export interface ResetPasswordPageFormData {
 export interface ResetPasswordPageProps {
   disabled: boolean;
   error: string;
-  onSubmit: (
-    data: ResetPasswordPageFormData,
-  ) => SubmitPromise<
-    RequestPasswordResetMutation["requestPasswordReset"]["errors"]
-  >;
+  onSubmit: (data: ResetPasswordPageFormData) => SubmitPromise<AccountErrorCode[]>;
 }
 
 const ResetPasswordPage: React.FC<ResetPasswordPageProps> = props => {
   const { disabled, error, onSubmit } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
 
@@ -36,7 +31,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = props => {
     <Form initial={{ email: "" }} onSubmit={onSubmit}>
       {({ change: handleChange, data, submit: handleSubmit }) => (
         <>
-          <IconButton className={classes.backBtn} href={APP_MOUNT_URI}>
+          <IconButton className={classes.backBtn} href={getAppMountUri()} variant="secondary">
             <ArrowRightIcon className={classes.arrow} />
           </IconButton>
           <Typography variant="h3" className={classes.header}>

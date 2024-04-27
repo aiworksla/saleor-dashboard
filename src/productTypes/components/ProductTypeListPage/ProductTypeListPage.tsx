@@ -1,16 +1,13 @@
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Button } from "@dashboard/components/Button";
+import FilterBar from "@dashboard/components/FilterBar";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { ProductTypeFragment } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import ProductTypeList from "@dashboard/productTypes/components/ProductTypeList/ProductTypeList";
+import { productTypeAddUrl, ProductTypeListUrlSortField } from "@dashboard/productTypes/urls";
 import { Card } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import FilterBar from "@saleor/components/FilterBar";
-import PageHeader from "@saleor/components/PageHeader";
-import { configurationMenuUrl } from "@saleor/configuration";
-import { ProductTypeFragment } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import {
-  productTypeAddUrl,
-  ProductTypeListUrlSortField,
-} from "@saleor/productTypes/urls";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -21,12 +18,7 @@ import {
   SortPage,
   TabPageProps,
 } from "../../../types";
-import ProductTypeList from "../ProductTypeList";
-import {
-  createFilterStructure,
-  ProductTypeFilterKeys,
-  ProductTypeListFilterOpts,
-} from "./filters";
+import { createFilterStructure, ProductTypeFilterKeys, ProductTypeListFilterOpts } from "./filters";
 
 export interface ProductTypeListPageProps
   extends PageListProps,
@@ -51,27 +43,15 @@ const ProductTypeListPage: React.FC<ProductTypeListPageProps> = ({
   ...listProps
 }) => {
   const intl = useIntl();
-
   const structure = createFilterStructure(intl, filterOpts);
 
   return (
-    <Container>
-      <Backlink href={configurationMenuUrl}>
-        {intl.formatMessage(sectionNames.configuration)}
-      </Backlink>
-      <PageHeader title={intl.formatMessage(sectionNames.productTypes)}>
-        <Button
-          variant="primary"
-          href={productTypeAddUrl()}
-          data-test-id="add-product-type"
-        >
-          <FormattedMessage
-            id="QY7FSs"
-            defaultMessage="create product type"
-            description="button"
-          />
+    <>
+      <TopNav href={configurationMenuUrl} title={intl.formatMessage(sectionNames.productTypes)}>
+        <Button variant="primary" href={productTypeAddUrl()} data-test-id="add-product-type">
+          <FormattedMessage id="gksZwp" defaultMessage="Create product type" description="button" />
         </Button>
-      </PageHeader>
+      </TopNav>
       <Card>
         <FilterBar
           allTabLabel={intl.formatMessage({
@@ -96,8 +76,9 @@ const ProductTypeListPage: React.FC<ProductTypeListPageProps> = ({
         />
         <ProductTypeList {...listProps} />
       </Card>
-    </Container>
+    </>
   );
 };
+
 ProductTypeListPage.displayName = "ProductTypeListPage";
 export default ProductTypeListPage;

@@ -1,10 +1,9 @@
-import { Choice } from "@saleor/components/SingleSelectField";
+import { Choice } from "@dashboard/components/SingleSelectField";
 import { filter } from "fuzzaldrin";
 import { useMemo, useState } from "react";
 
 function useChoiceSearch(choices: Array<Choice<string, string>>) {
   const [query, setQuery] = useState("");
-
   const sortedChoices = useMemo(
     () => filter(choices, query, { key: "label" }) || [],
     [choices, query],

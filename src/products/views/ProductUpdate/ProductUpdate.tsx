@@ -1,15 +1,11 @@
-import placeholderImg from "@assets/images/placeholder255x255.png";
-import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import useAppChannel from "@saleor/components/AppLayout/AppChannelContext";
-import { AttributeInput } from "@saleor/components/Attributes";
-import NotFoundPage from "@saleor/components/NotFoundPage";
-import { useShopLimitsQuery } from "@saleor/components/Shop/queries";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import {
-  DEFAULT_INITIAL_SEARCH_DATA,
-  VALUES_PAGINATE_BY,
-} from "@saleor/config";
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import useAppChannel from "@dashboard/components/AppLayout/AppChannelContext";
+import { AttributeInput } from "@dashboard/components/Attributes";
+import NotFoundPage from "@dashboard/components/NotFoundPage";
+import { useShopLimitsQuery } from "@dashboard/components/Shop/queries";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { DEFAULT_INITIAL_SEARCH_DATA, VALUES_PAGINATE_BY } from "@dashboard/config";
 import {
   ProductMediaCreateMutationVariables,
   useProductDeleteMutation,
@@ -17,23 +13,24 @@ import {
   useProductMediaCreateMutation,
   useProductMediaDeleteMutation,
   useProductMediaReorderMutation,
-  useWarehouseListQuery,
-} from "@saleor/graphql";
-import { getSearchFetchMoreProps } from "@saleor/hooks/makeTopLevelSearch/utils";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages, errorMessages } from "@saleor/intl";
-import { useSearchAttributeValuesSuggestions } from "@saleor/searches/useAttributeValueSearch";
-import useCategorySearch from "@saleor/searches/useCategorySearch";
-import useCollectionSearch from "@saleor/searches/useCollectionSearch";
-import usePageSearch from "@saleor/searches/usePageSearch";
-import useProductSearch from "@saleor/searches/useProductSearch";
-import { getProductErrorMessage } from "@saleor/utils/errors";
-import useAttributeValueSearchHandler from "@saleor/utils/handlers/attributeValueSearchHandler";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+} from "@dashboard/graphql";
+import { getSearchFetchMoreProps } from "@dashboard/hooks/makeTopLevelSearch/utils";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages, errorMessages } from "@dashboard/intl";
+import { useSearchAttributeValuesSuggestions } from "@dashboard/searches/useAttributeValueSearch";
+import useCategorySearch from "@dashboard/searches/useCategorySearch";
+import useCollectionSearch from "@dashboard/searches/useCollectionSearch";
+import usePageSearch from "@dashboard/searches/usePageSearch";
+import useProductSearch from "@dashboard/searches/useProductSearch";
+import { useTaxClassFetchMore } from "@dashboard/taxes/utils/useTaxClassFetchMore";
+import { getProductErrorMessage } from "@dashboard/utils/errors";
+import useAttributeValueSearchHandler from "@dashboard/utils/handlers/attributeValueSearchHandler";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { DialogContentText } from "@material-ui/core";
 import React from "react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 
 import { getMutationState } from "../../../misc";
 import ProductUpdatePage from "../../components/ProductUpdatePage";
@@ -44,35 +41,9 @@ import {
   ProductUrlQueryParams,
   productVariantEditUrl,
 } from "../../urls";
-import {
-  createImageReorderHandler,
-  createImageUploadHandler,
-} from "./handlers";
+import { createImageReorderHandler, createImageUploadHandler } from "./handlers";
 import { useProductUpdateHandler } from "./handlers/useProductUpdateHandler";
-
-const messages = defineMessages({
-  deleteProductDialogTitle: {
-    id: "TWVx7O",
-    defaultMessage: "Delete Product",
-    description: "delete product dialog title",
-  },
-  deleteProductDialogSubtitle: {
-    id: "ZHF4Z9",
-    defaultMessage: "Are you sure you want to delete {name}?",
-    description: "delete product dialog subtitle",
-  },
-  deleteVariantDialogTitle: {
-    id: "6iw4VR",
-    defaultMessage: "Delete Product Variants",
-    description: "delete variant dialog title",
-  },
-  deleteVariantDialogSubtitle: {
-    id: "ukdRUv",
-    defaultMessage:
-      "{counter,plural,one{Are you sure you want to delete this variant?} other{Are you sure you want to delete {displayQuantity} variants?}}",
-    description: "delete variant dialog subtitle",
-  },
-});
+import { productUpdatePageMessages as messages } from "./messages";
 
 interface ProductUpdateProps {
   id: string;
@@ -117,7 +88,6 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
     result: searchAttributeValuesOpts,
     reset: searchAttributeReset,
   } = useAttributeValueSearchHandler(DEFAULT_INITIAL_SEARCH_DATA);
-
   const { data, loading, refetch } = useProductDetailsQuery({
     displayLoader: true,
     variables: {
@@ -125,22 +95,14 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
       firstValues: VALUES_PAGINATE_BY,
     },
   });
-
   const isSimpleProduct = !data?.product?.productType?.hasVariants;
-
   const { availableChannels } = useAppChannel(false);
-
   const limitOpts = useShopLimitsQuery({
     variables: {
       productVariants: true,
     },
   });
-
-  const [
-    reorderProductImages,
-    reorderProductImagesOpts,
-  ] = useProductMediaReorderMutation({});
-
+  const [reorderProductImages, reorderProductImagesOpts] = useProductMediaReorderMutation({});
   const [deleteProduct, deleteProductOpts] = useProductDeleteMutation({
     onCompleted: () => {
       notify({
@@ -153,17 +115,12 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
       navigate(productListUrl());
     },
   });
-
-  const [
-    createProductImage,
-    createProductImageOpts,
-  ] = useProductMediaCreateMutation({
+  const [createProductImage, createProductImageOpts] = useProductMediaCreateMutation({
     onCompleted: data => {
       const imageError = data.productMediaCreate.errors.find(
-        error =>
-          error.field ===
-          ("image" as keyof ProductMediaCreateMutationVariables),
+        error => error.field === ("image" as keyof ProductMediaCreateMutationVariables),
       );
+
       if (imageError) {
         notify({
           status: "error",
@@ -173,7 +130,6 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
       }
     },
   });
-
   const [deleteProductImage] = useProductMediaDeleteMutation({
     onCompleted: () =>
       notify({
@@ -181,26 +137,13 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
         text: intl.formatMessage(commonMessages.savedChanges),
       }),
   });
-
   const [openModal, closeModal] = createDialogActionHandlers<
     ProductUrlDialog,
     ProductUrlQueryParams
   >(navigate, params => productUrl(id, params), params);
-
   const product = data?.product;
-
   const getAttributeValuesSuggestions = useSearchAttributeValuesSuggestions();
-  const warehousesQuery = useWarehouseListQuery({
-    displayLoader: true,
-    variables: {
-      first: 50,
-    },
-  });
-
-  const [
-    createProductMedia,
-    createProductMediaOpts,
-  ] = useProductMediaCreateMutation({
+  const [createProductMedia, createProductMediaOpts] = useProductMediaCreateMutation({
     onCompleted: data => {
       const errors = data.productMediaCreate.errors;
 
@@ -219,7 +162,6 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
       }
     },
   });
-
   const handleMediaUrlUpload = (mediaUrl: string) => {
     const variables = {
       alt: "",
@@ -231,35 +173,24 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
       variables,
     });
   };
-
   const handleBack = () => navigate(productListUrl());
-
-  const handleImageDelete = (id: string) => () =>
-    deleteProductImage({ variables: { id } });
-
+  const handleImageDelete = (id: string) => () => deleteProductImage({ variables: { id } });
   const [submit, submitOpts] = useProductUpdateHandler(product);
-
-  const warehouses = React.useMemo(
-    () => mapEdgesToItems(warehousesQuery.data?.warehouses) || [],
-    [warehousesQuery.data],
-  );
-
   const handleImageUpload = createImageUploadHandler(id, variables =>
     createProductImage({ variables }),
   );
   const handleImageReorder = createImageReorderHandler(product, variables =>
     reorderProductImages({ variables }),
   );
-
   const handleAssignAttributeReferenceClick = (attribute: AttributeInput) =>
     navigate(
       productUrl(id, {
+        ...params,
         action: "assign-attribute-value",
         id: attribute.id,
       }),
       { resetScroll: false },
     );
-
   const disableFormSave =
     submitOpts.loading ||
     createProductImageOpts.loading ||
@@ -267,48 +198,25 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
     reorderProductImagesOpts.loading ||
     createProductMediaOpts.loading ||
     loading;
-
   const formTransitionState = getMutationState(
     submitOpts.called,
     submitOpts.loading,
     submitOpts.errors,
     createProductMediaOpts.data?.productMediaCreate.errors,
   );
-
   const categories = mapEdgesToItems(searchCategoriesOpts?.data?.search) || [];
-
-  const collections =
-    mapEdgesToItems(searchCollectionsOpts?.data?.search) || [];
-
-  const attributeValues =
-    mapEdgesToItems(searchAttributeValuesOpts?.data?.attribute.choices) || [];
-
-  const fetchMoreCollections = getSearchFetchMoreProps(
-    searchCollectionsOpts,
-    loadMoreCollections,
-  );
-
-  const fetchMoreCategories = getSearchFetchMoreProps(
-    searchCategoriesOpts,
-    loadMoreCategories,
-  );
-
-  const fetchMoreReferencePages = getSearchFetchMoreProps(
-    searchPagesOpts,
-    loadMorePages,
-  );
-
-  const fetchMoreReferenceProducts = getSearchFetchMoreProps(
-    searchProductsOpts,
-    loadMoreProducts,
-  );
-
+  const collections = mapEdgesToItems(searchCollectionsOpts?.data?.search) || [];
+  const attributeValues = mapEdgesToItems(searchAttributeValuesOpts?.data?.attribute.choices) || [];
+  const fetchMoreCollections = getSearchFetchMoreProps(searchCollectionsOpts, loadMoreCollections);
+  const fetchMoreCategories = getSearchFetchMoreProps(searchCategoriesOpts, loadMoreCategories);
+  const fetchMoreReferencePages = getSearchFetchMoreProps(searchPagesOpts, loadMorePages);
+  const fetchMoreReferenceProducts = getSearchFetchMoreProps(searchProductsOpts, loadMoreProducts);
   const fetchMoreAttributeValues = {
-    hasMore: !!searchAttributeValuesOpts.data?.attribute?.choices?.pageInfo
-      ?.hasNextPage,
+    hasMore: !!searchAttributeValuesOpts.data?.attribute?.choices?.pageInfo?.hasNextPage,
     loading: !!searchAttributeValuesOpts.loading,
     onFetchMore: loadMoreAttributeValues,
   };
+  const { taxClasses, fetchMoreTaxClasses } = useTaxClassFetchMore();
 
   if (product === null) {
     return <NotFoundPage onBack={handleBack} />;
@@ -336,10 +244,9 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
         saveButtonBarState={formTransitionState}
         media={data?.product?.media}
         header={product?.name}
-        placeholderImage={placeholderImg}
         product={product}
-        warehouses={warehouses}
-        taxTypes={data?.taxTypes}
+        taxClasses={taxClasses ?? []}
+        fetchMoreTaxClasses={fetchMoreTaxClasses}
         variants={product?.variants}
         onDelete={() => openModal("remove")}
         onImageReorder={handleImageReorder}
@@ -354,14 +261,10 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ id, params }) => {
         onImageDelete={handleImageDelete}
         fetchMoreCategories={fetchMoreCategories}
         fetchMoreCollections={fetchMoreCollections}
-        assignReferencesAttributeId={
-          params.action === "assign-attribute-value" && params.id
-        }
+        assignReferencesAttributeId={params.action === "assign-attribute-value" && params.id}
         onAssignReferencesClick={handleAssignAttributeReferenceClick}
         referencePages={mapEdgesToItems(searchPagesOpts?.data?.search) || []}
-        referenceProducts={
-          mapEdgesToItems(searchProductsOpts?.data?.search) || []
-        }
+        referenceProducts={mapEdgesToItems(searchProductsOpts?.data?.search) || []}
         fetchReferencePages={searchPages}
         fetchMoreReferencePages={fetchMoreReferencePages}
         fetchReferenceProducts={searchProducts}

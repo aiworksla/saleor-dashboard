@@ -1,7 +1,4 @@
-import {
-  PermissionGroupErrorCode,
-  PermissionGroupErrorFragment,
-} from "@saleor/graphql";
+import { PermissionGroupErrorCode, PermissionGroupErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -30,9 +27,9 @@ const messages = defineMessages({
 });
 
 function getPermissionGroupErrorMessage(
-  err: PermissionGroupErrorFragment,
+  err: PermissionGroupErrorFragment | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case PermissionGroupErrorCode.ASSIGN_NON_STAFF_MEMBER:

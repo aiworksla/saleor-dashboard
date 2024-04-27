@@ -1,10 +1,17 @@
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
+// @ts-strict-ignore
+import { FilterContainer } from "@dashboard/components/ConditionalFilter/FilterElement";
+import { createProductQueryVariables } from "@dashboard/components/ConditionalFilter/queryVariables";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { FlagValue } from "@dashboard/featureFlags/FlagContent";
 import {
+  AttributeFragment,
+  AttributeInputTypeEnum,
   InitialProductFilterAttributesQuery,
   InitialProductFilterCategoriesQuery,
   InitialProductFilterCollectionsQuery,
   InitialProductFilterProductTypesQuery,
   ProductFilterInput,
+  ProductWhereInput,
   SearchAttributeValuesQuery,
   SearchAttributeValuesQueryVariables,
   SearchCategoriesQuery,
@@ -14,20 +21,15 @@ import {
   SearchProductTypesQuery,
   SearchProductTypesQueryVariables,
   StockAvailability,
-} from "@saleor/graphql";
-import { UseSearchResult } from "@saleor/hooks/makeSearch";
-import { findValueInEnum, maybe } from "@saleor/misc";
+} from "@dashboard/graphql";
+import { UseSearchResult } from "@dashboard/hooks/makeSearch";
+import { findValueInEnum, maybe } from "@dashboard/misc";
 import {
   ProductFilterKeys,
   ProductListFilterOpts,
-} from "@saleor/products/components/ProductListPage";
-import { RelayToFlat } from "@saleor/types";
-import {
-  mapEdgesToItems,
-  mapNodeToChoice,
-  mapSlugNodeToChoice,
-} from "@saleor/utils/maps";
-import moment from "moment-timezone";
+} from "@dashboard/products/components/ProductListPage";
+import { RelayToFlat } from "@dashboard/types";
+import { mapEdgesToItems, mapNodeToChoice, mapSlugNodeToChoice } from "@dashboard/utils/maps";
 
 import {
   FilterElement,
@@ -55,7 +57,50 @@ import {
   ProductListUrlQueryParams,
 } from "../../urls";
 import { getProductGiftCardFilterParam } from "./utils";
-export const PRODUCT_FILTERS_KEY = "productFilters";
+
+export const PRODUCT_FILTERS_KEY = "productPresets";
+
+function getAttributeFilterParamType(inputType: AttributeInputTypeEnum) {
+  switch (inputType) {
+    case AttributeInputTypeEnum.DATE:
+      return ProductListUrlFiltersAsDictWithMultipleValues.dateAttributes;
+    case AttributeInputTypeEnum.DATE_TIME:
+      return ProductListUrlFiltersAsDictWithMultipleValues.dateTimeAttributes;
+    case AttributeInputTypeEnum.NUMERIC:
+      return ProductListUrlFiltersAsDictWithMultipleValues.numericAttributes;
+    case AttributeInputTypeEnum.BOOLEAN:
+      return ProductListUrlFiltersAsDictWithMultipleValues.booleanAttributes;
+    default:
+      return ProductListUrlFiltersAsDictWithMultipleValues.stringAttributes;
+  }
+}
+
+export function getAttributeValuesFromParams(
+  params: ProductListUrlFilters,
+  attribute: Pick<AttributeFragment, "inputType" | "slug">,
+) {
+  return params[getAttributeFilterParamType(attribute.inputType)]?.[attribute.slug] || [];
+}
+
+export function mapAttributeParamsToFilterOpts(
+  attributes: RelayToFlat<InitialProductFilterAttributesQuery["attributes"]>,
+  params: ProductListUrlFilters,
+) {
+  return attributes
+    .sort((a, b) => (a.name > b.name ? 1 : -1))
+    .map(attr => {
+      const attrValues = getAttributeValuesFromParams(params, attr);
+
+      return {
+        active: attrValues.length > 0,
+        id: attr.id,
+        name: attr.name,
+        slug: attr.slug,
+        inputType: attr.inputType,
+        value: dedupeFilter(attrValues),
+      };
+    });
+}
 
 export function getFilterOpts(
   params: ProductListUrlFilters,
@@ -66,54 +111,31 @@ export function getFilterOpts(
   >,
   categories: {
     initial: RelayToFlat<InitialProductFilterCategoriesQuery["categories"]>;
-    search: UseSearchResult<
-      SearchCategoriesQuery,
-      SearchCategoriesQueryVariables
-    >;
+    search: UseSearchResult<SearchCategoriesQuery, SearchCategoriesQueryVariables>;
   },
   collections: {
     initial: RelayToFlat<InitialProductFilterCollectionsQuery["collections"]>;
-    search: UseSearchResult<
-      SearchCollectionsQuery,
-      SearchCollectionsQueryVariables
-    >;
+    search: UseSearchResult<SearchCollectionsQuery, SearchCollectionsQueryVariables>;
   },
   productTypes: {
     initial: RelayToFlat<InitialProductFilterProductTypesQuery["productTypes"]>;
-    search: UseSearchResult<
-      SearchProductTypesQuery,
-      SearchProductTypesQueryVariables
-    >;
+    search: UseSearchResult<SearchProductTypesQuery, SearchProductTypesQueryVariables>;
   },
   productKind: SingleAutocompleteChoiceType[],
   channels: SingleAutocompleteChoiceType[],
 ): ProductListFilterOpts {
   return {
-    attributes: attributes
-      .sort((a, b) => (a.name > b.name ? 1 : -1))
-      .map(attr => ({
-        active: maybe(() => params.attributes[attr.slug].length > 0, false),
-        id: attr.id,
-        name: attr.name,
-        slug: attr.slug,
-        inputType: attr.inputType,
-        value: dedupeFilter(params.attributes?.[attr.slug] || []),
-      })),
+    attributes: mapAttributeParamsToFilterOpts(attributes, params),
     attributeChoices: {
       active: true,
       choices: mapSlugNodeToChoice(
-        mapEdgesToItems(
-          focusedAttributeChoices.result.data?.attribute?.choices,
-        ),
+        mapEdgesToItems(focusedAttributeChoices.result.data?.attribute?.choices),
       ),
       displayValues: mapNodeToChoice(
-        mapEdgesToItems(
-          focusedAttributeChoices.result.data?.attribute?.choices,
-        ),
+        mapEdgesToItems(focusedAttributeChoices.result.data?.attribute?.choices),
       ),
       hasMore:
-        focusedAttributeChoices.result.data?.attribute?.choices?.pageInfo
-          ?.hasNextPage || false,
+        focusedAttributeChoices.result.data?.attribute?.choices?.pageInfo?.hasNextPage || false,
       initialSearch: "",
       loading: focusedAttributeChoices.result.loading,
       onFetchMore: focusedAttributeChoices.loadMore,
@@ -122,10 +144,8 @@ export function getFilterOpts(
     },
     categories: {
       active: !!params.categories,
-      choices: mapNodeToChoice(
-        mapEdgesToItems(categories?.search?.result?.data?.search),
-      ),
-      displayValues: !!params.categories
+      choices: mapNodeToChoice(mapEdgesToItems(categories?.search?.result?.data?.search)),
+      displayValues: params.categories
         ? maybe(
             () =>
               categories.initial.map(category => ({
@@ -135,10 +155,7 @@ export function getFilterOpts(
             [],
           )
         : [],
-      hasMore: maybe(
-        () => categories.search.result.data.search.pageInfo.hasNextPage,
-        false,
-      ),
+      hasMore: maybe(() => categories.search.result.data.search.pageInfo.hasNextPage, false),
       initialSearch: "",
       loading: categories.search.result.loading,
       onFetchMore: categories.search.loadMore,
@@ -152,10 +169,8 @@ export function getFilterOpts(
     },
     collections: {
       active: !!params.collections,
-      choices: mapNodeToChoice(
-        mapEdgesToItems(collections?.search?.result?.data?.search),
-      ),
-      displayValues: !!params.collections
+      choices: mapNodeToChoice(mapEdgesToItems(collections?.search?.result?.data?.search)),
+      displayValues: params.collections
         ? maybe(
             () =>
               collections.initial.map(category => ({
@@ -165,10 +180,7 @@ export function getFilterOpts(
             [],
           )
         : [],
-      hasMore: maybe(
-        () => collections.search.result.data.search.pageInfo.hasNextPage,
-        false,
-      ),
+      hasMore: maybe(() => collections.search.result.data.search.pageInfo.hasNextPage, false),
       initialSearch: "",
       loading: collections.search.result.loading,
       onFetchMore: collections.search.loadMore,
@@ -177,11 +189,7 @@ export function getFilterOpts(
     },
     metadata: {
       active: !!params?.metadata?.length,
-      value: [
-        ...(params?.metadata
-          ? params.metadata.filter(pair => pair?.key !== undefined)
-          : []),
-      ],
+      value: [...(params?.metadata ? params.metadata.filter(pair => pair?.key !== undefined) : [])],
     },
     productKind: {
       active: params?.productKind !== undefined,
@@ -190,8 +198,7 @@ export function getFilterOpts(
     },
     price: {
       active: maybe(
-        () =>
-          [params.priceFrom, params.priceTo].some(field => field !== undefined),
+        () => [params.priceFrom, params.priceTo].some(field => field !== undefined),
         false,
       ),
       value: {
@@ -201,10 +208,8 @@ export function getFilterOpts(
     },
     productType: {
       active: !!params.productTypes,
-      choices: mapNodeToChoice(
-        mapEdgesToItems(productTypes?.search?.result?.data?.search),
-      ),
-      displayValues: !!params.productTypes
+      choices: mapNodeToChoice(mapEdgesToItems(productTypes?.search?.result?.data?.search)),
+      displayValues: params.productTypes
         ? maybe(
             () =>
               productTypes.initial.map(productType => ({
@@ -214,10 +219,7 @@ export function getFilterOpts(
             [],
           )
         : [],
-      hasMore: maybe(
-        () => productTypes.search.result.data.search.pageInfo.hasNextPage,
-        false,
-      ),
+      hasMore: maybe(() => productTypes.search.result.data.search.pageInfo.hasNextPage, false),
       initialSearch: "",
       loading: productTypes.search.result.loading,
       onFetchMore: productTypes.search.loadMore,
@@ -226,46 +228,10 @@ export function getFilterOpts(
     },
     stockStatus: {
       active: maybe(() => params.stockStatus !== undefined, false),
-      value: maybe(() =>
-        findValueInEnum(params.stockStatus, StockAvailability),
-      ),
+      value: maybe(() => findValueInEnum(params.stockStatus, StockAvailability)),
     },
   };
 }
-
-const parseFilterValue = (
-  params: ProductListUrlFilters,
-  key: string,
-): {
-  type: "boolean" | "date" | "dateTime" | "numeric" | "string";
-  isMulti: boolean;
-  value: string[];
-} => {
-  const value = params.attributes[key];
-  const isMulti = params.attributes[key].length > 1;
-
-  const isBooleanValue = value.every(val => val === "true" || val === "false");
-  const isDateValue = (isMulti ? value : [value]).some(val =>
-    moment(val, moment.HTML5_FMT.DATE, true).isValid(),
-  );
-  const isDateTimeValue = (isMulti ? value : [value]).some(val =>
-    moment(val, moment.ISO_8601, true).isValid(),
-  );
-  const isNumericValue = value.some(value => !isNaN(parseFloat(value)));
-
-  const data = { isMulti, value };
-
-  if (isBooleanValue) {
-    return { ...data, type: "boolean" };
-  } else if (isDateValue) {
-    return { ...data, type: "date" };
-  } else if (isDateTimeValue) {
-    return { ...data, type: "dateTime" };
-  } else if (isNumericValue) {
-    return { ...data, type: "numeric" };
-  }
-  return { ...data, type: "string" };
-};
 
 interface BaseFilterParam {
   slug: string;
@@ -282,60 +248,85 @@ interface DateTimeFilterParam extends BaseFilterParam {
 interface DefaultFilterParam extends BaseFilterParam {
   values: string[];
 }
-
-function getFilteredAttributeValue(
-  params: ProductListUrlFilters,
-): Array<
+interface NumericFilterParam extends BaseFilterParam {
+  valuesRange: GteLte<number>;
+}
+export type FilterParam =
   | BooleanFilterParam
-  | BaseFilterParam
-  | DateTimeFilterParam
   | DateFilterParam
+  | DateTimeFilterParam
   | DefaultFilterParam
-> {
-  return !!params.attributes
-    ? Object.keys(params.attributes).map(key => {
-        const { isMulti, type, value } = parseFilterValue(params, key);
-        const name = { slug: key };
+  | NumericFilterParam;
 
-        switch (type) {
-          case "boolean":
-            return { ...name, boolean: JSON.parse(value[0]) };
+export const parseFilterValue = (
+  params: ProductListUrlFilters,
+  key: string,
+  type: ProductListUrlFiltersAsDictWithMultipleValues,
+): FilterParam => {
+  const value = params[type][key];
+  const isMulti = params[type][key].length > 1;
+  const name = { slug: key };
 
-          case "date":
-            return {
-              ...name,
-              date: getGteLteVariables({
-                gte: value[0] || null,
-                lte: isMulti ? value[1] || null : value[0],
-              }),
-            };
+  switch (type) {
+    case ProductListUrlFiltersAsDictWithMultipleValues.booleanAttributes:
+      return { ...name, boolean: JSON.parse(value[0]) };
+    case ProductListUrlFiltersAsDictWithMultipleValues.dateAttributes:
+      return {
+        ...name,
+        date: getGteLteVariables({
+          gte: value[0] || null,
+          lte: isMulti ? value[1] || null : value[0],
+        }),
+      };
+    case ProductListUrlFiltersAsDictWithMultipleValues.dateTimeAttributes:
+      return {
+        ...name,
+        dateTime: getGteLteVariables({
+          gte: value[0] || null,
+          lte: isMulti ? value[1] || null : value[0],
+        }),
+      };
+    case ProductListUrlFiltersAsDictWithMultipleValues.numericAttributes: {
+      const [gte, lte] = value.map(v => parseFloat(v));
 
-          case "dateTime":
-            return {
-              ...name,
-              dateTime: getGteLteVariables({
-                gte: value[0] || null,
-                lte: isMulti ? value[1] || null : value[0],
-              }),
-            };
+      return {
+        ...name,
+        valuesRange: {
+          gte: gte || undefined,
+          lte: isMulti ? lte || undefined : gte || undefined,
+        },
+      };
+    }
+    default:
+      return { ...name, values: value };
+  }
+};
 
-          case "numeric":
-            return {
-              ...name,
-              valuesRange: {
-                gte: value[0] || undefined,
-                lte: isMulti ? value[1] || undefined : value[0] || undefined,
-              },
-            };
+function getFilteredAttributeValue(params: ProductListUrlFilters): FilterParam[] {
+  const attrValues = Object.values(ProductListUrlFiltersAsDictWithMultipleValues).reduce<
+    FilterParam[]
+  >((attrValues, attributeType) => {
+    const attributes = params[attributeType];
 
-          default:
-            return { ...name, values: value };
-        }
-      })
-    : null;
+    if (!attributes) {
+      return attrValues;
+    }
+
+    return [
+      ...attrValues,
+      ...Object.keys(attributes).map(key => parseFilterValue(params, key, attributeType)),
+    ];
+  }, []);
+
+  if (!attrValues.length) {
+    return null;
+  }
+
+  return attrValues;
 }
 
-export function getFilterVariables(
+// TODO: Remove this function when productListingPageFiltersFlag is removed
+export function getLegacyFilterVariables(
   params: ProductListUrlFilters,
   isChannelSelected: boolean,
 ): ProductFilterInput {
@@ -350,8 +341,7 @@ export function getFilterVariables(
           lte: parseFloat(params.priceTo),
         })
       : null,
-    productTypes:
-      params.productTypes !== undefined ? params.productTypes : null,
+    productTypes: params.productTypes !== undefined ? params.productTypes : null,
     search: params.query,
     giftCard: getProductGiftCardFilterParam(params.productKind),
     stockAvailability:
@@ -367,7 +357,7 @@ export function getFilterQueryParam(
 ): ProductListUrlFilters {
   const { active, group, name, value } = filter;
 
-  if (!!group) {
+  if (group) {
     const rest = params && params[group] ? params[group] : undefined;
 
     return {
@@ -382,10 +372,7 @@ export function getFilterQueryParam(
 
   switch (name) {
     case ProductFilterKeys.categories:
-      return getMultipleValueQueryParam(
-        filter,
-        ProductListUrlFiltersWithMultipleValues.categories,
-      );
+      return getMultipleValueQueryParam(filter, ProductListUrlFiltersWithMultipleValues.categories);
 
     case ProductFilterKeys.collections:
       return getMultipleValueQueryParam(
@@ -408,22 +395,16 @@ export function getFilterQueryParam(
 
     case ProductFilterKeys.stock:
       return getSingleEnumValueQueryParam(
-        filter as FilterElementRegular<ProductFilterKeys.stock>,
+        filter as FilterElementRegular<ProductFilterKeys>,
         ProductListUrlFiltersEnum.stockStatus,
         StockAvailability,
       );
 
     case ProductFilterKeys.channel:
-      return getSingleValueQueryParam(
-        filter,
-        ProductListUrlFiltersEnum.channel,
-      );
+      return getSingleValueQueryParam(filter, ProductListUrlFiltersEnum.channel);
 
     case ProductFilterKeys.productKind:
-      return getSingleValueQueryParam(
-        filter,
-        ProductListUrlFiltersEnum.productKind,
-      );
+      return getSingleValueQueryParam(filter, ProductListUrlFiltersEnum.productKind);
 
     case ProductFilterKeys.metadata:
       return getKeyValueQueryParam(
@@ -433,18 +414,56 @@ export function getFilterQueryParam(
   }
 }
 
-export const {
-  deleteFilterTab,
-  getFilterTabs,
-  saveFilterTab,
-} = createFilterTabUtils<ProductListUrlFilters>(PRODUCT_FILTERS_KEY);
+export const storageUtils = createFilterTabUtils<string>(PRODUCT_FILTERS_KEY);
 
-export const {
-  areFiltersApplied,
-  getActiveFilters,
-  getFiltersCurrentTab,
-} = createFilterUtils<ProductListUrlQueryParams, ProductListUrlFilters>({
+export const { areFiltersApplied, getActiveFilters, getFiltersCurrentTab } = createFilterUtils<
+  ProductListUrlQueryParams,
+  ProductListUrlFilters
+>({
   ...ProductListUrlFiltersEnum,
   ...ProductListUrlFiltersWithMultipleValues,
   ...ProductListUrlFiltersAsDictWithMultipleValues,
 });
+
+export const getWhereVariables = (
+  productListingPageFiltersFlag: FlagValue,
+  value: FilterContainer,
+): ProductWhereInput => {
+  if (productListingPageFiltersFlag.enabled) {
+    const queryVars = createProductQueryVariables(value);
+
+    return queryVars;
+  }
+
+  return undefined;
+};
+
+export const getFilterVariables = ({
+  isProductListingPageFiltersFlagEnabled,
+  filterContainer,
+  queryParams,
+  isChannelSelected,
+  channelSlug,
+}: {
+  isProductListingPageFiltersFlagEnabled: boolean;
+  filterContainer: FilterContainer;
+  queryParams: ProductListUrlFilters;
+  isChannelSelected: boolean;
+  channelSlug: string | undefined;
+}) => {
+  if (isProductListingPageFiltersFlagEnabled) {
+    const queryVars = createProductQueryVariables(filterContainer);
+    const { channel, ...where } = queryVars;
+
+    return {
+      where,
+      search: queryParams.query,
+      channel: channel?.eq,
+    };
+  }
+
+  return {
+    filter: getLegacyFilterVariables(queryParams, isChannelSelected),
+    channel: channelSlug,
+  };
+};

@@ -28,8 +28,7 @@ const messages = defineMessages({
   },
   warehouseSettingsDisabledDescription: {
     id: "M8z5WZ",
-    defaultMessage:
-      "If selected customer won't be able to choose this warehouse as pickup point",
+    defaultMessage: "If selected customer won't be able to choose this warehouse as pickup point",
     description: "WarehouseSettings disabled warehouse description",
   },
   warehouseSettingsLocal: {
@@ -54,10 +53,10 @@ const messages = defineMessages({
       "If selected customer will be able to choose this warehouse as pickup point. Ordered products can be shipped here from a different warehouse",
     description: "WarehouseSettings all warehouses description",
   },
-  warehouseSettingsTitle: {
-    id: "//iaFx",
-    defaultMessage: "Settings",
-    description: "WarehouseSettings title",
+  warehouseSettingsStockTitle: {
+    id: "9kzIFd",
+    defaultMessage: "Stock settings",
+    description: "WarehouseSettings stock title",
   },
   warehouseSettingsPickupTitle: {
     id: "MIC9W7",

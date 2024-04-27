@@ -1,12 +1,14 @@
+// @ts-strict-ignore
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import { CollectionFragment } from "@dashboard/graphql";
+import ScrollableContent from "@dashboard/plugins/components/PluginsList/PluginAvailabilityStatusPopup/ScrollableContent";
 import { Typography } from "@material-ui/core";
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import { CollectionFragment } from "@saleor/graphql";
-import { Pill, PillColor } from "@saleor/macaw-ui";
-import ScrollableContent from "@saleor/plugins/components/PluginsList/PluginAvailabilityStatusPopup/ScrollableContent";
+import { PillColor } from "@saleor/macaw-ui";
 import React from "react";
 import { MessageDescriptor, useIntl } from "react-intl";
 
 import { messages } from "../ChannelsAvailabilityDropdown/messages";
+import { Pill } from "../Pill";
 import { useStyles } from "./styles";
 
 export interface ChannelsAvailabilityMenuContentProps {

@@ -1,6 +1,7 @@
-import { Channel } from "@saleor/channels/utils";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+// @ts-strict-ignore
+import { Channel } from "@dashboard/channels/utils";
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import React from "react";
 
 import ChannelsAvailabilityDialogChannelsList from "../ChannelsAvailabilityDialogChannelsList";
@@ -37,13 +38,9 @@ export const ChannelsAvailabilityDialog: React.FC<ChannelsAvailabilityDialogProp
   title,
   toggleAll,
 }) => {
-  const { query, onQueryChange, filteredChannels } = useChannelsSearch(
-    channels,
-  );
+  const { query, onQueryChange, filteredChannels } = useChannelsSearch(channels);
   const hasChannels = channels.length > 0;
-
   const handleToggleAll = () => toggleAll(channels, selected);
-
   const hasAllSelected = selected === channels.length;
 
   return (

@@ -8,40 +8,38 @@ import { editSeoSettings } from "../seoComponent";
 const valueTrue = AVAILABLE_CHANNELS_FORM.radioButtonsValueTrue;
 const valueFalse = AVAILABLE_CHANNELS_FORM.radioButtonsValueFalse;
 
-export function updateProductIsAvailableForPurchase(
-  productUrl,
-  isAvailableForPurchase,
-) {
+export function updateProductIsAvailableForPurchase(isAvailableForPurchase) {
   const isAvailableForPurchaseSelector = isAvailableForPurchase
     ? valueTrue
     : valueFalse;
   const availableForPurchaseSelector = `${AVAILABLE_CHANNELS_FORM.availableForPurchaseRadioButtons}${isAvailableForPurchaseSelector}`;
-  updateProductMenageInChannel(productUrl, availableForPurchaseSelector);
+  updateProductManageInChannel(availableForPurchaseSelector);
 }
 
-export function updateProductPublish(productUrl, isPublished) {
+export function updateProductPublish(isPublished) {
   const isPublishedSelector = isPublished ? valueTrue : valueFalse;
   const publishedSelector = `${AVAILABLE_CHANNELS_FORM.publishedRadioButtons}${isPublishedSelector}`;
-  updateProductMenageInChannel(productUrl, publishedSelector);
+  updateProductManageInChannel(publishedSelector);
 }
 
-export function updateProductVisibleInListings(productUrl) {
-  updateProductMenageInChannel(
-    productUrl,
-    AVAILABLE_CHANNELS_FORM.visibleInListingsButton,
-  );
+export function updateProductVisibleInListings() {
+  updateProductManageInChannel(AVAILABLE_CHANNELS_FORM.visibleInListingsButton);
 }
 
-function updateProductMenageInChannel(productUrl, menageSelector) {
-  cy.visit(productUrl)
-    .get(AVAILABLE_CHANNELS_FORM.assignedChannels)
+function updateProductManageInChannel(manageSelector) {
+  cy.get(AVAILABLE_CHANNELS_FORM.assignedChannels)
     .click()
-    .get(menageSelector)
+    .get(manageSelector)
+    .first()
+    .scrollIntoView()
     .click()
+    // cypress click is to fast - our app is nor ready to handle new event when click occurs - solution could be disabling save button until app is ready to handle new event
+    .wait(1000)
     .waitForProgressBarToNotBeVisible()
     .addAliasToGraphRequest("ProductChannelListingUpdate")
     .get(BUTTON_SELECTORS.confirm)
     .click()
+    .confirmationMessageShouldAppear()
     .wait("@ProductChannelListingUpdate");
 }
 
@@ -73,9 +71,11 @@ export function fillUpAllCommonFieldsInCreateAndUpdate({
       editSeoSettings(seo);
     })
     .then(() => {
+      cy.get(BUTTON_SELECTORS.expandMetadataButton).first().click();
       addMetadataField(metadata.public);
     })
     .then(() => {
+      cy.get(BUTTON_SELECTORS.expandMetadataButton).last().click();
       addMetadataField(metadata.private);
     });
 }
@@ -83,7 +83,7 @@ export function fillUpAllCommonFieldsInCreateAndUpdate({
 export function fillUpProductGeneralInfo({ name, description, rating }) {
   return cy
     .get(PRODUCT_DETAILS.productNameInput)
-    .click()
+    .click({ force: true })
     .clearAndType(name)
     .get(PRODUCT_DETAILS.descriptionInput)
     .clearAndType(description)
@@ -108,7 +108,7 @@ export function fillUpProductOrganization({
 }) {
   const organization = {};
   return cy
-    .fillAutocompleteSelect(PRODUCT_DETAILS.productTypeInput, productType)
+    .fillAutocompleteSelect(PRODUCT_DETAILS.productTypeInput, productType, true)
     .then(selected => {
       organization.productType = selected;
       fillUpCollectionAndCategory({ category, collection });
@@ -123,10 +123,10 @@ export function fillUpProductOrganization({
 export function fillUpCollectionAndCategory({ category, collection }) {
   const organization = {};
   return cy
-    .fillAutocompleteSelect(PRODUCT_DETAILS.categoryInput, category)
+    .fillAutocompleteSelect(PRODUCT_DETAILS.categoryInput, category, false)
     .then(selected => {
       organization.category = selected;
-      cy.fillMultiSelect(PRODUCT_DETAILS.collectionInput, collection);
+      cy.fillNewMultiSelect(PRODUCT_DETAILS.collectionInput, collection);
     })
     .then(selected => {
       organization.collection = selected;
@@ -142,20 +142,18 @@ export function addVariantToDataGrid(variantName) {
     .should("be.visible")
     .get(PRODUCT_DETAILS.firstRowDataGrid)
     .click({ force: true })
-    .type(variantName)
+    .type(variantName, { force: true })
     .get(BUTTON_SELECTORS.confirm)
     .click()
     .confirmationMessageShouldAppear()
-    .reload()
     .waitForProgressBarToNotBeVisible();
 }
 
 export function enterVariantEditPage() {
   cy.get(PRODUCT_DETAILS.dataGridTable)
+    .scrollIntoView()
     .should("be.visible")
     .wait(1000)
-    .get(BUTTON_SELECTORS.showMoreButton)
-    .click()
     .get(PRODUCT_DETAILS.editVariant)
     .click();
 }

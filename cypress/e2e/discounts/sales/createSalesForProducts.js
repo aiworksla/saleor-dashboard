@@ -7,13 +7,16 @@ import { urlList } from "../../../fixtures/urlList";
 import { createChannel } from "../../../support/api/requests/Channels";
 import { updateChannelInProduct } from "../../../support/api/requests/Product";
 import * as channelsUtils from "../../../support/api/utils/channelsUtils";
-import { deleteSalesStartsWith } from "../../../support/api/utils/discounts/salesUtils";
-import * as productsUtils from "../../../support/api/utils/products/productsUtils";
+import * as productsUtils
+  from "../../../support/api/utils/products/productsUtils";
+import { createShipping } from "../../../support/api/utils/shippingUtils";
 import {
-  createShipping,
-  deleteShippingStartsWith,
-} from "../../../support/api/utils/shippingUtils";
-import { getProductPrice } from "../../../support/api/utils/storeFront/storeFrontProductUtils";
+  getProductPrice,
+} from "../../../support/api/utils/storeFront/storeFrontProductUtils";
+import {
+  getDefaultTaxClass,
+  updateTaxConfigurationForChannel,
+} from "../../../support/api/utils/taxesUtils";
 import {
   assignProducts,
   createSale,
@@ -31,15 +34,12 @@ describe("As an admin I want to create sale for products", () => {
   let category;
   let defaultChannel;
   let warehouse;
+  let taxClass;
 
   before(() => {
     const name = `${startsWith}${faker.datatype.number()}`;
 
-    cy.clearSessionData().loginUserViaRequest();
-    channelsUtils.deleteChannelsStartsWith(startsWith);
-    deleteSalesStartsWith(startsWith);
-    productsUtils.deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
+    cy.loginUserViaRequest();
     productsUtils
       .createTypeAttributeAndCategoryForProduct({ name })
       .then(
@@ -57,6 +57,10 @@ describe("As an admin I want to create sale for products", () => {
       )
       .then(channel => {
         defaultChannel = channel;
+        getDefaultTaxClass();
+      })
+      .then(taxResp => {
+        taxClass = taxResp;
         cy.fixture("addresses");
       })
       .then(addresses => {
@@ -65,15 +69,27 @@ describe("As an admin I want to create sale for products", () => {
           name,
           address: addresses.plAddress,
           price: 100,
+          taxClassId: taxClass.id,
         });
       })
       .then(({ warehouse: warehouseResp }) => {
         warehouse = warehouseResp;
+        cy.checkIfDataAreNotNull({
+          productType,
+          attribute,
+          category,
+          defaultChannel,
+          warehouse,
+        });
       });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
+    updateTaxConfigurationForChannel({
+      channelSlug: defaultChannel.slug,
+      pricesEnteredWithTax: true,
+    });
   });
 
   it(
@@ -93,6 +109,7 @@ describe("As an admin I want to create sale for products", () => {
         price: productPrice,
         discountOption: discountOptions.PERCENTAGE,
         discountValue,
+        taxClassId: taxClass.id,
       }).should("eq", expectedPrice);
     },
   );
@@ -139,6 +156,7 @@ describe("As an admin I want to create sale for products", () => {
           attributeId: attribute.id,
           categoryId: category.id,
           price: productPrice,
+          taxClassId: taxClass.id,
         })
         .then(({ product: productResp }) => {
           product = productResp;
@@ -151,9 +169,7 @@ describe("As an admin I want to create sale for products", () => {
            cy.clearSessionData()
           .loginUserViaRequest("auth", ONE_PERMISSION_USERS.discount) 
           */
-          cy.visit(urlList.sales)
-            .expectSkeletonIsVisible()
-            .waitForProgressBarToNotExist();
+          cy.visit(urlList.sales);
           createSale({
             saleName,
             channelName: channel.name,

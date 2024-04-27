@@ -1,34 +1,27 @@
-import { ProductOrder, ProductOrderField } from "@saleor/graphql";
-import {
-  ProductListUrlQueryParams,
-  ProductListUrlSortField,
-} from "@saleor/products/urls";
-import { getOrderDirection } from "@saleor/utils/sort";
+// @ts-strict-ignore
+import { ProductOrder, ProductOrderField } from "@dashboard/graphql";
+import { ProductListUrlQueryParams, ProductListUrlSortField } from "@dashboard/products/urls";
+import { getOrderDirection } from "@dashboard/utils/sort";
 
 export const DEFAULT_SORT_KEY = ProductListUrlSortField.name;
 
-export function canBeSorted(
-  sort: ProductListUrlSortField,
-  isChannelSelected: boolean,
-) {
+export function canBeSorted(sort: ProductListUrlSortField, isChannelSelected: boolean) {
   switch (sort) {
     case ProductListUrlSortField.name:
     case ProductListUrlSortField.productType:
+    case ProductListUrlSortField.date:
     case ProductListUrlSortField.attribute:
     case ProductListUrlSortField.rank:
-    case ProductListUrlSortField.date:
       return true;
     case ProductListUrlSortField.price:
-    case ProductListUrlSortField.status:
+    case ProductListUrlSortField.availability:
       return isChannelSelected;
     default:
       return false;
   }
 }
 
-export function getSortQueryField(
-  sort: ProductListUrlSortField,
-): ProductOrderField {
+export function getSortQueryField(sort: ProductListUrlSortField): ProductOrderField {
   switch (sort) {
     case ProductListUrlSortField.name:
       return ProductOrderField.NAME;
@@ -36,7 +29,7 @@ export function getSortQueryField(
       return ProductOrderField.PRICE;
     case ProductListUrlSortField.productType:
       return ProductOrderField.TYPE;
-    case ProductListUrlSortField.status:
+    case ProductListUrlSortField.availability:
       return ProductOrderField.PUBLISHED;
     case ProductListUrlSortField.rank:
       return ProductOrderField.RANK;
@@ -56,6 +49,7 @@ export function getSortQueryVariables(
   }
 
   const direction = getOrderDirection(params.asc);
+
   if (params.sort === ProductListUrlSortField.attribute) {
     return {
       attributeId: params.attributeId,
@@ -64,6 +58,7 @@ export function getSortQueryVariables(
   }
 
   const field = getSortQueryField(params.sort);
+
   return {
     direction,
     field,

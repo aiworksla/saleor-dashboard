@@ -1,25 +1,24 @@
-import { ApolloClient } from "@apollo/client";
-import { IMessageContext } from "@saleor/components/messages";
-import { APP_DEFAULT_URI, APP_MOUNT_URI, DEMO_MODE } from "@saleor/config";
-import { useUserDetailsQuery } from "@saleor/graphql";
-import useLocalStorage from "@saleor/hooks/useLocalStorage";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { commonMessages } from "@saleor/intl";
+import { ApolloClient, ApolloError } from "@apollo/client";
+import { IMessageContext } from "@dashboard/components/messages";
+import { DEMO_MODE } from "@dashboard/config";
+import { useUserDetailsQuery } from "@dashboard/graphql";
+import useLocalStorage from "@dashboard/hooks/useLocalStorage";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { commonMessages } from "@dashboard/intl";
 import {
-  GetExternalAccessTokenData,
-  LoginData,
-  useAuth,
-  useAuthState,
-} from "@saleor/sdk";
-import {
+  checkIfCredentialsExist,
   isSupported as isCredentialsManagementAPISupported,
   login as loginWithCredentialsManagementAPI,
   saveCredentials,
-} from "@saleor/utils/credentialsManagement";
+} from "@dashboard/utils/credentialsManagement";
+import { getAppMountUriForRedirect } from "@dashboard/utils/urls";
+import { GetExternalAccessTokenData, LoginData, useAuth, useAuthState } from "@saleor/sdk";
+import isEmpty from "lodash/isEmpty";
 import { useEffect, useRef, useState } from "react";
 import { IntlShape } from "react-intl";
 import urlJoin from "url-join";
 
+import { parseAuthError } from "../errors";
 import {
   ExternalLoginInput,
   RequestExternalLoginInput,
@@ -35,38 +34,24 @@ export interface UseAuthProviderOpts {
   apolloClient: ApolloClient<any>;
 }
 
-export function useAuthProvider({
-  intl,
-  notify,
-  apolloClient,
-}: UseAuthProviderOpts): UserContext {
-  const {
-    login,
-    getExternalAuthUrl,
-    getExternalAccessToken,
-    logout,
-  } = useAuth();
+export function useAuthProvider({ intl, notify, apolloClient }: UseAuthProviderOpts): UserContext {
+  const { login, getExternalAuthUrl, getExternalAccessToken, logout } = useAuth();
   const navigate = useNavigator();
   const { authenticated, authenticating, user } = useAuthState();
-  const [requestedExternalPluginId] = useLocalStorage(
-    "requestedExternalPluginId",
-    null,
-  );
-  const [error, setError] = useState<UserContextError>();
+  const [requestedExternalPluginId] = useLocalStorage("requestedExternalPluginId", null);
+  const [errors, setErrors] = useState<UserContextError[]>([]);
   const permitCredentialsAPI = useRef(true);
 
   useEffect(() => {
-    if (authenticating && error) {
-      setError(undefined);
+    if (authenticating && errors.length) {
+      setErrors([]);
     }
   }, [authenticating]);
-
   useEffect(() => {
     if (authenticated) {
       permitCredentialsAPI.current = true;
     }
   }, [authenticated]);
-
   useEffect(() => {
     if (
       !authenticated &&
@@ -86,18 +71,27 @@ export function useAuthProvider({
     // state will cause an error
     fetchPolicy: "cache-and-network",
   });
+  const handleLoginError = (error: ApolloError) => {
+    const parsedErrors = parseAuthError(error);
 
+    if (parsedErrors.length) {
+      setErrors(parsedErrors);
+    } else {
+      setErrors(["unknownLoginError"]);
+    }
+  };
   const handleLogout = async () => {
-    const path = APP_MOUNT_URI === APP_DEFAULT_URI ? "" : APP_MOUNT_URI;
-    const returnTo = urlJoin(window.location.origin, path);
-
+    const returnTo = urlJoin(window.location.origin, getAppMountUriForRedirect());
     const result = await logout({
       input: JSON.stringify({
         returnTo,
       } as RequestExternalLogoutInput),
     });
+    // Clear credentials from browser's credential manager only when exist.
+    // Chrome 115 crash when calling preventSilentAccess() when no credentials exist.
+    const hasCredentials = await checkIfCredentialsExist();
 
-    if (isCredentialsManagementAPISupported) {
+    if (isCredentialsManagementAPISupported && !!hasCredentials) {
       navigator.credentials.preventSilentAccess();
     }
 
@@ -106,7 +100,6 @@ export function useAuthProvider({
     apolloClient.clearStore();
 
     const errors = result?.errors || [];
-
     const externalLogoutUrl = result
       ? JSON.parse(result.data?.externalLogout?.logoutData || null)?.logoutUrl
       : "";
@@ -118,10 +111,7 @@ export function useAuthProvider({
         navigate("/");
       }
     }
-
-    return;
   };
-
   const handleLogin = async (email: string, password: string) => {
     try {
       const result = await login({
@@ -130,27 +120,33 @@ export function useAuthProvider({
         includeDetails: false,
       });
 
-      if (result && !result.data.tokenCreate.errors.length) {
+      if (isEmpty(result.data?.tokenCreate?.user?.userPermissions)) {
+        setErrors(["noPermissionsError"]);
+        await handleLogout();
+      }
+
+      if (result && !result.data?.tokenCreate?.errors.length) {
         if (DEMO_MODE) {
           displayDemoMessage(intl, notify);
         }
-        saveCredentials(result.data.tokenCreate.user, password);
+
+        saveCredentials(result.data?.tokenCreate?.user!, password);
       } else {
-        setError("loginError");
+        setErrors(["loginError"]);
       }
 
-      await logoutNonStaffUser(result.data.tokenCreate);
+      await logoutNonStaffUser(result.data?.tokenCreate!);
 
-      return result.data.tokenCreate;
+      return result.data?.tokenCreate;
     } catch (error) {
-      setError("serverError");
+      if (error instanceof ApolloError) {
+        handleLoginError(error);
+      } else {
+        setErrors(["unknownLoginError"]);
+      }
     }
   };
-
-  const handleRequestExternalLogin = async (
-    pluginId: string,
-    input: RequestExternalLoginInput,
-  ) => {
+  const handleRequestExternalLogin = async (pluginId: string, input: RequestExternalLoginInput) => {
     const result = await getExternalAuthUrl({
       pluginId,
       input: JSON.stringify(input),
@@ -158,37 +154,44 @@ export function useAuthProvider({
 
     return result?.data?.externalAuthenticationUrl;
   };
+  const handleExternalLogin = async (pluginId: string | null, input: ExternalLoginInput) => {
+    if (!pluginId) {
+      return;
+    }
 
-  const handleExternalLogin = async (
-    pluginId: string,
-    input: ExternalLoginInput,
-  ) => {
     try {
       const result = await getExternalAccessToken({
         pluginId,
         input: JSON.stringify(input),
       });
 
-      if (result && !result.data?.externalObtainAccessTokens.errors.length) {
+      if (isEmpty(result.data?.externalObtainAccessTokens?.user?.userPermissions)) {
+        setErrors(["noPermissionsError"]);
+        await handleLogout();
+      }
+
+      if (result && !result.data?.externalObtainAccessTokens?.errors.length) {
         if (DEMO_MODE) {
           displayDemoMessage(intl, notify);
         }
       } else {
-        setError("externalLoginError");
+        setErrors(["externalLoginError"]);
+        await handleLogout();
       }
 
-      await logoutNonStaffUser(result.data.externalObtainAccessTokens);
+      await logoutNonStaffUser(result.data?.externalObtainAccessTokens!);
 
       return result?.data?.externalObtainAccessTokens;
     } catch (error) {
-      setError("serverError");
+      if (error instanceof ApolloError) {
+        handleLoginError(error);
+      } else {
+        setErrors(["unknownLoginError"]);
+      }
     }
   };
-
-  const logoutNonStaffUser = async (
-    data: LoginData | GetExternalAccessTokenData,
-  ) => {
-    if (data.user && !data.user.isStaff) {
+  const logoutNonStaffUser = async (data: LoginData | GetExternalAccessTokenData) => {
+    if (data?.user && !data.user.isStaff) {
       notify({
         status: "error",
         text: intl.formatMessage(commonMessages.unauthorizedDashboardAccess),
@@ -203,9 +206,10 @@ export function useAuthProvider({
     requestLoginByExternalPlugin: handleRequestExternalLogin,
     loginByExternalPlugin: handleExternalLogin,
     logout: handleLogout,
-    authenticating: authenticating && !error,
-    authenticated: authenticated && user?.isStaff,
+    authenticating: authenticating && !errors.length,
+    authenticated: authenticated && !!user?.isStaff && !errors.length,
     user: userDetails.data?.me,
-    error,
+    refetchUser: userDetails.refetch,
+    errors,
   };
 }

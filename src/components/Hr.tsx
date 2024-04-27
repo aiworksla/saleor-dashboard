@@ -1,31 +1,21 @@
-import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 
-interface HrProps {
+/**
+ * @deprecated use `Divider` component from `@saleor/macaw-ui-next`
+ */
+export const Hr: React.FC<{
   className?: string;
-}
-
-const useStyles = makeStyles(
-  theme => ({
-    root: {
-      backgroundColor: theme.palette.divider,
-      border: "none",
-      display: "block",
-      height: 1,
-      margin: 0,
-      width: "100%",
-    },
-  }),
-  { name: "Hr" },
+}> = ({ className }) => (
+  <Box
+    as="hr"
+    className={className}
+    backgroundColor="default3"
+    borderWidth={0}
+    width="100%"
+    height="px"
+  />
 );
 
-export const Hr: React.FC<HrProps> = props => {
-  const { className } = props;
-
-  const classes = useStyles(props);
-
-  return <hr className={classNames(classes.root, className)} />;
-};
 Hr.displayName = "Hr";
 export default Hr;

@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import { UseFormResult } from "@dashboard/hooks/useForm";
+import { RequireOnlyOne } from "@dashboard/misc";
+import commonErrorMessages from "@dashboard/utils/errors/common";
 import { TextField } from "@material-ui/core";
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import { UseFormResult } from "@saleor/hooks/useForm";
 import { makeStyles } from "@saleor/macaw-ui";
-import { RequireOnlyOne } from "@saleor/misc";
-import commonErrorMessages from "@saleor/utils/errors/common";
 import Hue from "@uiw/react-color-hue";
 import Saturation from "@uiw/react-color-saturation";
 import convert from "color-convert";
@@ -50,37 +51,27 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 }) => {
   const classes = useStyles();
   const intl = useIntl();
-  const [hex, setHex] = useState<string>(
-    data.value ? data.value.replace("#", "") : "000000",
-  );
+  const [hex, setHex] = useState<string>(data.value ? data.value.replace("#", "") : "000000");
   const [hue, setHue] = useState<number>(convert.hex.hsv(hex)[0]);
-
   const [, s, v] = convert.hex.hsv(hex);
   const [r, g, b] = convert.hex.rgb(hex);
   const isValidColor = hex.match(/^(?:[0-9a-fA-F]{3}){1,2}$/);
-
-  const handleRGBChange = (
-    rgbColor: RequireOnlyOne<{ r: string; g: string; b: string }>,
-  ) => {
+  const handleRGBChange = (rgbColor: RequireOnlyOne<{ r: string; g: string; b: string }>) => {
     const getValue = (val: string): number => {
       if (!val) {
         return 0;
       }
+
       const parsedVal = parseInt(val, 10);
+
       return parsedVal > 255 ? 255 : parsedVal;
     };
 
     setHex(
-      convert.rgb.hex([
-        getValue(rgbColor.r),
-        getValue(rgbColor.g),
-        getValue(rgbColor.b),
-      ] as RGB),
+      convert.rgb.hex([getValue(rgbColor.r), getValue(rgbColor.g), getValue(rgbColor.b)] as RGB),
     );
   };
-
-  const handleHEXChange = (hexColor: string) =>
-    setHex(hexColor.replace(/ |#/g, ""));
+  const handleHEXChange = (hexColor: string) => setHex(hexColor.replace(/ |#/g, ""));
 
   useEffect(() => {
     if (isValidColor) {

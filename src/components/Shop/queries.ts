@@ -1,10 +1,11 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import {
   RefreshLimitsQuery,
   RefreshLimitsQueryVariables,
   useRefreshLimitsQuery,
-} from "@saleor/graphql";
-import { QueryHookOptions } from "@saleor/hooks/graphql";
+} from "@dashboard/graphql";
+import { QueryHookOptions } from "@dashboard/hooks/graphql";
 
 export const shopInfo = gql`
   query ShopInfo {
@@ -16,7 +17,6 @@ export const shopInfo = gql`
         ...CountryWithCode
       }
       defaultWeightUnit
-      displayGrossPrices
       domain {
         host
         url
@@ -24,12 +24,10 @@ export const shopInfo = gql`
       languages {
         ...Language
       }
-      includeTaxesInPrices
       name
       trackInventoryByDefault
       permissions {
-        code
-        name
+        ...Permission
       }
       version
     }
@@ -69,10 +67,7 @@ export const limitInfo = gql`
   }
 `;
 export const useShopLimitsQuery = (
-  opts: QueryHookOptions<
-    RefreshLimitsQuery,
-    Partial<RefreshLimitsQueryVariables>
-  >,
+  opts: QueryHookOptions<RefreshLimitsQuery, Partial<RefreshLimitsQueryVariables>>,
 ) =>
   useRefreshLimitsQuery({
     ...opts,

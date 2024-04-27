@@ -1,4 +1,4 @@
-import { ProductFieldEnum } from "@saleor/graphql";
+import { ProductFieldEnum } from "@dashboard/graphql";
 import { defineMessages, useIntl } from "react-intl";
 
 export const productExportDialogMessages = defineMessages({
@@ -8,8 +8,8 @@ export const productExportDialogMessages = defineMessages({
     description: "export products to csv file, dialog header",
   },
   confirmButtonLabel: {
-    id: "oOFrUd",
-    defaultMessage: "export products",
+    id: "2JBvj0",
+    defaultMessage: "Export products",
     description: "export products to csv file, button",
   },
   productsLabel: {
@@ -21,7 +21,6 @@ export const productExportDialogMessages = defineMessages({
 
 function useProductExportFieldMessages() {
   const intl = useIntl();
-
   const messages = {
     [ProductFieldEnum.CATEGORY]: intl.formatMessage({
       id: "KupNHw",

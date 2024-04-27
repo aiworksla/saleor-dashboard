@@ -1,19 +1,18 @@
-import { WindowTitle } from "@saleor/components/WindowTitle";
+// @ts-strict-ignore
+import { WindowTitle } from "@dashboard/components/WindowTitle";
 import {
   usePageTypeCreateMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { getMutationErrors } from "@saleor/misc";
-import createMetadataCreateHandler from "@saleor/utils/handlers/metadataCreateHandler";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { getMutationErrors } from "@dashboard/misc";
+import createMetadataCreateHandler from "@dashboard/utils/handlers/metadataCreateHandler";
 import React from "react";
 import { useIntl } from "react-intl";
 
-import PageTypeCreatePage, {
-  PageTypeForm,
-} from "../components/PageTypeCreatePage";
+import PageTypeCreatePage, { PageTypeForm } from "../components/PageTypeCreatePage";
 import { pageTypeUrl } from "../urls";
 
 export const PageTypeCreate: React.FC = () => {
@@ -22,7 +21,6 @@ export const PageTypeCreate: React.FC = () => {
   const intl = useIntl();
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-
   const [createPageType, createPageTypeOpts] = usePageTypeCreateMutation({
     onCompleted: updateData => {
       if (updateData.pageTypeCreate.errors.length === 0) {
@@ -37,7 +35,6 @@ export const PageTypeCreate: React.FC = () => {
       }
     },
   });
-
   const handleCreate = async (formData: PageTypeForm) => {
     const result = await createPageType({
       variables: {
@@ -52,7 +49,6 @@ export const PageTypeCreate: React.FC = () => {
       errors: getMutationErrors(result),
     };
   };
-
   const handleSubmit = createMetadataCreateHandler(
     handleCreate,
     updateMetadata,

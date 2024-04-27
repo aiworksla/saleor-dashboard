@@ -1,14 +1,13 @@
 /// <reference types="cypress" />
 import faker from "faker";
 
-import { deleteGiftCardsWithTagStartsWith } from "../../../support/api/utils/catalog/giftCardUtils";
 import * as channelsUtils from "../../../support/api/utils/channelsUtils";
-import { createWaitingForCaptureOrder } from "../../../support/api/utils/ordersUtils";
-import * as productsUtils from "../../../support/api/utils/products/productsUtils";
 import {
-  createShipping,
-  deleteShippingStartsWith,
-} from "../../../support/api/utils/shippingUtils";
+  createWaitingForCaptureOrder,
+} from "../../../support/api/utils/ordersUtils";
+import * as productsUtils
+  from "../../../support/api/utils/products/productsUtils";
+import { createShipping } from "../../../support/api/utils/shippingUtils";
 
 describe("As a customer I should be able to purchase gift card as a product", () => {
   const startsWith = "GiftCardsCheckout";
@@ -29,11 +28,7 @@ describe("As a customer I should be able to purchase gift card as a product", ()
   };
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    channelsUtils.deleteChannelsStartsWith(startsWith);
-    productsUtils.deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
-    deleteGiftCardsWithTagStartsWith(startsWith);
+    cy.loginUserViaRequest();
 
     const name = `${startsWith}${faker.datatype.number()}`;
 
@@ -79,11 +74,20 @@ describe("As a customer I should be able to purchase gift card as a product", ()
       })
       .then(({ variantsList: variantsResp }) => {
         variants = variantsResp;
+        cy.checkIfDataAreNotNull({
+          defaultChannel,
+          productType,
+          attribute,
+          category,
+          shippingMethod,
+          variants,
+          address,
+        });
       });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(

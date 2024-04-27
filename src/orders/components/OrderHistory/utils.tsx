@@ -1,12 +1,11 @@
-import { OrderEventFragment, OrderEventsEnum } from "@saleor/graphql";
-import { getFullName } from "@saleor/misc";
-import { orderUrl } from "@saleor/orders/urls";
-import { staffMemberDetailsUrl } from "@saleor/staff/urls";
+// @ts-strict-ignore
+import { OrderEventFragment, OrderEventsEnum } from "@dashboard/graphql";
+import { getFullName } from "@dashboard/misc";
+import { orderUrl } from "@dashboard/orders/urls";
+import { staffMemberDetailsUrl } from "@dashboard/staff/urls";
 import { MessageDescriptor } from "react-intl";
 
-export const getEventSecondaryTitle = (
-  event: OrderEventFragment,
-): [MessageDescriptor, any?] => {
+export const getEventSecondaryTitle = (event: OrderEventFragment): [MessageDescriptor, any?] => {
   switch (event.type) {
     case OrderEventsEnum.ORDER_MARKED_AS_PAID: {
       return [
@@ -45,6 +44,7 @@ const timelineEventTypes = {
     OrderEventsEnum.ORDER_LINE_DISCOUNT_REMOVED,
   ],
   note: [OrderEventsEnum.NOTE_ADDED],
+  note_updated: [OrderEventsEnum.NOTE_UPDATED],
   rawMessage: [
     OrderEventsEnum.OTHER,
     OrderEventsEnum.EXTERNAL_SERVICE_NOTIFICATION,
@@ -59,6 +59,7 @@ export const isTimelineEventOfType = (
     | "secondaryTitle"
     | "rawMessage"
     | "note"
+    | "note_updated"
     | "linked"
     | "discount",
   eventType: OrderEventsEnum,
@@ -67,12 +68,8 @@ export const isTimelineEventOfType = (
 export const isTimelineEventOfDiscountType = (eventType: OrderEventsEnum) =>
   isTimelineEventOfType("discount", eventType);
 
-const selectEmployeeName = ({
-  firstName,
-  lastName,
-  email,
-}: OrderEventFragment["user"]) => {
-  if (!!firstName) {
+const selectEmployeeName = ({ firstName, lastName, email }: OrderEventFragment["user"]) => {
+  if (firstName) {
     return getFullName({ firstName, lastName }).trim();
   }
 
@@ -92,10 +89,7 @@ export const getEmployeeNameLink = (event: OrderEventFragment) => {
   };
 };
 
-export const hasOrderLineDiscountWithNoPreviousValue = ({
-  type,
-  lines,
-}: OrderEventFragment) =>
+export const hasOrderLineDiscountWithNoPreviousValue = ({ type, lines }: OrderEventFragment) =>
   type === OrderEventsEnum.ORDER_LINE_DISCOUNT_UPDATED &&
   lines?.[0]?.discount &&
   !lines?.[0].discount?.oldValue;
@@ -115,13 +109,7 @@ const hasEnsuredOrderEventFields = (
   fields: Array<keyof OrderEventFragment>,
 ) => !fields.some((field: keyof OrderEventFragment) => !event[field]);
 
-export const getOrderNumberLinkObject = ({
-  id,
-  number,
-}: {
-  id: string;
-  number: string;
-}) => ({
+export const getOrderNumberLinkObject = ({ id, number }: { id: string; number: string }) => ({
   link: orderUrl(id),
   text: `#${number}`,
 });

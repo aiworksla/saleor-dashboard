@@ -1,3 +1,11 @@
+import { Button } from "@dashboard/components/Button";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import {
   Dialog,
   DialogActions,
@@ -5,15 +13,6 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -27,13 +26,12 @@ export interface OrderFulfillmentAcceptDialogProps {
   confirmButtonState: ConfirmButtonTransitionState;
   errors: OrderErrorFragment[];
   open: boolean;
-  onClose(): void;
-  onConfirm(data: OrderFulfillmentAcceptDialogFormData): void;
+  onClose: () => void;
+  onConfirm: (data: OrderFulfillmentAcceptDialogFormData) => void;
 }
 
 const OrderFulfillmentAcceptDialog: React.FC<OrderFulfillmentAcceptDialogProps> = props => {
   const { confirmButtonState, errors, open, onConfirm, onClose } = props;
-
   const intl = useIntl();
 
   return (
@@ -41,7 +39,7 @@ const OrderFulfillmentAcceptDialog: React.FC<OrderFulfillmentAcceptDialogProps> 
       <Form initial={{ notifyCustomer: true }} onSubmit={onConfirm}>
         {({ change, data, submit }) => (
           <>
-            <DialogTitle>
+            <DialogTitle disableTypography>
               <FormattedMessage {...messages.title} />
             </DialogTitle>
             <DialogContent>
@@ -50,9 +48,7 @@ const OrderFulfillmentAcceptDialog: React.FC<OrderFulfillmentAcceptDialogProps> 
               </DialogContentText>
               <ControlledCheckbox
                 data-test-id="notify-customer"
-                name={
-                  "notifyCustomer" as keyof OrderFulfillmentAcceptDialogFormData
-                }
+                name={"notifyCustomer" as keyof OrderFulfillmentAcceptDialogFormData}
                 label={intl.formatMessage(messages.notifyCustomer)}
                 checked={data.notifyCustomer}
                 onChange={change}
@@ -73,7 +69,7 @@ const OrderFulfillmentAcceptDialog: React.FC<OrderFulfillmentAcceptDialogProps> 
                 <FormattedMessage {...buttonMessages.cancel} />
               </Button>
               <ConfirmButton
-                data-test="submit"
+                data-test-id="submit"
                 transitionState={confirmButtonState}
                 onClick={submit}
               >
@@ -86,5 +82,6 @@ const OrderFulfillmentAcceptDialog: React.FC<OrderFulfillmentAcceptDialogProps> 
     </Dialog>
   );
 };
+
 OrderFulfillmentAcceptDialog.displayName = "OrderFulfillmentAcceptDialog";
 export default OrderFulfillmentAcceptDialog;

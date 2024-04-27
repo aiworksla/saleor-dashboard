@@ -1,22 +1,23 @@
-import { DialogContentText } from "@material-ui/core";
-import { filterable } from "@saleor/attributes/utils/data";
-import ActionDialog from "@saleor/components/ActionDialog";
-import useAppChannel from "@saleor/components/AppLayout/AppChannelContext";
-import DeleteFilterTabDialog from "@saleor/components/DeleteFilterTabDialog";
-import SaveFilterTabDialog, {
-  SaveFilterTabDialogFormData,
-} from "@saleor/components/SaveFilterTabDialog";
-import { useShopLimitsQuery } from "@saleor/components/Shop/queries";
+// @ts-strict-ignore
+import { filterable } from "@dashboard/attributes/utils/data";
+import ActionDialog from "@dashboard/components/ActionDialog";
+import useAppChannel from "@dashboard/components/AppLayout/AppChannelContext";
+import { useConditionalFilterContext } from "@dashboard/components/ConditionalFilter/context";
+import DeleteFilterTabDialog from "@dashboard/components/DeleteFilterTabDialog";
+import SaveFilterTabDialog from "@dashboard/components/SaveFilterTabDialog";
+import { useShopLimitsQuery } from "@dashboard/components/Shop/queries";
 import {
   DEFAULT_INITIAL_PAGINATION_DATA,
   DEFAULT_INITIAL_SEARCH_DATA,
   defaultListSettings,
   ProductListColumns,
-} from "@saleor/config";
-import { Task } from "@saleor/containers/BackgroundTasks/types";
+} from "@dashboard/config";
+import { Task } from "@dashboard/containers/BackgroundTasks/types";
+import { useFlag } from "@dashboard/featureFlags";
 import {
   ProductListQueryVariables,
-  useGridAttributesQuery,
+  useAvailableColumnAttributesLazyQuery,
+  useGridAttributesLazyQuery,
   useInitialProductFilterAttributesQuery,
   useInitialProductFilterCategoriesQuery,
   useInitialProductFilterCollectionsQuery,
@@ -26,61 +27,52 @@ import {
   useProductExportMutation,
   useProductListQuery,
   useWarehouseListQuery,
-} from "@saleor/graphql";
-import useBackgroundTask from "@saleor/hooks/useBackgroundTask";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useListSettings from "@saleor/hooks/useListSettings";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { usePaginationReset } from "@saleor/hooks/usePaginationReset";
+} from "@dashboard/graphql";
+import useBackgroundTask from "@dashboard/hooks/useBackgroundTask";
+import { useFilterHandlers } from "@dashboard/hooks/useFilterHandlers";
+import { useFilterPresets } from "@dashboard/hooks/useFilterPresets";
+import useListSettings from "@dashboard/hooks/useListSettings";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { usePaginationReset } from "@dashboard/hooks/usePaginationReset";
 import usePaginator, {
   createPaginationState,
   PaginatorContext,
-} from "@saleor/hooks/usePaginator";
-import { commonMessages } from "@saleor/intl";
-import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import ProductExportDialog from "@saleor/products/components/ProductExportDialog";
+} from "@dashboard/hooks/usePaginator";
+import { useRowSelection } from "@dashboard/hooks/useRowSelection";
+import { commonMessages } from "@dashboard/intl";
+import ProductExportDialog from "@dashboard/products/components/ProductExportDialog";
 import {
   getAttributeIdFromColumnValue,
   isAttributeColumnValue,
-} from "@saleor/products/components/ProductListPage/utils";
-import ProductTypePickerDialog from "@saleor/products/components/ProductTypePickerDialog";
+} from "@dashboard/products/components/ProductListPage/utils";
+import ProductTypePickerDialog from "@dashboard/products/components/ProductTypePickerDialog";
 import {
   productAddUrl,
   productListUrl,
   ProductListUrlDialog,
   ProductListUrlQueryParams,
   ProductListUrlSortField,
-} from "@saleor/products/urls";
-import useAttributeSearch from "@saleor/searches/useAttributeSearch";
-import useAttributeValueSearch from "@saleor/searches/useAttributeValueSearch";
-import useAvailableInGridAttributesSearch from "@saleor/searches/useAvailableInGridAttributesSearch";
-import useCategorySearch from "@saleor/searches/useCategorySearch";
-import useCollectionSearch from "@saleor/searches/useCollectionSearch";
-import useProductTypeSearch from "@saleor/searches/useProductTypeSearch";
-import { ListViews } from "@saleor/types";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createFilterHandlers from "@saleor/utils/handlers/filterHandlers";
-import { mapEdgesToItems, mapNodeToChoice } from "@saleor/utils/maps";
-import { getSortUrlVariables } from "@saleor/utils/sort";
-import React, { useState } from "react";
+} from "@dashboard/products/urls";
+import useAttributeSearch from "@dashboard/searches/useAttributeSearch";
+import useAttributeValueSearch from "@dashboard/searches/useAttributeValueSearch";
+import useCategorySearch from "@dashboard/searches/useCategorySearch";
+import useCollectionSearch from "@dashboard/searches/useCollectionSearch";
+import useProductTypeSearch from "@dashboard/searches/useProductTypeSearch";
+import { ListViews } from "@dashboard/types";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import { mapEdgesToItems, mapNodeToChoice } from "@dashboard/utils/maps";
+import { getSortUrlVariables } from "@dashboard/utils/sort";
+import { DialogContentText } from "@material-ui/core";
+import isEqual from "lodash/isEqual";
+import React, { useCallback, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { useSortRedirects } from "../../../hooks/useSortRedirects";
 import ProductListPage from "../../components/ProductListPage";
-import {
-  deleteFilterTab,
-  getActiveFilters,
-  getFilterOpts,
-  getFilterQueryParam,
-  getFiltersCurrentTab,
-  getFilterTabs,
-  getFilterVariables,
-  saveFilterTab,
-} from "./filters";
-import { canBeSorted, DEFAULT_SORT_KEY, getSortQueryVariables } from "./sort";
-import { getAvailableProductKinds, getProductKindOpts } from "./utils";
+import { ProductsExportParameters } from "./export";
+import { getFilterOpts, getFilterQueryParam, getFilterVariables, storageUtils } from "./filters";
+import { DEFAULT_SORT_KEY, getSortQueryVariables } from "./sort";
+import { getAvailableProductKinds, getProductKindOpts, obtainChannelFromFilter } from "./utils";
 
 interface ProductListProps {
   params: ProductListUrlQueryParams;
@@ -90,9 +82,9 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const { queue } = useBackgroundTask();
-  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(
-    params.ids,
-  );
+  const { valueProvider } = useConditionalFilterContext();
+  const productListingPageFiltersFlag = useFlag("product_filters");
+  const selectedChannelSlug = obtainChannelFromFilter(valueProvider);
   const { updateListSettings, settings } = useListSettings<ProductListColumns>(
     ListViews.PRODUCT_LIST,
   );
@@ -100,56 +92,54 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
   usePaginationReset(productListUrl, params, settings.rowNumber);
 
   const intl = useIntl();
-  const {
-    data: initialFilterAttributes,
-  } = useInitialProductFilterAttributesQuery();
-  const {
-    data: initialFilterCategories,
-  } = useInitialProductFilterCategoriesQuery({
+  const { data: initialFilterAttributes } = useInitialProductFilterAttributesQuery({
+    skip: productListingPageFiltersFlag.enabled,
+  });
+  const { data: initialFilterCategories } = useInitialProductFilterCategoriesQuery({
     variables: {
       categories: params.categories,
     },
-    skip: !params.categories?.length,
+    skip: !params.categories?.length || productListingPageFiltersFlag.enabled,
   });
-  const {
-    data: initialFilterCollections,
-  } = useInitialProductFilterCollectionsQuery({
+  const { data: initialFilterCollections } = useInitialProductFilterCollectionsQuery({
     variables: {
       collections: params.collections,
     },
-    skip: !params.collections?.length,
+    skip: !params.collections?.length || productListingPageFiltersFlag.enabled,
   });
-  const {
-    data: initialFilterProductTypes,
-  } = useInitialProductFilterProductTypesQuery({
+  const { data: initialFilterProductTypes } = useInitialProductFilterProductTypesQuery({
     variables: {
       productTypes: params.productTypes,
     },
-    skip: !params.productTypes?.length,
+    skip: !params.productTypes?.length || productListingPageFiltersFlag.enabled,
   });
   const searchCategories = useCategorySearch({
     variables: {
       ...DEFAULT_INITIAL_SEARCH_DATA,
       first: 5,
     },
+    skip: productListingPageFiltersFlag.enabled,
   });
   const searchCollections = useCollectionSearch({
     variables: {
       ...DEFAULT_INITIAL_SEARCH_DATA,
       first: 5,
     },
+    skip: productListingPageFiltersFlag.enabled,
   });
   const searchProductTypes = useProductTypeSearch({
     variables: {
       ...DEFAULT_INITIAL_SEARCH_DATA,
       first: 5,
     },
+    skip: productListingPageFiltersFlag.enabled,
   });
   const searchAttributes = useAttributeSearch({
     variables: {
       ...DEFAULT_INITIAL_SEARCH_DATA,
       first: 10,
     },
+    skip: productListingPageFiltersFlag.enabled,
   });
   const [focusedAttribute, setFocusedAttribute] = useState<string>();
   const searchAttributeValues = useAttributeValueSearch({
@@ -173,31 +163,40 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
       productVariants: true,
     },
   });
-
   const selectedChannel = availableChannels.find(
-    channel => channel.slug === params.channel,
+    channel =>
+      channel.slug ===
+      (productListingPageFiltersFlag.enabled ? selectedChannelSlug : params.channel),
   );
-
-  useSortRedirects<ProductListUrlSortField>({
-    params,
-    defaultSortField: DEFAULT_SORT_KEY,
-    urlFunc: productListUrl,
-    resetToDefault: !canBeSorted(params.sort, !!selectedChannel),
-  });
-
   const [openModal, closeModal] = createDialogActionHandlers<
     ProductListUrlDialog,
     ProductListUrlQueryParams
   >(navigate, productListUrl, params);
-
-  const tabs = getFilterTabs();
-
-  const currentTab = getFiltersCurrentTab(params, tabs);
-
+  const {
+    clearRowSelection,
+    selectedRowIds,
+    setClearDatagridRowSelectionCallback,
+    setSelectedRowIds,
+  } = useRowSelection(params);
+  const {
+    hasPresetsChanged,
+    onPresetChange,
+    onPresetDelete,
+    onPresetSave,
+    onPresetUpdate,
+    getPresetNameToDelete,
+    presets,
+    selectedPreset,
+    setPresetIdToDelete,
+  } = useFilterPresets({
+    params,
+    getUrl: productListUrl,
+    storageUtils,
+    reset: clearRowSelection,
+  });
   const countAllProducts = useProductCountQuery({
     skip: params.action !== "export",
   });
-
   const [exportProducts, exportProductsOpts] = useProductExportMutation({
     onCompleted: data => {
       if (data.exportProducts.errors.length === 0) {
@@ -217,44 +216,33 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
           id: data.exportProducts.exportFile.id,
         });
         closeModal();
-        reset();
+        clearRowSelection();
       }
     },
   });
-
-  const [
-    changeFilters,
-    resetFilters,
-    handleSearchChange,
-  ] = createFilterHandlers({
-    cleanupFn: reset,
+  const [productBulkDelete, productBulkDeleteOpts] = useProductBulkDeleteMutation({
+    onCompleted: data => {
+      if (data.productBulkDelete.errors.length === 0) {
+        closeModal();
+        notify({
+          status: "success",
+          text: intl.formatMessage(commonMessages.savedChanges),
+        });
+        refetch();
+        limitOpts.refetch();
+        clearRowSelection();
+      }
+    },
+  });
+  const [changeFilters, resetFilters, handleSearchChange] = useFilterHandlers({
+    cleanupFn: clearRowSelection,
     createUrl: productListUrl,
     getFilterQueryParam,
-    navigate,
     params,
+    keepActiveTab: true,
+    defaultSortField: DEFAULT_SORT_KEY,
+    hasSortWithRank: true,
   });
-
-  const handleTabChange = (tab: number) => {
-    reset();
-    navigate(
-      productListUrl({
-        activeTab: tab.toString(),
-        ...getFilterTabs()[tab - 1].data,
-      }),
-    );
-  };
-
-  const handleFilterTabDelete = () => {
-    deleteFilterTab(currentTab);
-    reset();
-    navigate(productListUrl());
-  };
-
-  const handleFilterTabSave = (data: SaveFilterTabDialogFormData) => {
-    saveFilterTab(data.name, getActiveFilters(params));
-    handleTabChange(tabs.length + 1);
-  };
-
   const handleSort = (field: ProductListUrlSortField, attributeId?: string) =>
     navigate(
       productListUrl({
@@ -264,67 +252,81 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
         ...DEFAULT_INITIAL_PAGINATION_DATA,
       }),
     );
-
+  const handleSubmitBulkDelete = () => {
+    productBulkDelete({
+      variables: { ids: selectedRowIds },
+    });
+    clearRowSelection();
+  };
   const kindOpts = getProductKindOpts(availableProductKinds, intl);
   const paginationState = createPaginationState(settings.rowNumber, params);
   const channelOpts = availableChannels
     ? mapNodeToChoice(availableChannels, channel => channel.slug)
     : null;
-  const filter = getFilterVariables(params, !!selectedChannel);
+  const filterVariables = getFilterVariables({
+    isProductListingPageFiltersFlagEnabled: productListingPageFiltersFlag.enabled,
+    filterContainer: valueProvider.value,
+    queryParams: params,
+    isChannelSelected: !!selectedChannel,
+    channelSlug: selectedChannel?.slug,
+  });
   const sort = getSortQueryVariables(params, !!selectedChannel);
   const queryVariables = React.useMemo<
-    Omit<ProductListQueryVariables, "hasChannel" | "hasSelectedAttributes">
+    Omit<
+      ProductListQueryVariables,
+      "hasChannel" | "hasSelectedAttributes" | "includeCategories" | "includeCollections"
+    >
   >(
     () => ({
       ...paginationState,
-      filter,
+      ...filterVariables,
       sort,
-      channel: selectedChannel?.slug,
     }),
-    [params, settings.rowNumber],
+    [params, settings.rowNumber, valueProvider.value],
   );
-
-  const filteredColumnIds = settings.columns
+  const filteredColumnIds = (settings.columns ?? [])
     .filter(isAttributeColumnValue)
     .map(getAttributeIdFromColumnValue);
-
   const { data, loading, refetch } = useProductListQuery({
     displayLoader: true,
     variables: {
       ...queryVariables,
       hasChannel: !!selectedChannel,
-      hasSelectedAttributes: filteredColumnIds.length > 0,
+      includeCategories: settings.columns.includes("productCategory"),
+      includeCollections: settings.columns.includes("productCollections"),
     },
+    skip: valueProvider.loading,
   });
-
-  const availableInGridAttributesOpts = useAvailableInGridAttributesSearch({
-    variables: {
-      ...DEFAULT_INITIAL_SEARCH_DATA,
-      first: 5,
-    },
-  });
-  const gridAttributes = useGridAttributesQuery({
-    variables: { ids: filteredColumnIds },
-    skip: filteredColumnIds.length === 0,
-  });
-
-  const [
-    productBulkDelete,
-    productBulkDeleteOpts,
-  ] = useProductBulkDeleteMutation({
-    onCompleted: data => {
-      if (data.productBulkDelete.errors.length === 0) {
-        closeModal();
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        reset();
-        refetch();
-        limitOpts.refetch();
+  const products = mapEdgesToItems(data?.products);
+  const handleSetSelectedProductIds = useCallback(
+    (rows: number[], clearSelection: () => void) => {
+      if (!products) {
+        return;
       }
+
+      const rowsIds = rows.map(row => products[row].id);
+      const haveSaveValues = isEqual(rowsIds, selectedRowIds);
+
+      if (!haveSaveValues) {
+        setSelectedRowIds(rowsIds);
+      }
+
+      setClearDatagridRowSelectionCallback(clearSelection);
     },
-  });
+    [products, selectedRowIds],
+  );
+  const availableColumnsAttributesOpts = useAvailableColumnAttributesLazyQuery();
+  const [gridAttributesQuery, gridAttributesOpts] = useGridAttributesLazyQuery();
+
+  useEffect(() => {
+    // Fetch this only on initial render
+    gridAttributesQuery({
+      variables: {
+        ids: filteredColumnIds,
+        hasAttributes: !!filteredColumnIds.length,
+      },
+    });
+  }, []);
 
   const {
     loadMore: loadMoreDialogProductTypes,
@@ -333,18 +335,14 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
   } = useProductTypeSearch({
     variables: DEFAULT_INITIAL_SEARCH_DATA,
   });
-
   const fetchMoreDialogProductTypes = {
     hasMore: searchDialogProductTypesOpts.data?.search?.pageInfo?.hasNextPage,
     loading: searchDialogProductTypesOpts.loading,
     onFetchMore: loadMoreDialogProductTypes,
   };
-
   const filterOpts = getFilterOpts(
     params,
-    (mapEdgesToItems(initialFilterAttributes?.attributes) || []).filter(
-      filterable,
-    ),
+    (mapEdgesToItems(initialFilterAttributes?.attributes) || []).filter(filterable),
     searchAttributeValues,
     {
       initial: mapEdgesToItems(initialFilterCategories?.categories) || [],
@@ -361,7 +359,6 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
     kindOpts,
     channelOpts,
   );
-
   const paginationValues = usePaginator({
     pageInfo: data?.products?.pageInfo,
     paginationState,
@@ -377,73 +374,47 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
           sort: params.sort,
         }}
         onSort={handleSort}
-        availableInGridAttributes={
-          mapEdgesToItems(
-            availableInGridAttributesOpts.result?.data?.availableInGrid,
-          ) || []
-        }
         currencySymbol={selectedChannel?.currencyCode || ""}
-        currentTab={currentTab}
+        currentTab={selectedPreset}
         defaultSettings={defaultListSettings[ListViews.PRODUCT_LIST]}
         filterOpts={filterOpts}
-        gridAttributes={mapEdgesToItems(gridAttributes?.data?.grid) || []}
+        gridAttributesOpts={gridAttributesOpts}
         settings={settings}
-        loading={
-          availableInGridAttributesOpts.result.loading || gridAttributes.loading
-        }
-        hasMore={maybe(
-          () =>
-            availableInGridAttributesOpts.result.data.availableInGrid.pageInfo
-              .hasNextPage,
-          false,
-        )}
-        disabled={loading}
+        availableColumnsAttributesOpts={availableColumnsAttributesOpts}
+        disabled={loading || valueProvider.loading}
         limits={limitOpts.data?.shop.limits}
-        products={mapEdgesToItems(data?.products)}
-        selectedProductIds={listElements}
-        onColumnQueryChange={availableInGridAttributesOpts.search}
-        onFetchMore={availableInGridAttributesOpts.loadMore}
-        onUpdateListSettings={updateListSettings}
+        products={products}
+        onUpdateListSettings={(...props) => {
+          clearRowSelection();
+          updateListSettings(...props);
+        }}
         onAdd={() => openModal("create-product")}
         onAll={resetFilters}
-        toolbar={
-          <IconButton
-            variant="secondary"
-            color="primary"
-            onClick={() =>
-              openModal("delete", {
-                ids: listElements,
-              })
-            }
-          >
-            <DeleteIcon />
-          </IconButton>
-        }
-        isChecked={isSelected}
-        selected={listElements.length}
-        toggle={toggle}
-        toggleAll={toggleAll}
         onSearchChange={handleSearchChange}
         onFilterChange={changeFilters}
         onFilterAttributeFocus={setFocusedAttribute}
         onTabSave={() => openModal("save-search")}
-        onTabDelete={() => openModal("delete-search")}
-        onTabChange={handleTabChange}
+        onTabUpdate={onPresetUpdate}
+        onTabDelete={(tabIndex: number) => {
+          setPresetIdToDelete(tabIndex);
+          openModal("delete-search");
+        }}
+        onProductsDelete={() => openModal("delete")}
+        onTabChange={onPresetChange}
+        hasPresetsChanged={hasPresetsChanged()}
         initialSearch={params.query || ""}
-        tabs={getFilterTabs().map(tab => tab.name)}
+        tabs={presets.map(tab => tab.name)}
         onExport={() => openModal("export")}
         selectedChannelId={selectedChannel?.id}
-        columnQuery={availableInGridAttributesOpts.query}
+        selectedProductIds={selectedRowIds}
+        onSelectProductIds={handleSetSelectedProductIds}
+        clearRowSelection={clearRowSelection}
       />
       <ActionDialog
         open={params.action === "delete"}
         confirmButtonState={productBulkDeleteOpts.status}
         onClose={closeModal}
-        onConfirm={() =>
-          productBulkDelete({
-            variables: { ids: params.ids },
-          })
-        }
+        onConfirm={handleSubmitBulkDelete}
         title={intl.formatMessage({
           id: "F4WdSO",
           defaultMessage: "Delete Products",
@@ -457,22 +428,16 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
             defaultMessage="{counter,plural,one{Are you sure you want to delete this product?} other{Are you sure you want to delete {displayQuantity} products?}}"
             description="dialog content"
             values={{
-              counter: params?.ids?.length,
-              displayQuantity: <strong>{params?.ids?.length}</strong>,
+              counter: selectedRowIds.length,
+              displayQuantity: <strong>{selectedRowIds.length}</strong>,
             }}
           />
         </DialogContentText>
       </ActionDialog>
       <ProductExportDialog
-        attributes={
-          mapEdgesToItems(searchAttributes?.result?.data?.search) || []
-        }
+        attributes={mapEdgesToItems(searchAttributes?.result?.data?.search) || []}
         hasMore={searchAttributes.result.data?.search.pageInfo.hasNextPage}
-        loading={
-          searchAttributes.result.loading ||
-          countAllProducts.loading ||
-          warehouses.loading
-        }
+        loading={searchAttributes.result.loading || countAllProducts.loading || warehouses.loading}
         onFetch={searchAttributes.search}
         onFetchMore={searchAttributes.loadMore}
         open={params.action === "export"}
@@ -482,41 +447,41 @@ export const ProductList: React.FC<ProductListProps> = ({ params }) => {
           all: countAllProducts.data?.products?.totalCount,
           filter: data?.products?.totalCount,
         }}
-        selectedProducts={listElements.length}
+        selectedProducts={selectedRowIds.length}
         warehouses={mapEdgesToItems(warehouses?.data?.warehouses) || []}
         channels={availableChannels}
         onClose={closeModal}
-        onSubmit={data =>
+        onSubmit={data => {
+          const productsExportParams = new ProductsExportParameters({
+            ...data,
+            ...filterVariables,
+            ids: selectedRowIds,
+          });
+
           exportProducts({
             variables: {
-              input: {
-                ...data,
-                filter,
-                ids: listElements,
-              },
+              input: productsExportParams.asExportProductsInput(),
             },
-          })
-        }
+          });
+        }}
       />
       <SaveFilterTabDialog
         open={params.action === "save-search"}
         confirmButtonState="default"
         onClose={closeModal}
-        onSubmit={handleFilterTabSave}
+        onSubmit={onPresetSave}
       />
       <DeleteFilterTabDialog
         open={params.action === "delete-search"}
         confirmButtonState="default"
         onClose={closeModal}
-        onSubmit={handleFilterTabDelete}
-        tabName={maybe(() => tabs[currentTab - 1].name, "...")}
+        onSubmit={onPresetDelete}
+        tabName={getPresetNameToDelete()}
       />
       <ProductTypePickerDialog
         confirmButtonState="success"
         open={params.action === "create-product"}
-        productTypes={mapNodeToChoice(
-          mapEdgesToItems(searchDialogProductTypesOpts?.data?.search),
-        )}
+        productTypes={mapNodeToChoice(mapEdgesToItems(searchDialogProductTypesOpts?.data?.search))}
         fetchProductTypes={searchDialogProductTypes}
         fetchMoreProductTypes={fetchMoreDialogProductTypes}
         onClose={closeModal}

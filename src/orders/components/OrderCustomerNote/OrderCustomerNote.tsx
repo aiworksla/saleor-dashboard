@@ -1,6 +1,6 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import Skeleton from "@dashboard/components/Skeleton";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import Skeleton from "@saleor/components/Skeleton";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -8,9 +8,7 @@ interface OrderCustomerNoteProps {
   note: string;
 }
 
-export const OrderCustomerNote: React.FC<OrderCustomerNoteProps> = ({
-  note,
-}) => {
+export const OrderCustomerNote: React.FC<OrderCustomerNoteProps> = ({ note }) => {
   const intl = useIntl();
 
   return (
@@ -27,10 +25,7 @@ export const OrderCustomerNote: React.FC<OrderCustomerNoteProps> = ({
           <Skeleton />
         ) : note === "" ? (
           <Typography color="textSecondary">
-            <FormattedMessage
-              id="VrFy8e"
-              defaultMessage="No notes from customer"
-            />
+            <FormattedMessage id="VrFy8e" defaultMessage="No notes from customer" />
           </Typography>
         ) : (
           <Typography>{note}</Typography>

@@ -3,9 +3,13 @@
 
 import faker from "faker";
 
-import { CHANNEL_FORM_SELECTORS } from "../../elements/channels/channel-form-selectors";
+import {
+  CHANNEL_FORM_SELECTORS,
+} from "../../elements/channels/channel-form-selectors";
 import { HEADER_SELECTORS } from "../../elements/header/header-selectors";
-import { DRAFT_ORDER_SELECTORS } from "../../elements/orders/draft-order-selectors";
+import {
+  DRAFT_ORDER_SELECTORS,
+} from "../../elements/orders/draft-order-selectors";
 import { ORDERS_SELECTORS } from "../../elements/orders/orders-selectors";
 import { urlList } from "../../fixtures/urlList";
 import { createChannel } from "../../support/api/requests/Channels";
@@ -23,8 +27,7 @@ xdescribe("Channels in draft orders", () => {
   let otherChannel;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    channelsUtils.deleteChannelsStartsWith(startsWith);
+    cy.loginUserViaRequest();
     channelsUtils
       .getDefaultChannel()
       .then(channel => {
@@ -33,15 +36,16 @@ xdescribe("Channels in draft orders", () => {
       })
       .then(channelResp => {
         otherChannel = channelResp;
+        cy.checkIfDataAreNotNull({ defaultChannel, otherChannel });
       });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
-    "Draft order channel should be taken from global channel picker",
+    "Draft order channel should be taken from global channel picker. TC: SALEOR_2101",
     { tags: ["@orders", "@allEnv"] },
     () => {
       let channelName;
@@ -51,9 +55,7 @@ xdescribe("Channels in draft orders", () => {
           channelName = channelInHeader;
         },
       );
-      cy.visit(urlList.orders)
-        .get(ORDERS_SELECTORS.createOrder)
-        .click();
+      cy.visit(urlList.orders).get(ORDERS_SELECTORS.createOrderButton).click();
       cy.getTextFromElement(CHANNEL_FORM_SELECTORS.channelSelect).then(
         selectedChannelName => {
           expect(channelName).to.contains(selectedChannelName);
@@ -69,13 +71,13 @@ xdescribe("Channels in draft orders", () => {
   );
 
   it(
-    "Draft order channel should be taken from global channel picker when changed",
+    "Draft order channel should be taken from global channel picker when changed. TC: SALEOR_2102",
     { tags: ["@orders", "@allEnv"] },
     () => {
       cy.visit(urlList.homePage);
       selectChannelInHeader(otherChannel.name);
       cy.visit(urlList.orders);
-      cy.get(ORDERS_SELECTORS.createOrder).click();
+      cy.get(ORDERS_SELECTORS.createOrderButton).click();
       cy.getTextFromElement(CHANNEL_FORM_SELECTORS.channelSelect).then(
         channelInSelect => {
           expect(channelInSelect).to.be.eq(otherChannel.name);
@@ -97,7 +99,7 @@ xdescribe("Channels in draft orders", () => {
       cy.visit(urlList.homePage);
       selectChannelInHeader(defaultChannel.name);
       cy.visit(urlList.orders);
-      cy.get(ORDERS_SELECTORS.createOrder).click();
+      cy.get(ORDERS_SELECTORS.createOrderButton).click();
       cy.getTextFromElement(CHANNEL_FORM_SELECTORS.channelSelect).then(
         channelInSelect => {
           expect(channelInSelect).to.be.eq(defaultChannel.name);

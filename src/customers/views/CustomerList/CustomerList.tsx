@@ -1,51 +1,33 @@
-import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import DeleteFilterTabDialog from "@saleor/components/DeleteFilterTabDialog";
-import SaveFilterTabDialog, {
-  SaveFilterTabDialogFormData,
-} from "@saleor/components/SaveFilterTabDialog";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import {
-  useBulkRemoveCustomersMutation,
-  useListCustomersQuery,
-} from "@saleor/graphql";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useListSettings from "@saleor/hooks/useListSettings";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { usePaginationReset } from "@saleor/hooks/usePaginationReset";
+import ActionDialog from "@dashboard/components/ActionDialog";
+import DeleteFilterTabDialog from "@dashboard/components/DeleteFilterTabDialog";
+import SaveFilterTabDialog from "@dashboard/components/SaveFilterTabDialog";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { useBulkRemoveCustomersMutation, useListCustomersQuery } from "@dashboard/graphql";
+import { useFilterPresets } from "@dashboard/hooks/useFilterPresets";
+import useListSettings from "@dashboard/hooks/useListSettings";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { usePaginationReset } from "@dashboard/hooks/usePaginationReset";
 import usePaginator, {
   createPaginationState,
   PaginatorContext,
-} from "@saleor/hooks/usePaginator";
-import { commonMessages, sectionNames } from "@saleor/intl";
-import { DeleteIcon, IconButton } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import { ListViews } from "@saleor/types";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createFilterHandlers from "@saleor/utils/handlers/filterHandlers";
-import createSortHandler from "@saleor/utils/handlers/sortHandler";
-import { mapEdgesToItems } from "@saleor/utils/maps";
-import { getSortParams } from "@saleor/utils/sort";
-import React from "react";
+} from "@dashboard/hooks/usePaginator";
+import { useRowSelection } from "@dashboard/hooks/useRowSelection";
+import { commonMessages, sectionNames } from "@dashboard/intl";
+import { ListViews } from "@dashboard/types";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import createFilterHandlers from "@dashboard/utils/handlers/filterHandlers";
+import createSortHandler from "@dashboard/utils/handlers/sortHandler";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { getSortParams } from "@dashboard/utils/sort";
+import { DialogContentText } from "@material-ui/core";
+import isEqual from "lodash/isEqual";
+import React, { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import CustomerListPage from "../../components/CustomerListPage";
-import {
-  customerListUrl,
-  CustomerListUrlDialog,
-  CustomerListUrlQueryParams,
-} from "../../urls";
-import {
-  deleteFilterTab,
-  getActiveFilters,
-  getFilterOpts,
-  getFilterQueryParam,
-  getFiltersCurrentTab,
-  getFilterTabs,
-  getFilterVariables,
-  saveFilterTab,
-} from "./filters";
+import { customerListUrl, CustomerListUrlDialog, CustomerListUrlQueryParams } from "../../urls";
+import { getFilterOpts, getFilterQueryParam, getFilterVariables, storageUtils } from "./filters";
 import { getSortQueryVariables } from "./sort";
 
 interface CustomerListProps {
@@ -55,17 +37,33 @@ interface CustomerListProps {
 export const CustomerList: React.FC<CustomerListProps> = ({ params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
-  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(
-    params.ids,
-  );
-  const { updateListSettings, settings } = useListSettings(
-    ListViews.CUSTOMER_LIST,
-  );
+  const intl = useIntl();
+  const { updateListSettings, settings } = useListSettings(ListViews.CUSTOMER_LIST);
 
   usePaginationReset(customerListUrl, params, settings.rowNumber);
 
-  const intl = useIntl();
-
+  const {
+    clearRowSelection,
+    selectedRowIds,
+    setClearDatagridRowSelectionCallback,
+    setSelectedRowIds,
+  } = useRowSelection(params);
+  const {
+    selectedPreset,
+    presets,
+    hasPresetsChanged,
+    onPresetChange,
+    onPresetDelete,
+    onPresetSave,
+    onPresetUpdate,
+    setPresetIdToDelete,
+    getPresetNameToDelete,
+  } = useFilterPresets({
+    params,
+    reset: clearRowSelection,
+    getUrl: customerListUrl,
+    storageUtils,
+  });
   const paginationState = createPaginationState(settings.rowNumber, params);
   const queryVariables = React.useMemo(
     () => ({
@@ -79,121 +77,94 @@ export const CustomerList: React.FC<CustomerListProps> = ({ params }) => {
     displayLoader: true,
     variables: queryVariables,
   });
-
-  const tabs = getFilterTabs();
-
-  const currentTab = getFiltersCurrentTab(params, tabs);
-
-  const [
-    changeFilters,
-    resetFilters,
-    handleSearchChange,
-  ] = createFilterHandlers({
-    cleanupFn: reset,
+  const customers = mapEdgesToItems(data?.customers);
+  const [changeFilters, resetFilters, handleSearchChange] = createFilterHandlers({
+    cleanupFn: clearRowSelection,
     createUrl: customerListUrl,
     getFilterQueryParam,
     navigate,
     params,
+    keepActiveTab: true,
   });
-
   const [openModal, closeModal] = createDialogActionHandlers<
     CustomerListUrlDialog,
     CustomerListUrlQueryParams
   >(navigate, customerListUrl, params);
-
-  const handleTabChange = (tab: number) => {
-    reset();
-    navigate(
-      customerListUrl({
-        activeTab: tab.toString(),
-        ...getFilterTabs()[tab - 1].data,
-      }),
-    );
-  };
-
-  const handleTabDelete = () => {
-    deleteFilterTab(currentTab);
-    reset();
-    navigate(customerListUrl());
-  };
-
-  const handleTabSave = (data: SaveFilterTabDialogFormData) => {
-    saveFilterTab(data.name, getActiveFilters(params));
-    handleTabChange(tabs.length + 1);
-  };
-
   const paginationValues = usePaginator({
-    pageInfo: maybe(() => data.customers.pageInfo),
+    pageInfo: data?.customers?.pageInfo,
     paginationState,
     queryString: params,
   });
-
-  const [
-    bulkRemoveCustomers,
-    bulkRemoveCustomersOpts,
-  ] = useBulkRemoveCustomersMutation({
+  const [bulkRemoveCustomers, bulkRemoveCustomersOpts] = useBulkRemoveCustomersMutation({
     onCompleted: data => {
-      if (data.customerBulkDelete.errors.length === 0) {
+      if (data.customerBulkDelete?.errors.length === 0) {
         notify({
           status: "success",
           text: intl.formatMessage(commonMessages.savedChanges),
         });
-        reset();
         refetch();
+        clearRowSelection();
         closeModal();
       }
     },
   });
-
   const handleSort = createSortHandler(navigate, customerListUrl, params);
+  const handleSetSelectedCustomerIds = useCallback(
+    (rows: number[], clearSelection: () => void) => {
+      if (!customers) {
+        return;
+      }
+
+      const rowsIds = rows.map(row => customers[row].id);
+      const haveSaveValues = isEqual(rowsIds, selectedRowIds);
+
+      if (!haveSaveValues) {
+        setSelectedRowIds(rowsIds);
+      }
+
+      setClearDatagridRowSelectionCallback(clearSelection);
+    },
+    [customers, selectedRowIds, setClearDatagridRowSelectionCallback, setSelectedRowIds],
+  );
 
   return (
     <PaginatorContext.Provider value={paginationValues}>
       <WindowTitle title={intl.formatMessage(sectionNames.customers)} />
       <CustomerListPage
-        currentTab={currentTab}
+        selectedFilterPreset={selectedPreset}
         filterOpts={getFilterOpts(params)}
         initialSearch={params.query || ""}
         onSearchChange={handleSearchChange}
         onFilterChange={changeFilters}
-        onAll={resetFilters}
-        onTabChange={handleTabChange}
-        onTabDelete={() => openModal("delete-search")}
-        onTabSave={() => openModal("save-search")}
-        tabs={tabs.map(tab => tab.name)}
-        customers={mapEdgesToItems(data?.customers)}
+        onFilterPresetsAll={resetFilters}
+        onFilterPresetChange={onPresetChange}
+        onFilterPresetDelete={(id: number) => {
+          setPresetIdToDelete(id);
+          openModal("delete-search");
+        }}
+        onFilterPresetPresetSave={() => openModal("save-search")}
+        onFilterPresetUpdate={onPresetUpdate}
+        filterPresets={presets.map(preset => preset.name)}
+        customers={customers}
         settings={settings}
         disabled={loading}
+        loading={loading}
         onUpdateListSettings={updateListSettings}
         onSort={handleSort}
-        toolbar={
-          <IconButton
-            variant="secondary"
-            color="primary"
-            onClick={() =>
-              openModal("remove", {
-                ids: listElements,
-              })
-            }
-          >
-            <DeleteIcon />
-          </IconButton>
-        }
-        isChecked={isSelected}
-        selected={listElements.length}
-        selectedCustomerIds={listElements}
+        selectedCustomerIds={selectedRowIds}
+        onSelectCustomerIds={handleSetSelectedCustomerIds}
         sort={getSortParams(params)}
-        toggle={toggle}
-        toggleAll={toggleAll}
+        hasPresetsChanged={hasPresetsChanged}
+        onCustomersDelete={() => openModal("remove", { ids: selectedRowIds })}
       />
       <ActionDialog
-        open={params.action === "remove" && maybe(() => params.ids.length > 0)}
+        open={params.action === "remove" && selectedRowIds?.length > 0}
         onClose={closeModal}
         confirmButtonState={bulkRemoveCustomersOpts.status}
         onConfirm={() =>
           bulkRemoveCustomers({
             variables: {
-              ids: params.ids,
+              ids: selectedRowIds,
             },
           })
         }
@@ -209,10 +180,8 @@ export const CustomerList: React.FC<CustomerListProps> = ({ params }) => {
             id="N2SbNc"
             defaultMessage="{counter,plural,one{Are you sure you want to delete this customer?} other{Are you sure you want to delete {displayQuantity} customers?}}"
             values={{
-              counter: maybe(() => params.ids.length),
-              displayQuantity: (
-                <strong>{maybe(() => params.ids.length)}</strong>
-              ),
+              counter: selectedRowIds?.length,
+              displayQuantity: <strong>{selectedRowIds?.length}</strong>,
             }}
           />
         </DialogContentText>
@@ -221,14 +190,14 @@ export const CustomerList: React.FC<CustomerListProps> = ({ params }) => {
         open={params.action === "save-search"}
         confirmButtonState="default"
         onClose={closeModal}
-        onSubmit={handleTabSave}
+        onSubmit={onPresetSave}
       />
       <DeleteFilterTabDialog
         open={params.action === "delete-search"}
         confirmButtonState="default"
         onClose={closeModal}
-        onSubmit={handleTabDelete}
-        tabName={maybe(() => tabs[currentTab - 1].name, "...")}
+        onSubmit={onPresetDelete}
+        tabName={getPresetNameToDelete()}
       />
     </PaginatorContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { AttributeErrorCode, AttributeErrorFragment } from "@saleor/graphql";
+import { AttributeErrorCode, AttributeErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -21,7 +21,7 @@ const messages = defineMessages({
 function getAttributeErrorMessage(
   err: Omit<AttributeErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case AttributeErrorCode.ALREADY_EXISTS:

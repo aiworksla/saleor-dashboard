@@ -1,8 +1,10 @@
 import { makeStyles } from "@saleor/macaw-ui";
+import clsx from "clsx";
 import React from "react";
 
 export interface TabContainerProps {
   children: React.ReactNode | React.ReactNodeArray;
+  className?: string;
 }
 
 const useStyles = makeStyles(
@@ -13,14 +15,13 @@ const useStyles = makeStyles(
   }),
   { name: "TabContainer" },
 );
-
 const TabContainer: React.FC<TabContainerProps> = props => {
   const { children } = props;
-
   const classes = useStyles(props);
 
-  return <div className={classes.root}>{children}</div>;
+  return <div className={clsx(classes.root, props.className)}>{children}</div>;
 };
+
 TabContainer.displayName = "TabContainer";
 
 export default TabContainer;

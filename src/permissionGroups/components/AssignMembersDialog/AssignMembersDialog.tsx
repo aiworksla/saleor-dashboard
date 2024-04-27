@@ -1,3 +1,17 @@
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { UserAvatar } from "@dashboard/components/UserAvatar";
+import { SearchStaffMembersQuery } from "@dashboard/graphql";
+import useElementScroll, { isScrolledToBottom } from "@dashboard/hooks/useElementScroll";
+import useSearchQuery from "@dashboard/hooks/useSearchQuery";
+import { buttonMessages } from "@dashboard/intl";
+import { getUserInitials, getUserName, renderCollection } from "@dashboard/misc";
+import { DialogProps, FetchMoreProps, RelayToFlat, SearchPageProps } from "@dashboard/types";
 import {
   Checkbox,
   CircularProgress,
@@ -8,29 +22,10 @@ import {
   TableBody,
   TableCell,
   TextField,
-  Typography,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { SearchStaffMembersQuery } from "@saleor/graphql";
-import useElementScroll, {
-  isScrolledToBottom,
-} from "@saleor/hooks/useElementScroll";
-import useSearchQuery from "@saleor/hooks/useSearchQuery";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { getUserInitials, getUserName, renderCollection } from "@saleor/misc";
-import {
-  DialogProps,
-  FetchMoreProps,
-  RelayToFlat,
-  SearchPageProps,
-} from "@saleor/types";
-import classNames from "classnames";
+import { makeStyles } from "@saleor/macaw-ui";
+import { Box, Text } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -39,16 +34,6 @@ import { messages } from "./messages";
 
 const useStyles = makeStyles(
   theme => ({
-    avatar: {
-      alignItems: "center",
-      borderRadius: "100%",
-      display: "grid",
-      float: "left",
-      height: 32,
-      justifyContent: "center",
-      overflow: "hidden",
-      width: 32,
-    },
     avatarCell: {
       padding: 0,
       width: 32,
@@ -100,17 +85,8 @@ const useStyles = makeStyles(
     overflow: {
       overflowY: "visible",
     },
-    scrollArea: {
-      maxHeight: 400,
-      overflowY: "scroll",
-      paddingTop: 0,
-      paddingBottom: 0,
-    },
     table: {
       marginBottom: theme.spacing(3),
-    },
-    statusText: {
-      color: "#9E9D9D",
     },
     wideCell: {
       width: "80%",
@@ -119,10 +95,7 @@ const useStyles = makeStyles(
   { name: "AssignStaffMembersDialog" },
 );
 
-export interface AssignMembersDialogProps
-  extends DialogProps,
-    FetchMoreProps,
-    SearchPageProps {
+export interface AssignMembersDialogProps extends DialogProps, FetchMoreProps, SearchPageProps {
   confirmButtonState: ConfirmButtonTransitionState;
   disabled: boolean;
   staffMembers: RelayToFlat<SearchStaffMembersQuery["search"]>;
@@ -135,20 +108,14 @@ function handleStaffMemberAssign(
   member: RelayToFlat<SearchStaffMembersQuery["search"]>[0],
   isSelected: boolean,
   selectedMembers: RelayToFlat<SearchStaffMembersQuery["search"]>,
-  setSelectedMembers: (
-    data: RelayToFlat<SearchStaffMembersQuery["search"]>,
-  ) => void,
+  setSelectedMembers: (data: RelayToFlat<SearchStaffMembersQuery["search"]>) => void,
 ) {
   if (isSelected) {
-    setSelectedMembers(
-      selectedMembers.filter(selectedMember => selectedMember.id !== member.id),
-    );
+    setSelectedMembers(selectedMembers.filter(selectedMember => selectedMember.id !== member.id));
   } else {
     setSelectedMembers([...selectedMembers, member]);
   }
 }
-
-const scrollableTargetId = "assignMembersScrollableDialog";
 
 const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
   confirmButtonState,
@@ -165,11 +132,9 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
   const intl = useIntl();
   const classes = useStyles({});
   const [query, onQueryChange] = useSearchQuery(onSearchChange);
-
   const [selectedMembers, setSelectedMembers] = React.useState<
     RelayToFlat<SearchStaffMembersQuery["search"]>
   >([]);
-
   const anchor = React.useRef<HTMLDivElement>();
   const scrollPosition = useElementScroll(anchor);
   const dropShadow = !isScrolledToBottom(anchor, scrollPosition);
@@ -184,11 +149,12 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
         paper: classes.dialogPaper,
       }}
     >
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage {...messages.title} />
       </DialogTitle>
       <DialogContent className={classes.inputContainer}>
         <TextField
+          data-test-id="search-members-input"
           name="query"
           value={query}
           onChange={onQueryChange}
@@ -202,11 +168,7 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
           disabled={disabled}
         />
       </DialogContent>
-      <DialogContent
-        className={classes.scrollArea}
-        ref={anchor}
-        id={scrollableTargetId}
-      >
+      <DialogContent ref={anchor}>
         <InfiniteScroll
           dataLength={staffMembers?.length || 0}
           next={onFetchMore}
@@ -220,26 +182,24 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
               </div>
             </>
           }
-          scrollableTarget={scrollableTargetId}
+          height={400}
         >
           <ResponsiveTable className={classes.table}>
-            <TableBody>
+            <TableBody data-test-id="search-results">
               {renderCollection(
                 staffMembers,
                 member => {
                   if (!member) {
                     return null;
                   }
+
                   const isSelected = selectedMembers.some(
                     selectedMember => selectedMember.id === member.id,
                   );
 
                   return (
                     <TableRowLink key={member.id} data-test-id="user-row">
-                      <TableCell
-                        padding="checkbox"
-                        className={classes.checkboxCell}
-                      >
+                      <TableCell padding="checkbox" className={classes.checkboxCell}>
                         <Checkbox
                           color="primary"
                           checked={isSelected}
@@ -254,37 +214,23 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
                         />
                       </TableCell>
                       <TableCell className={classes.avatarCell}>
-                        <div className={classes.avatar}>
-                          {!!member?.avatar?.url ? (
-                            <img
-                              className={classes.avatarImage}
-                              src={member.avatar.url}
-                            />
-                          ) : (
-                            <div className={classes.avatarDefault}>
-                              <Typography>{getUserInitials(member)}</Typography>
-                            </div>
-                          )}
-                        </div>
+                        <UserAvatar url={member?.avatar?.url} initials={getUserInitials(member)} />
                       </TableCell>
                       <TableCell className={classes.colName}>
-                        <Typography>
-                          {getUserName(member) || <Skeleton />}
-                        </Typography>
-                        <Typography
-                          variant={"caption"}
-                          className={classes.statusText}
-                        >
-                          {!!member ? (
-                            member.isActive ? (
-                              intl.formatMessage(messages.staffActive)
+                        <Box display="flex" flexDirection="column" justifyContent="center">
+                          <Text>{getUserName(member) || <Skeleton />}</Text>
+                          <Text size={2} color="default2">
+                            {member ? (
+                              member.isActive ? (
+                                intl.formatMessage(messages.staffActive)
+                              ) : (
+                                intl.formatMessage(messages.staffInactive)
+                              )
                             ) : (
-                              intl.formatMessage(messages.staffInactive)
-                            )
-                          ) : (
-                            <Skeleton />
-                          )}
-                        </Typography>
+                              <Skeleton />
+                            )}
+                          </Text>
+                        </Box>
                       </TableCell>
                     </TableRowLink>
                   );
@@ -303,7 +249,7 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
         </InfiniteScroll>
       </DialogContent>
       <DialogActions
-        className={classNames({
+        className={clsx({
           [classes.dropShadow]: dropShadow,
         })}
       >
@@ -322,5 +268,6 @@ const AssignMembersDialog: React.FC<AssignMembersDialogProps> = ({
     </Dialog>
   );
 };
+
 AssignMembersDialog.displayName = "AssignMembersDialog";
 export default AssignMembersDialog;

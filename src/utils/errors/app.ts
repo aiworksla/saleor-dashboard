@@ -1,4 +1,4 @@
-import { AppErrorCode, AppErrorFragment } from "@saleor/graphql";
+import { AppErrorCode, AppErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -38,7 +38,7 @@ const messages = defineMessages({
   },
 });
 
-function getAppErrorMessage(err: AppErrorFragment, intl: IntlShape): string {
+function getAppErrorMessage(err: AppErrorFragment, intl: IntlShape): string | undefined {
   if (err) {
     switch (err.code) {
       case AppErrorCode.INVALID_MANIFEST_FORMAT:

@@ -1,4 +1,5 @@
-import { useGiftCardProductsCountQuery } from "@saleor/graphql";
+import { useGiftCardProductsCountQuery } from "@dashboard/graphql";
+import useLocalStorage from "@dashboard/hooks/useLocalStorage";
 import { Alert } from "@saleor/macaw-ui";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -8,20 +9,18 @@ import GiftCardsListHeaderAlertContent from "./GiftCardsListHeaderAlertContent";
 
 const GiftCardsListHeaderAlert: React.FC = () => {
   const intl = useIntl();
-
-  const {
-    data: giftCardProductsCount,
-    loading: giftCardProductsCountLoading,
-  } = useGiftCardProductsCountQuery();
-
+  const [selectedChannel] = useLocalStorage("channel", "");
+  const { data: giftCardProductsCount, loading: giftCardProductsCountLoading } =
+    useGiftCardProductsCountQuery({
+      variables: {
+        channel: selectedChannel,
+      },
+    });
   const giftCardProductTypesExist =
-    giftCardProductsCount?.giftCardProductTypes.totalCount > 0;
-  const giftCardProductsExist =
-    giftCardProductsCount?.giftCardProducts.totalCount > 0;
-
+    (giftCardProductsCount?.giftCardProductTypes?.totalCount ?? 0) > 0;
+  const giftCardProductsExist = (giftCardProductsCount?.giftCardProducts?.totalCount ?? 0) > 0;
   const showNoGiftCardProductsAlert =
-    !giftCardProductsCountLoading &&
-    (!giftCardProductTypesExist || !giftCardProductsExist);
+    !giftCardProductsCountLoading && (!giftCardProductTypesExist || !giftCardProductsExist);
 
   if (showNoGiftCardProductsAlert) {
     return (
@@ -29,6 +28,7 @@ const GiftCardsListHeaderAlert: React.FC = () => {
         title={intl.formatMessage(messages.noGiftCardsAlertTitle)}
         variant="warning"
         close={false}
+        className="remove-icon-background remove-content-padding-top "
       >
         <GiftCardsListHeaderAlertContent
           giftCardProductTypesExist={giftCardProductTypesExist}

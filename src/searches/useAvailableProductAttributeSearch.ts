@@ -1,25 +1,17 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import {
   SearchAvailableProductAttributesDocument,
   SearchAvailableProductAttributesQuery,
   SearchAvailableProductAttributesQueryVariables,
-} from "@saleor/graphql";
-import makeSearch from "@saleor/hooks/makeSearch";
+} from "@dashboard/graphql";
+import makeSearch from "@dashboard/hooks/makeSearch";
 
 export const searchProductAttributes = gql`
-  query SearchAvailableProductAttributes(
-    $id: ID!
-    $after: String
-    $first: Int!
-    $query: String!
-  ) {
+  query SearchAvailableProductAttributes($id: ID!, $after: String, $first: Int!, $query: String!) {
     productType(id: $id) {
       id
-      availableAttributes(
-        after: $after
-        first: $first
-        filter: { search: $query }
-      ) {
+      availableAttributes(after: $after, first: $first, filter: { search: $query }) {
         edges {
           node {
             ...AvailableAttribute

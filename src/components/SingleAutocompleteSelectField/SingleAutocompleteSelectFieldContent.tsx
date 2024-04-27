@@ -1,17 +1,11 @@
+// @ts-strict-ignore
 import chevronDown from "@assets/images/ChevronDown.svg";
-import {
-  CircularProgress,
-  MenuItem,
-  Paper,
-  Typography,
-} from "@material-ui/core";
+import useElementScroll, { isScrolledToBottom } from "@dashboard/hooks/useElementScroll";
+import { FetchMoreProps } from "@dashboard/types";
+import { CircularProgress, MenuItem, Paper, Typography } from "@material-ui/core";
 import Add from "@material-ui/icons/Add";
-import useElementScroll, {
-  isScrolledToBottom,
-} from "@saleor/hooks/useElementScroll";
 import { makeStyles } from "@saleor/macaw-ui";
-import { FetchMoreProps } from "@saleor/types";
-import classNames from "classnames";
+import clsx from "clsx";
 import { GetItemPropsOptions } from "downshift";
 import React, { ReactElement } from "react";
 import SVG from "react-inlinesvg";
@@ -24,10 +18,7 @@ const maxMenuItems = 5;
 const offset = 24;
 
 export type ChoiceValue = string;
-export interface SingleAutocompleteChoiceType<
-  V extends ChoiceValue = ChoiceValue,
-  L = string
-> {
+export interface SingleAutocompleteChoiceType<V extends ChoiceValue = ChoiceValue, L = string> {
   label: L;
   value: V;
 }
@@ -35,8 +26,7 @@ export interface SingleAutocompleteActionType {
   label: string;
   onClick: () => void;
 }
-export interface SingleAutocompleteSelectFieldContentProps
-  extends Partial<FetchMoreProps> {
+export interface SingleAutocompleteSelectFieldContentProps extends Partial<FetchMoreProps> {
   add?: SingleAutocompleteActionType;
   choices: Array<SingleAutocompleteChoiceType<string, string | JSX.Element>>;
   displayCustomValue: boolean;
@@ -64,10 +54,7 @@ const useStyles = makeStyles(
     },
     arrowInnerContainer: {
       alignItems: "center",
-      background:
-        theme.palette.type === "light"
-          ? theme.palette.grey[50]
-          : theme.palette.grey[900],
+      background: theme.palette.type === "light" ? theme.palette.grey[50] : theme.palette.grey[900],
       bottom: 0,
       color: theme.palette.grey[500],
       display: "flex",
@@ -79,9 +66,7 @@ const useStyles = makeStyles(
       width: "100%",
     },
     content: {
-      maxHeight: `calc(${menuItemHeight * maxMenuItems}px + ${theme.spacing(
-        2,
-      )})`,
+      maxHeight: `calc(${menuItemHeight * maxMenuItems}px + ${theme.spacing(2)})`,
       overflow: "scroll",
       padding: 8,
     },
@@ -118,16 +103,13 @@ const useStyles = makeStyles(
   },
 );
 
-function getChoiceIndex(
-  index: number,
-  emptyValue: boolean,
-  customValue: boolean,
-  add: boolean,
-) {
+function getChoiceIndex(index: number, emptyValue: boolean, customValue: boolean, add: boolean) {
   let choiceIndex = index;
+
   if (emptyValue) {
     choiceIndex += 1;
   }
+
   if (customValue || add) {
     choiceIndex += 2;
   }
@@ -136,8 +118,9 @@ function getChoiceIndex(
 }
 
 const sliceSize = 20;
-
-const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFieldContentProps> = props => {
+const SingleAutocompleteSelectFieldContent: React.FC<
+  SingleAutocompleteSelectFieldContentProps
+> = props => {
   const {
     add,
     choices,
@@ -163,34 +146,32 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
   const [calledForMore, setCalledForMore] = React.useState(false);
   const [slice, setSlice] = React.useState(onFetchMore ? 10000 : sliceSize);
   const [initialized, setInitialized] = React.useState(false);
-
   const scrolledToBottom = isScrolledToBottom(anchor, scrollPosition, offset);
 
   React.useEffect(() => {
-    if (!calledForMore && onFetchMore && scrolledToBottom) {
+    if (!calledForMore && onFetchMore && scrolledToBottom && hasMore) {
       onFetchMore();
       setCalledForMore(true);
     } else if (scrolledToBottom && !onFetchMore) {
       setSlice(slice => slice + sliceSize);
     }
   }, [scrolledToBottom]);
-
   React.useEffect(() => {
     if (!onFetchMore) {
       setSlice(sliceSize);
     }
+  }, [choices?.length]);
+  React.useEffect(() => {
     if (anchor.current?.scrollTo && !initialized) {
       anchor.current.scrollTo({
         top: 0,
       });
       setInitialized(true);
     }
-  }, [choices?.length]);
-
+  }, [initialized]);
   React.useEffect(() => {
     setInitialized(false);
   }, [inputValue]);
-
   React.useEffect(() => {
     if (calledForMore && !loading) {
       setCalledForMore(false);
@@ -200,13 +181,12 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
   const emptyOptionProps = getItemProps({
     item: "",
   });
-
   const choicesToDisplay = choices.slice(0, slice);
 
   return (
     <Paper
       // click-outside-ignore is used by glide-datagrid
-      className={classNames("click-outside-ignore", classes.root)}
+      className={clsx("click-outside-ignore", classes.root)}
       elevation={8}
       style={style}
     >
@@ -214,6 +194,7 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
         className={classes.content}
         ref={anchor}
         data-test-id="autocomplete-dropdown"
+        aria-label="autocomplete-dropdown"
       >
         {choices.length > 0 || displayCustomValue ? (
           <>
@@ -267,20 +248,11 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
                 />
               </MenuItem>
             )}
-            {choices.length > 0 && (!!add || displayCustomValue) && (
-              <Hr className={classes.hr} />
-            )}
+            {choices.length > 0 && (!!add || displayCustomValue) && <Hr className={classes.hr} />}
             {choicesToDisplay.map((suggestion, index) => {
-              const choiceIndex = getChoiceIndex(
-                index,
-                emptyOption,
-                displayCustomValue,
-                !!add,
-              );
+              const choiceIndex = getChoiceIndex(index, emptyOption, displayCustomValue, !!add);
               const key = React.isValidElement(suggestion.label)
-                ? `${index}${suggestion.value}${
-                    ((suggestion as unknown) as ReactElement).props
-                  }`
+                ? `${index}${suggestion.value}${(suggestion as unknown as ReactElement).props}`
                 : JSON.stringify(suggestion);
 
               return (
@@ -323,10 +295,10 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
       {choices.length > maxMenuItems && (
         <div className={classes.arrowContainer}>
           <div
-            className={classNames(classes.arrowInnerContainer, {
+            className={clsx(classes.arrowInnerContainer, {
               // Needs to be explicitly compared to false because
               // scrolledToBottom can be either true, false or undefined
-              [classes.hide]: scrolledToBottom !== false,
+              [classes.hide]: scrolledToBottom,
             })}
           >
             <SVG src={chevronDown} />
@@ -337,6 +309,5 @@ const SingleAutocompleteSelectFieldContent: React.FC<SingleAutocompleteSelectFie
   );
 };
 
-SingleAutocompleteSelectFieldContent.displayName =
-  "SingleAutocompleteSelectFieldContent";
+SingleAutocompleteSelectFieldContent.displayName = "SingleAutocompleteSelectFieldContent";
 export default SingleAutocompleteSelectFieldContent;

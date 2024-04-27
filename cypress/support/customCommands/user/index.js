@@ -1,6 +1,7 @@
 import "../../api/requests/utils/index";
 
 import { LOGIN_SELECTORS } from "../../../elements/account/login-selectors";
+import { urlList } from "../../../fixtures/urlList";
 import { TEST_ADMIN_USER } from "../../../fixtures/users";
 
 Cypress.Commands.add("loginUser", () =>
@@ -17,13 +18,19 @@ Cypress.Commands.add("loginInShop", () => {
   cy.loginUserViaRequest("token");
 });
 
+Cypress.Commands.add("visitHomePageLoggedViaApi", user => {
+  cy.addAliasToGraphRequest("UserDetails")
+    .loginUserViaRequest("auth", user)
+    .visit(urlList.homePage)
+    .waitForRequestAndCheckIfNoErrors("@UserDetails");
+});
+
 Cypress.Commands.add(
   "loginUserViaRequest",
   (authorization = "auth", user = TEST_ADMIN_USER) => {
     const mutation = `mutation TokenAuth{
     tokenCreate(email: "${user.email}", password: "${user.password}") {
       token
-      csrfToken
       refreshToken
       errors: errors {
         code
@@ -35,11 +42,12 @@ Cypress.Commands.add(
       }
     }
   }`;
-    return cy.sendRequestWithQuery(mutation, authorization).then(resp => {
+    return cy.sendRequestWithQuery(mutation, null).then(resp => {
       window.localStorage.setItem(
-        "_saleorCSRFToken",
-        resp.body.data.tokenCreate.csrfToken,
+        "_saleorRefreshToken",
+        resp.body.data.tokenCreate.refreshToken,
       );
+      window.localStorage.setItem("notifiedAboutNavigator", "true");
       window.sessionStorage.setItem(
         authorization,
         resp.body.data.tokenCreate.token,

@@ -1,25 +1,20 @@
-import {
-  Card,
-  CardContent,
-  TableBody,
-  TableCell,
-  Typography,
-} from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import { FormSpacer } from "@saleor/components/FormSpacer";
-import RadioGroupField from "@saleor/components/RadioGroupField";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableHead from "@saleor/components/TableHead";
-import TableRowLink from "@saleor/components/TableRowLink";
-import TextFieldWithChoice from "@saleor/components/TextFieldWithChoice";
-import { ChannelInput } from "@saleor/discounts/handlers";
-import { DiscountTypeEnum } from "@saleor/discounts/types";
-import { DiscountErrorFragment } from "@saleor/graphql";
-import { renderCollection } from "@saleor/misc";
-import { getFormErrors } from "@saleor/utils/errors";
-import getDiscountErrorMessage from "@saleor/utils/errors/discounts";
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import { FormSpacer } from "@dashboard/components/FormSpacer";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableHead from "@dashboard/components/TableHead";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { ChannelInput } from "@dashboard/discounts/handlers";
+import { DiscountTypeEnum } from "@dashboard/discounts/types";
+import { DiscountErrorFragment } from "@dashboard/graphql";
+import { renderCollection } from "@dashboard/misc";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getDiscountErrorMessage from "@dashboard/utils/errors/discounts";
+import { Card, CardContent, TableBody, TableCell, Typography } from "@material-ui/core";
+import { Input, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -42,15 +37,11 @@ export enum VoucherType {
 }
 
 const numberOfColumns = 2;
-
 const VoucherValue: React.FC<VoucherValueProps> = props => {
   const { data, disabled, errors, variant, onChange, onChannelChange } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
-
   const formErrors = getFormErrors(["discountValue", "type"], errors);
-
   const translatedVoucherTypes = translateVoucherTypes(intl);
   const voucherTypeChoices = Object.values(VoucherType).map(type => ({
     label: translatedVoucherTypes[type],
@@ -58,7 +49,7 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
   }));
 
   return (
-    <Card>
+    <Card data-test-id="value-section">
       <CardTitle
         title={intl.formatMessage({
           id: "/oaqFS",
@@ -67,12 +58,6 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
         })}
       />
       <CardContent>
-        <Typography variant="caption">
-          <FormattedMessage
-            id="K+ROF8"
-            defaultMessage="Channels that don’t have assigned discounts will use their parent channel to define the price. Price will be converted to channel’s currency"
-          />
-        </Typography>
         <div className={classes.tableContainer}>
           <ResponsiveTable className={classes.table}>
             <TableHead colSpan={numberOfColumns} disabled={disabled} items={[]}>
@@ -87,11 +72,7 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
               </TableCell>
               <TableCell className={classes.colType}>
                 <span>
-                  <FormattedMessage
-                    id="1shOIS"
-                    defaultMessage="Price"
-                    description="column title"
-                  />
+                  <FormattedMessage id="1shOIS" defaultMessage="Price" description="column title" />
                 </span>
               </TableCell>
             </TableHead>
@@ -99,35 +80,31 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
               {renderCollection(
                 data.channelListings,
                 (listing, index) => {
-                  const error = formErrors.discountValue?.channels?.find(
-                    id => id === listing.id,
-                  );
+                  const error = formErrors.discountValue?.channels?.find(id => id === listing.id);
+
                   return (
-                    <TableRowLink key={listing?.id || `skeleton-${index}`}>
+                    <TableRowLink
+                      key={listing?.id || `skeleton-${index}`}
+                      data-test-id={listing?.name}
+                    >
                       <TableCell>
-                        <Typography>{listing?.name || <Skeleton />}</Typography>
+                        <Text>{listing?.name || <Skeleton />}</Text>
                       </TableCell>
                       <TableCell className={classes.colPrice}>
                         {listing ? (
-                          <TextFieldWithChoice
+                          <Input
+                            data-test-id="discount-value-input"
                             disabled={disabled}
                             error={!!error?.length}
-                            ChoiceProps={{
-                              label:
-                                data.discountType ===
-                                DiscountTypeEnum.VALUE_FIXED
+                            endAdornment={
+                              <Text size={2}>
+                                {data.discountType === DiscountTypeEnum.VALUE_FIXED
                                   ? listing.currency
-                                  : "%",
-                              name: "discountType" as keyof FormData,
-                              values: null,
-                            }}
+                                  : "%"}
+                              </Text>
+                            }
                             helperText={
-                              error
-                                ? getDiscountErrorMessage(
-                                    formErrors.discountValue,
-                                    intl,
-                                  )
-                                : ""
+                              error ? getDiscountErrorMessage(formErrors.discountValue, intl) : ""
                             }
                             name={"value"}
                             onChange={e =>
@@ -141,10 +118,6 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
                             })}
                             value={listing.discountValue || ""}
                             type="number"
-                            fullWidth
-                            inputProps={{
-                              min: 0,
-                            }}
                           />
                         ) : (
                           <Skeleton />
@@ -156,10 +129,7 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
                 () => (
                   <TableRowLink>
                     <TableCell colSpan={numberOfColumns}>
-                      <FormattedMessage
-                        id="/glQgs"
-                        defaultMessage="No channels found"
-                      />
+                      <FormattedMessage id="/glQgs" defaultMessage="No channels found" />
                     </TableCell>
                   </TableRowLink>
                 ),
@@ -212,4 +182,5 @@ const VoucherValue: React.FC<VoucherValueProps> = props => {
     </Card>
   );
 };
+
 export default VoucherValue;

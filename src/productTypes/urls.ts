@@ -1,5 +1,5 @@
-import { ProductTypeKindEnum } from "@saleor/graphql";
-import { stringifyQs } from "@saleor/utils/urls";
+import { ProductTypeKindEnum } from "@dashboard/graphql";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import {
@@ -56,7 +56,5 @@ export type ProductTypeUrlQueryParams = BulkAction &
   SingleAction & {
     type?: string;
   };
-export const productTypeUrl = (
-  id: string,
-  params?: ProductTypeUrlQueryParams,
-) => productTypePath(encodeURIComponent(id)) + "?" + stringifyQs(params);
+export const productTypeUrl = (id: string, params?: ProductTypeUrlQueryParams) =>
+  productTypePath(encodeURIComponent(id)) + "?" + stringifyQs(params);

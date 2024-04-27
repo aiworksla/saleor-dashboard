@@ -1,7 +1,5 @@
-import {
-  ProductVariantCreateDataQuery,
-  ProductVariantFragment,
-} from "@saleor/graphql";
+// @ts-strict-ignore
+import { ProductVariantCreateDataQuery, ProductVariantFragment } from "@dashboard/graphql";
 
 export type Product = ProductVariantCreateDataQuery["product"];
 export type Variant = ProductVariantFragment;

@@ -1,15 +1,16 @@
+// @ts-strict-ignore
+import CardSpacer from "@dashboard/components/CardSpacer";
+import CardTitle from "@dashboard/components/CardTitle";
+import RichTextEditor from "@dashboard/components/RichTextEditor";
+import { RichTextEditorLoading } from "@dashboard/components/RichTextEditor/RichTextEditorLoading";
+import { ShippingErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getShippingErrorMessage from "@dashboard/utils/errors/shipping";
+import { useRichTextContext } from "@dashboard/utils/richText/context";
 import { OutputData } from "@editorjs/editorjs";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import CardSpacer from "@saleor/components/CardSpacer";
-import CardTitle from "@saleor/components/CardTitle";
-import RichTextEditor from "@saleor/components/RichTextEditor";
-import { RichTextEditorLoading } from "@saleor/components/RichTextEditor/RichTextEditorLoading";
-import { ShippingErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getShippingErrorMessage from "@saleor/utils/errors/shipping";
-import { useRichTextContext } from "@saleor/utils/richText/context";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 
@@ -35,12 +36,11 @@ const messages = defineMessages({
     description: "label",
   },
 });
-
 const useStyles = makeStyles(
   theme => ({
     deliveryTimeFields: {
       display: "grid",
-      gridColumnGap: theme.spacing(2),
+      gridColumnGap: theme.spacing(1),
       gridRowGap: theme.spacing(1),
       gridTemplateColumns: "1fr 1fr 1fr",
       [theme.breakpoints.down("md")]: {
@@ -56,7 +56,7 @@ const useStyles = makeStyles(
 
 export interface ShippingRateInfoProps {
   data: {
-    description: OutputData;
+    description: OutputData | null;
     name: string;
     maxDays: string;
     minDays: string;
@@ -68,27 +68,14 @@ export interface ShippingRateInfoProps {
 
 const ShippingRateInfo: React.FC<ShippingRateInfoProps> = props => {
   const { data, disabled, errors, onChange } = props;
-
   const intl = useIntl();
   const classes = useStyles(props);
-
-  const {
-    defaultValue,
-    editorRef,
-    isReadyForMount,
-    handleChange,
-  } = useRichTextContext();
-
-  const formErrors = getFormErrors(
-    ["name", "description", "minDays", "maxDays"],
-    errors,
-  );
+  const { defaultValue, editorRef, isReadyForMount, handleChange } = useRichTextContext();
+  const formErrors = getFormErrors(["name", "description", "minDays", "maxDays"], errors);
 
   return (
     <Card>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
           disabled={disabled}
@@ -97,6 +84,7 @@ const ShippingRateInfo: React.FC<ShippingRateInfoProps> = props => {
           helperText={getShippingErrorMessage(formErrors.name, intl)}
           label={intl.formatMessage(messages.name)}
           name="name"
+          data-test-id="shipping-rate-name-input"
           value={data.name}
           onChange={onChange}
         />
@@ -121,6 +109,7 @@ const ShippingRateInfo: React.FC<ShippingRateInfoProps> = props => {
         <CardSpacer />
         <div className={classes.deliveryTimeFields}>
           <TextField
+            data-test-id="min-delivery-time-input"
             disabled={disabled}
             error={!!formErrors.minDays}
             fullWidth
@@ -137,6 +126,7 @@ const ShippingRateInfo: React.FC<ShippingRateInfoProps> = props => {
             onChange={onChange}
           />
           <TextField
+            data-test-id="max-delivery-time-input"
             disabled={disabled}
             error={!!formErrors.maxDays}
             fullWidth
@@ -157,5 +147,6 @@ const ShippingRateInfo: React.FC<ShippingRateInfoProps> = props => {
     </Card>
   );
 };
+
 ShippingRateInfo.displayName = "ShippingRateInfo";
 export default ShippingRateInfo;

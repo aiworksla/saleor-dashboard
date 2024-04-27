@@ -1,10 +1,12 @@
+import { commonMessages } from "@dashboard/intl";
 import { TableCell } from "@material-ui/core";
 import {
   Pagination,
   PaginationProps as MacawPaginationProps,
+  PaginationRowNumberSelectLabels,
 } from "@saleor/macaw-ui";
 import React from "react";
-import { defineMessages, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 import { Link, LinkProps } from "react-router-dom";
 
 import { ListSettings } from "../../types";
@@ -13,14 +15,6 @@ export type ListSettingsUpdate = <T extends keyof ListSettings>(
   key: T,
   value: ListSettings[T],
 ) => void;
-
-const messages = defineMessages({
-  noOfRows: {
-    id: "2HfSiT",
-    defaultMessage: "No. of rows",
-    description: "pagination",
-  },
-});
 
 export interface PaginationProps
   extends Omit<
@@ -34,6 +28,7 @@ export interface PaginationProps
   prevHref?: string;
   nextHref?: string;
   disabled?: boolean;
+  labels?: PaginationRowNumberSelectLabels;
 }
 export const TablePagination: React.FC<PaginationProps> = ({
   component,
@@ -45,6 +40,7 @@ export const TablePagination: React.FC<PaginationProps> = ({
   hasNextPage,
   hasPreviousPage,
   disabled,
+  labels,
   ...rest
 }) => {
   const intl = useIntl();
@@ -57,20 +53,14 @@ export const TablePagination: React.FC<PaginationProps> = ({
         hasNextPage={hasNextPage && !disabled}
         hasPreviousPage={hasPreviousPage && !disabled}
         labels={{
-          noOfRows: intl.formatMessage(messages.noOfRows),
+          noOfRows: labels?.noOfRows ?? intl.formatMessage(commonMessages.noOfRows),
         }}
         rowNumber={settings?.rowNumber}
         onRowNumberUpdate={
-          onUpdateListSettings
-            ? value => onUpdateListSettings("rowNumber", value)
-            : undefined
+          onUpdateListSettings ? value => onUpdateListSettings("rowNumber", value) : undefined
         }
-        nextIconButtonProps={
-          nextHref ? { component: Link, to: nextHref } : undefined
-        }
-        prevIconButtonProps={
-          prevHref ? { component: Link, to: prevHref } : undefined
-        }
+        nextIconButtonProps={nextHref ? { component: Link, to: nextHref } : undefined}
+        prevIconButtonProps={prevHref ? { component: Link, to: prevHref } : undefined}
       />
     </Wrapper>
   );

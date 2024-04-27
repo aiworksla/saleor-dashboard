@@ -1,26 +1,26 @@
+// @ts-strict-ignore
 import {
   extensionMountPoints,
   mapToMenuItemsForProductDetails,
   useExtensions,
-} from "@saleor/apps/useExtensions";
+} from "@dashboard/apps/hooks/useExtensions";
 import {
   getReferenceAttributeEntityTypeFromAttribute,
   mergeAttributeValues,
-} from "@saleor/attributes/utils/data";
-import { ChannelData } from "@saleor/channels/utils";
-import AssignAttributeValueDialog from "@saleor/components/AssignAttributeValueDialog";
-import Attributes, { AttributeInput } from "@saleor/components/Attributes";
-import { Backlink } from "@saleor/components/Backlink";
-import CardMenu from "@saleor/components/CardMenu";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ChannelsAvailabilityCard from "@saleor/components/ChannelsAvailabilityCard";
-import Container from "@saleor/components/Container";
-import Grid from "@saleor/components/Grid";
-import Metadata from "@saleor/components/Metadata/Metadata";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import SeoForm from "@saleor/components/SeoForm";
-import { Choice } from "@saleor/components/SingleSelectField";
+} from "@dashboard/attributes/utils/data";
+import { ChannelData } from "@dashboard/channels/utils";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import AssignAttributeValueDialog from "@dashboard/components/AssignAttributeValueDialog";
+import { AttributeInput, Attributes } from "@dashboard/components/Attributes";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import ChannelsAvailabilityCard from "@dashboard/components/ChannelsAvailabilityCard";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { useDevModeContext } from "@dashboard/components/DevModePanel/hooks";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata/Metadata";
+import Savebar from "@dashboard/components/Savebar";
+import { SeoForm } from "@dashboard/components/SeoForm";
+import { Choice } from "@dashboard/components/SingleSelectField";
 import {
   ChannelFragment,
   PermissionEnum,
@@ -35,36 +35,32 @@ import {
   SearchCollectionsQuery,
   SearchPagesQuery,
   SearchProductsQuery,
-  TaxTypeFragment,
-  WarehouseFragment,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import ProductExternalMediaDialog from "@saleor/products/components/ProductExternalMediaDialog";
-import { productImageUrl, productListUrl } from "@saleor/products/urls";
-import { ProductVariantListError } from "@saleor/products/views/ProductUpdate/handlers/errors";
-import { UseProductUpdateHandlerError } from "@saleor/products/views/ProductUpdate/handlers/useProductUpdateHandler";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
+  TaxClassBaseFragment,
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { maybe } from "@dashboard/misc";
+import ProductExternalMediaDialog from "@dashboard/products/components/ProductExternalMediaDialog";
+import { ProductOrganization } from "@dashboard/products/components/ProductOrganization/ProductOrganization";
+import { defaultGraphiQLQuery } from "@dashboard/products/queries";
+import { productImageUrl, productListUrl } from "@dashboard/products/urls";
+import { ProductVariantListError } from "@dashboard/products/views/ProductUpdate/handlers/errors";
+import { UseProductUpdateHandlerError } from "@dashboard/products/views/ProductUpdate/handlers/useProductUpdateHandler";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
-import { getChoices } from "../../utils/data";
-import ProductDetailsForm from "../ProductDetailsForm";
+import { AttributeValuesMetadata, getChoices } from "../../utils/data";
+import { ProductDetailsForm } from "../ProductDetailsForm";
 import ProductMedia from "../ProductMedia";
-import ProductOrganization from "../ProductOrganization";
 import ProductTaxes from "../ProductTaxes";
 import ProductVariants from "../ProductVariants";
 import ProductUpdateForm from "./form";
+import { messages } from "./messages";
 import ProductChannelsListingsDialog from "./ProductChannelsListingsDialog";
-import {
-  ProductUpdateData,
-  ProductUpdateHandlers,
-  ProductUpdateSubmitData,
-} from "./types";
+import { ProductUpdateData, ProductUpdateHandlers, ProductUpdateSubmitData } from "./types";
 
 export interface ProductUpdatePageProps {
   channels: ChannelFragment[];
@@ -72,12 +68,9 @@ export interface ProductUpdatePageProps {
   channelsErrors: ProductChannelListingErrorFragment[];
   variantListErrors: ProductVariantListError[];
   errors: UseProductUpdateHandlerError[];
-  placeholderImage: string;
   collections: RelayToFlat<SearchCollectionsQuery["search"]>;
   categories: RelayToFlat<SearchCategoriesQuery["search"]>;
-  attributeValues: RelayToFlat<
-    SearchAttributeValuesQuery["attribute"]["choices"]
-  >;
+  attributeValues: RelayToFlat<SearchAttributeValuesQuery["attribute"]["choices"]>;
   disabled: boolean;
   fetchMoreCategories: FetchMoreProps;
   fetchMoreCollections: FetchMoreProps;
@@ -88,8 +81,8 @@ export interface ProductUpdatePageProps {
   product: ProductFragment;
   header: string;
   saveButtonBarState: ConfirmButtonTransitionState;
-  warehouses: WarehouseFragment[];
-  taxTypes: TaxTypeFragment[];
+  taxClasses: TaxClassBaseFragment[];
+  fetchMoreTaxClasses: FetchMoreProps;
   referencePages?: RelayToFlat<SearchPagesQuery["search"]>;
   referenceProducts?: RelayToFlat<SearchProductsQuery["search"]>;
   assignReferencesAttributeId?: string;
@@ -103,21 +96,18 @@ export interface ProductUpdatePageProps {
   fetchReferenceProducts?: (data: string) => void;
   fetchAttributeValues: (query: string, attributeId: string) => void;
   refetch: () => Promise<any>;
-  onAttributeValuesSearch: (
-    id: string,
-    query: string,
-  ) => Promise<Array<Choice<string, string>>>;
+  onAttributeValuesSearch: (id: string, query: string) => Promise<Array<Choice<string, string>>>;
   onAssignReferencesClick: (attribute: AttributeInput) => void;
   onCloseDialog: () => void;
   onImageDelete: (id: string) => () => void;
   onSubmit: (data: ProductUpdateSubmitData) => SubmitPromise;
   onVariantShow: (id: string) => void;
   onAttributeSelectBlur: () => void;
-  onDelete();
-  onImageReorder?(event: { oldIndex: number; newIndex: number });
-  onImageUpload(file: File);
-  onMediaUrlUpload(mediaUrl: string);
-  onSeoClick?();
+  onDelete: () => any;
+  onImageReorder?: (event: { oldIndex: number; newIndex: number }) => any;
+  onImageUpload: (file: File) => any;
+  onMediaUrlUpload: (mediaUrl: string) => any;
+  onSeoClick?: () => any;
 }
 
 export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
@@ -138,12 +128,11 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
   media,
   header,
   limits,
-  placeholderImage,
   product,
   saveButtonBarState,
   variants,
-  warehouses,
-  taxTypes,
+  taxClasses,
+  fetchMoreTaxClasses,
   referencePages = [],
   referenceProducts = [],
   onDelete,
@@ -171,36 +160,25 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
   const intl = useIntl();
   const navigate = useNavigator();
   const [channelPickerOpen, setChannelPickerOpen] = React.useState(false);
-
-  const [selectedCategory, setSelectedCategory] = useStateFromProps(
-    product?.category?.name || "",
-  );
-
+  const [selectedCategory, setSelectedCategory] = useStateFromProps(product?.category?.name || "");
   const [mediaUrlModalStatus, setMediaUrlModalStatus] = useStateFromProps(
     isMediaUrlModalVisible || false,
   );
-
   const [selectedCollections, setSelectedCollections] = useStateFromProps(
     getChoices(maybe(() => product.collections, [])),
   );
-
-  const [selectedTaxType, setSelectedTaxType] = useStateFromProps(
-    product?.taxType?.description,
-  );
-
+  const [selectedTaxClass, setSelectedTaxClass] = useStateFromProps(product?.taxClass?.name ?? "");
   const categories = getChoices(categoryChoiceList);
   const collections = getChoices(collectionChoiceList);
   const hasVariants = product?.productType?.hasVariants;
-  const taxTypeChoices =
-    taxTypes?.map(taxType => ({
-      label: taxType.description,
-      value: taxType.taxCode,
+  const taxClassesChoices =
+    taxClasses?.map(taxClass => ({
+      label: taxClass.name,
+      value: taxClass.id,
     })) || [];
-
   const canOpenAssignReferencesAttributeDialog = !!assignReferencesAttributeId;
-
   const handleAssignReferenceAttribute = (
-    attributeValues: string[],
+    attributeValues: AttributeValuesMetadata[],
     data: ProductUpdateData,
     handlers: ProductUpdateHandlers,
   ) => {
@@ -208,17 +186,14 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
       assignReferencesAttributeId,
       mergeAttributeValues(
         assignReferencesAttributeId,
-        attributeValues,
+        attributeValues.map(({ value }) => value),
         data.attributes,
       ),
     );
+    handlers.selectAttributeReferenceMetadata(assignReferencesAttributeId, attributeValues);
     onCloseDialog();
   };
-
-  const { PRODUCT_DETAILS_MORE_ACTIONS } = useExtensions(
-    extensionMountPoints.PRODUCT_DETAILS,
-  );
-
+  const { PRODUCT_DETAILS_MORE_ACTIONS } = useExtensions(extensionMountPoints.PRODUCT_DETAILS);
   const productErrors = React.useMemo(
     () =>
       errors.filter(
@@ -226,7 +201,6 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
       ) as ProductErrorWithAttributesFragment[],
     [errors],
   );
-
   const productOrganizationErrors = React.useMemo(
     () =>
       [...errors, ...channelsErrors].filter(err =>
@@ -234,11 +208,16 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
       ) as Array<ProductErrorFragment | ProductChannelListingErrorFragment>,
     [errors, channelsErrors],
   );
-
   const extensionMenuItems = mapToMenuItemsForProductDetails(
     PRODUCT_DETAILS_MORE_ACTIONS,
     productId,
   );
+  const context = useDevModeContext();
+  const openPlaygroundURL = () => {
+    context.setDevModeContent(defaultGraphiQLQuery);
+    context.setVariables(`{ "id": "${product?.id}" }`);
+    context.setDevModeVisibility(true);
+  };
 
   return (
     <ProductUpdateForm
@@ -250,9 +229,8 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
       selectedCollections={selectedCollections}
       setSelectedCategory={setSelectedCategory}
       setSelectedCollections={setSelectedCollections}
-      setSelectedTaxType={setSelectedTaxType}
-      taxTypes={taxTypeChoices}
-      warehouses={warehouses}
+      setSelectedTaxClass={setSelectedTaxClass}
+      taxClasses={taxClassesChoices}
       hasVariants={hasVariants}
       referencePages={referencePages}
       referenceProducts={referenceProducts}
@@ -264,14 +242,7 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
       disabled={disabled}
       refetch={refetch}
     >
-      {({
-        change,
-        data,
-        handlers,
-        submit,
-        isSaveDisabled,
-        attributeRichTextGetters,
-      }) => {
+      {({ change, data, handlers, submit, isSaveDisabled, attributeRichTextGetters }) => {
         const availabilityCommonProps = {
           managePermissions: [PermissionEnum.MANAGE_PRODUCTS],
           messages: {
@@ -293,189 +264,180 @@ export const ProductUpdatePage: React.FC<ProductUpdatePageProps> = ({
           onChange: handlers.changeChannels,
           openModal: () => setChannelPickerOpen(true),
         };
+        const listings = data.channels.updateChannels?.map<ChannelData>(listing => {
+          const channel = channels?.find(ac => ac.id === listing.channelId);
 
-        const listings = data.channels.updateChannels.map<ChannelData>(
-          listing => {
-            const channel = channels?.find(ac => ac.id === listing.channelId);
-            return {
-              id: listing.channelId,
-              ...channel,
-              ...listing,
-              availableForPurchase: listing.availableForPurchaseDate,
-              currency: channel.currencyCode,
-            };
-          },
+          return {
+            ...channel,
+            ...listing,
+            id: listing.channelId,
+            currency: channel.currencyCode,
+          };
+        });
+        const entityType = getReferenceAttributeEntityTypeFromAttribute(
+          assignReferencesAttributeId,
+          data.attributes,
         );
 
         return (
-          <>
-            <Container>
-              <Backlink href={productListUrl()}>
-                {intl.formatMessage(sectionNames.products)}
-              </Backlink>
-              <PageHeader title={header}>
-                {extensionMenuItems.length > 0 && (
-                  <CardMenu
-                    menuItems={extensionMenuItems}
-                    data-test-id="menu"
-                  />
-                )}
-              </PageHeader>
-              <Grid richText>
-                <div>
-                  <ProductDetailsForm
-                    data={data}
-                    disabled={disabled}
-                    errors={productErrors}
-                    onChange={change}
-                  />
-                  <CardSpacer />
-                  <ProductMedia
-                    media={media}
-                    placeholderImage={placeholderImage}
-                    onImageDelete={onImageDelete}
-                    onImageReorder={onImageReorder}
-                    onImageUpload={onImageUpload}
-                    openMediaUrlModal={() => setMediaUrlModalStatus(true)}
-                    getImageEditUrl={imageId =>
-                      productImageUrl(productId, imageId)
-                    }
-                  />
-                  <CardSpacer />
-                  {data.attributes.length > 0 && (
-                    <Attributes
-                      attributes={data.attributes}
-                      attributeValues={attributeValues}
-                      errors={productErrors}
-                      loading={disabled}
-                      disabled={disabled}
-                      onChange={handlers.selectAttribute}
-                      onMultiChange={handlers.selectAttributeMultiple}
-                      onFileChange={handlers.selectAttributeFile}
-                      onReferencesRemove={handlers.selectAttributeReference}
-                      onReferencesAddClick={onAssignReferencesClick}
-                      onReferencesReorder={handlers.reorderAttributeValue}
-                      fetchAttributeValues={fetchAttributeValues}
-                      fetchMoreAttributeValues={fetchMoreAttributeValues}
-                      onAttributeSelectBlur={onAttributeSelectBlur}
-                      richTextGetters={attributeRichTextGetters}
-                    />
-                  )}
-                  <CardSpacer />
-                  <ProductVariants
-                    productName={product?.name}
-                    errors={variantListErrors}
-                    channels={listings}
-                    limits={limits}
-                    variants={variants}
-                    variantAttributes={product?.productType.variantAttributes}
-                    warehouses={warehouses}
-                    onAttributeValuesSearch={onAttributeValuesSearch}
-                    onChange={handlers.changeVariants}
-                    onRowClick={onVariantShow}
-                  />
-                  <CardSpacer />
-                  <SeoForm
-                    errors={productErrors}
-                    title={data.seoTitle}
-                    titlePlaceholder={data.name}
-                    description={data.seoDescription}
-                    descriptionPlaceholder={""} // TODO: cast description to string
-                    slug={data.slug}
-                    slugPlaceholder={data.name}
-                    loading={disabled}
-                    onClick={onSeoClick}
-                    onChange={change}
-                    helperText={intl.formatMessage({
-                      id: "LKoIB1",
-                      defaultMessage:
-                        "Add search engine title and description to make this product easier to find",
-                    })}
-                  />
-                  <CardSpacer />
-                  <Metadata data={data} onChange={handlers.changeMetadata} />
-                </div>
-                <div>
-                  <ProductOrganization
-                    canChangeType={false}
-                    categories={categories}
-                    categoryInputDisplayValue={selectedCategory}
-                    collections={collections}
-                    collectionsInputDisplayValue={selectedCollections}
-                    data={data}
-                    disabled={disabled}
-                    errors={productOrganizationErrors}
-                    fetchCategories={fetchCategories}
-                    fetchCollections={fetchCollections}
-                    fetchMoreCategories={fetchMoreCategories}
-                    fetchMoreCollections={fetchMoreCollections}
-                    productType={product?.productType}
-                    onCategoryChange={handlers.selectCategory}
-                    onCollectionChange={handlers.selectCollection}
-                  />
-                  <CardSpacer />
-                  <ChannelsAvailabilityCard
-                    {...availabilityCommonProps}
-                    channels={listings}
-                  />
-                  <CardSpacer />
-                  <ProductTaxes
-                    data={data}
-                    disabled={disabled}
-                    selectedTaxTypeDisplayName={selectedTaxType}
-                    taxTypes={taxTypes}
-                    onChange={change}
-                    onTaxTypeChange={handlers.selectTaxRate}
-                  />
-                </div>
-              </Grid>
-              <Savebar
-                onCancel={() => navigate(productListUrl())}
-                onDelete={onDelete}
-                onSubmit={submit}
-                state={saveButtonBarState}
-                disabled={isSaveDisabled}
+          <DetailPageLayout>
+            <TopNav href={productListUrl()} title={header}>
+              <TopNav.Menu
+                items={[
+                  ...extensionMenuItems,
+                  {
+                    label: intl.formatMessage(messages.openGraphiQL),
+                    onSelect: openPlaygroundURL,
+                    testId: "graphiql-redirect",
+                  },
+                ]}
+                dataTestId="menu"
               />
-              {canOpenAssignReferencesAttributeDialog && (
-                <AssignAttributeValueDialog
-                  entityType={getReferenceAttributeEntityTypeFromAttribute(
-                    assignReferencesAttributeId,
-                    data.attributes,
-                  )}
-                  confirmButtonState={"default"}
-                  products={referenceProducts}
-                  pages={referencePages}
-                  hasMore={handlers.fetchMoreReferences?.hasMore}
-                  open={canOpenAssignReferencesAttributeDialog}
-                  onFetch={handlers.fetchReferences}
-                  onFetchMore={handlers.fetchMoreReferences?.onFetchMore}
-                  loading={handlers.fetchMoreReferences?.loading}
-                  onClose={onCloseDialog}
-                  onSubmit={attributeValues =>
-                    handleAssignReferenceAttribute(
-                      attributeValues,
-                      data,
-                      handlers,
-                    )
-                  }
+            </TopNav>
+
+            <DetailPageLayout.Content>
+              <ProductDetailsForm
+                data={data}
+                disabled={disabled}
+                errors={productErrors}
+                onChange={change}
+              />
+              <ProductMedia
+                media={media}
+                onImageDelete={onImageDelete}
+                onImageReorder={onImageReorder}
+                onImageUpload={onImageUpload}
+                openMediaUrlModal={() => setMediaUrlModalStatus(true)}
+                getImageEditUrl={imageId => productImageUrl(productId, imageId)}
+              />
+              {data.attributes.length > 0 && (
+                <Attributes
+                  attributes={data.attributes}
+                  attributeValues={attributeValues}
+                  errors={productErrors}
+                  loading={disabled}
+                  disabled={disabled}
+                  onChange={handlers.selectAttribute}
+                  onMultiChange={handlers.selectAttributeMultiple}
+                  onFileChange={handlers.selectAttributeFile}
+                  onReferencesRemove={handlers.selectAttributeReference}
+                  onReferencesAddClick={onAssignReferencesClick}
+                  onReferencesReorder={handlers.reorderAttributeValue}
+                  fetchAttributeValues={fetchAttributeValues}
+                  fetchMoreAttributeValues={fetchMoreAttributeValues}
+                  onAttributeSelectBlur={onAttributeSelectBlur}
+                  richTextGetters={attributeRichTextGetters}
                 />
               )}
-
-              <ProductExternalMediaDialog
-                product={product}
-                onClose={() => setMediaUrlModalStatus(false)}
-                open={mediaUrlModalStatus}
-                onSubmit={onMediaUrlUpload}
+              <ProductVariants
+                productName={product?.name}
+                errors={variantListErrors}
+                channels={listings}
+                limits={limits}
+                variants={variants}
+                variantAttributes={product?.productType.variantAttributes}
+                onAttributeValuesSearch={onAttributeValuesSearch}
+                onChange={handlers.changeVariants}
+                onRowClick={onVariantShow}
               />
-              <ProductChannelsListingsDialog
-                channels={channels}
+              <CardSpacer />
+              <SeoForm
+                errors={productErrors}
+                title={data.seoTitle}
+                titlePlaceholder={data.name}
+                description={data.seoDescription}
+                descriptionPlaceholder={""} // TODO: cast description to string
+                slug={data.slug}
+                slugPlaceholder={data.name}
+                loading={disabled}
+                onClick={onSeoClick}
+                onChange={change}
+                helperText={intl.formatMessage({
+                  id: "LKoIB1",
+                  defaultMessage:
+                    "Add search engine title and description to make this product easier to find",
+                })}
+              />
+              <Metadata data={data} onChange={handlers.changeMetadata} />
+            </DetailPageLayout.Content>
+            <DetailPageLayout.RightSidebar>
+              <ProductOrganization
+                canChangeType={false}
+                categories={categories}
+                categoryInputDisplayValue={selectedCategory}
+                collections={collections}
+                collectionsInputDisplayValue={selectedCollections}
                 data={data}
-                onClose={() => setChannelPickerOpen(false)}
-                open={channelPickerOpen}
-                onConfirm={handlers.updateChannelList}
+                disabled={disabled}
+                errors={productOrganizationErrors}
+                fetchCategories={fetchCategories}
+                fetchCollections={fetchCollections}
+                fetchMoreCategories={fetchMoreCategories}
+                fetchMoreCollections={fetchMoreCollections}
+                productType={product?.productType}
+                onCategoryChange={handlers.selectCategory}
+                onCollectionChange={handlers.selectCollection}
               />
-            </Container>
-          </>
+              <ChannelsAvailabilityCard {...availabilityCommonProps} channels={listings ?? []} />
+              <Box paddingBottom={52}>
+                <ProductTaxes
+                  value={data.taxClassId}
+                  disabled={disabled}
+                  onChange={handlers.selectTaxClass}
+                  taxClassDisplayName={selectedTaxClass}
+                  taxClasses={taxClasses}
+                  onFetchMore={fetchMoreTaxClasses}
+                />
+              </Box>
+            </DetailPageLayout.RightSidebar>
+
+            <Savebar
+              onCancel={() => navigate(productListUrl())}
+              onDelete={onDelete}
+              onSubmit={submit}
+              state={saveButtonBarState}
+              disabled={isSaveDisabled}
+            />
+            {canOpenAssignReferencesAttributeDialog && entityType && (
+              <AssignAttributeValueDialog
+                entityType={entityType}
+                confirmButtonState={"default"}
+                products={referenceProducts}
+                pages={referencePages}
+                attribute={data.attributes.find(({ id }) => id === assignReferencesAttributeId)}
+                hasMore={handlers.fetchMoreReferences?.hasMore}
+                open={canOpenAssignReferencesAttributeDialog}
+                onFetch={handlers.fetchReferences}
+                onFetchMore={handlers.fetchMoreReferences?.onFetchMore}
+                loading={handlers.fetchMoreReferences?.loading}
+                onClose={onCloseDialog}
+                onSubmit={attributeValues =>
+                  handleAssignReferenceAttribute(
+                    attributeValues.map(container => ({
+                      value: container.id,
+                      label: container.name,
+                    })),
+                    data,
+                    handlers,
+                  )
+                }
+              />
+            )}
+
+            <ProductExternalMediaDialog
+              product={product}
+              onClose={() => setMediaUrlModalStatus(false)}
+              open={mediaUrlModalStatus}
+              onSubmit={onMediaUrlUpload}
+            />
+            <ProductChannelsListingsDialog
+              channels={channels}
+              data={data}
+              onClose={() => setChannelPickerOpen(false)}
+              open={channelPickerOpen}
+              onConfirm={handlers.updateChannelList}
+            />
+          </DetailPageLayout>
         );
       }}
     </ProductUpdateForm>

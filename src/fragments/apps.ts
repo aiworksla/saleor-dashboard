@@ -1,5 +1,30 @@
 import { gql } from "@apollo/client";
 
+export const appManifestFragment = gql`
+  fragment AppManifest on Manifest {
+    identifier
+    version
+    about
+    name
+    appUrl
+    configurationUrl
+    tokenTargetUrl
+    dataPrivacy
+    dataPrivacyUrl
+    homepageUrl
+    supportUrl
+    permissions {
+      code
+      name
+    }
+    brand {
+      logo {
+        default(format: WEBP, size: 64)
+      }
+    }
+  }
+`;
+
 export const appFragment = gql`
   fragment App on App {
     id
@@ -14,21 +39,41 @@ export const appFragment = gql`
     supportUrl
     version
     accessToken
-    privateMetadata {
+    brand {
+      logo {
+        default(format: WEBP, size: 64)
+      }
+    }
+    privateMetadata @include(if: $hasManagedAppsPermission) {
       key
       value
     }
-    metadata {
+    metadata @include(if: $hasManagedAppsPermission) {
       key
       value
     }
-    tokens {
+    tokens @include(if: $hasManagedAppsPermission) {
       authToken
       id
       name
     }
-    webhooks {
+    webhooks @include(if: $hasManagedAppsPermission) {
       ...Webhook
+    }
+  }
+`;
+
+export const appInstallationFragment = gql`
+  fragment AppInstallation on AppInstallation {
+    status
+    message
+    appName
+    manifestUrl
+    id
+    brand {
+      logo {
+        default(format: WEBP, size: 64)
+      }
     }
   }
 `;
@@ -41,6 +86,13 @@ export const appListItemFragment = gql`
     type
     appUrl
     manifestUrl
+    version
+    created
+    brand {
+      logo {
+        default(format: WEBP, size: 64)
+      }
+    }
     permissions {
       ...AppPermission
     }
@@ -51,5 +103,13 @@ export const appPermissionFragment = gql`
   fragment AppPermission on Permission {
     name
     code
+  }
+`;
+
+export const appAvatarFragment = gql`
+  fragment AppAvatar on App {
+    id
+    name
+    # TODO: Add app image
   }
 `;

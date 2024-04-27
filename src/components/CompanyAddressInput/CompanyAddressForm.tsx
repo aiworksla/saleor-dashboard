@@ -1,31 +1,32 @@
-import { TextField } from "@material-ui/core";
-import FormSpacer from "@saleor/components/FormSpacer";
-import Grid from "@saleor/components/Grid";
+// @ts-strict-ignore
+import FormSpacer from "@dashboard/components/FormSpacer";
+import Grid from "@dashboard/components/Grid";
 import SingleAutocompleteSelectField, {
   SingleAutocompleteChoiceType,
-} from "@saleor/components/SingleAutocompleteSelectField";
-import { AddressTypeInput } from "@saleor/customers/types";
+} from "@dashboard/components/SingleAutocompleteSelectField";
+import { AddressTypeInput } from "@dashboard/customers/types";
 import {
   AccountErrorFragment,
   ShopErrorFragment,
   WarehouseErrorFragment,
-} from "@saleor/graphql";
-import { ChangeEvent } from "@saleor/hooks/useForm";
+} from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAccountErrorMessage from "@dashboard/utils/errors/account";
+import getShopErrorMessage from "@dashboard/utils/errors/shop";
+import getWarehouseErrorMessage from "@dashboard/utils/errors/warehouse";
+import { TextField } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
-import getShopErrorMessage from "@saleor/utils/errors/shop";
-import getWarehouseErrorMessage from "@saleor/utils/errors/warehouse";
 import React from "react";
 import { IntlShape, useIntl } from "react-intl";
+
+import { useAddressValidation } from "../AddressEdit/useAddressValidation";
 
 export interface CompanyAddressFormProps {
   countries: SingleAutocompleteChoiceType[];
   data: AddressTypeInput;
   displayCountry: string;
-  errors: Array<
-    AccountErrorFragment | ShopErrorFragment | WarehouseErrorFragment
-  >;
+  errors: Array<AccountErrorFragment | ShopErrorFragment | WarehouseErrorFragment>;
   disabled: boolean;
   onChange: (event: ChangeEvent) => void;
   onCountryChange: (event: ChangeEvent) => void;
@@ -53,19 +54,10 @@ function getErrorMessage(
 }
 
 const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
-  const {
-    countries,
-    data,
-    disabled,
-    displayCountry,
-    errors,
-    onChange,
-    onCountryChange,
-  } = props;
-
+  const { countries, data, disabled, displayCountry, errors, onChange, onCountryChange } = props;
+  const { areas, isFieldAllowed, getDisplayValue } = useAddressValidation(data.country);
   const classes = useStyles(props);
   const intl = useIntl();
-
   const formFields = [
     "companyName",
     "streetAddress1",
@@ -80,9 +72,10 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
   const formErrors = getFormErrors(formFields, errors);
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} data-test-id="company-info">
       <TextField
         disabled={disabled}
+        data-test-id="company-name-input"
         error={!!formErrors.companyName}
         helperText={getErrorMessage(formErrors.companyName, intl)}
         label={intl.formatMessage({
@@ -102,6 +95,7 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
       <TextField
         disabled={disabled}
         error={!!formErrors.streetAddress1}
+        data-test-id="company-address-line-1-input"
         helperText={getErrorMessage(formErrors.streetAddress1, intl)}
         label={intl.formatMessage({
           id: "B52Em/",
@@ -120,6 +114,7 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
       <TextField
         disabled={disabled}
         error={!!formErrors.streetAddress2}
+        data-test-id="company-address-line-2-input"
         helperText={getErrorMessage(formErrors.streetAddress2, intl)}
         label={intl.formatMessage({
           id: "oQY0a2",
@@ -139,6 +134,7 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
         <TextField
           disabled={disabled}
           error={!!formErrors.city}
+          data-test-id="company-city-input"
           helperText={getErrorMessage(formErrors.city, intl)}
           label={intl.formatMessage({
             id: "TE4fIS",
@@ -156,6 +152,7 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
         <TextField
           disabled={disabled}
           error={!!formErrors.postalCode}
+          data-test-id="company-zip-input"
           helperText={getErrorMessage(formErrors.postalCode, intl)}
           label={intl.formatMessage({
             id: "oYGfnY",
@@ -176,6 +173,7 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
         <SingleAutocompleteSelectField
           data-test-id="address-edit-country-select-field"
           disabled={disabled}
+          autocomplete="new-password"
           displayValue={displayCountry}
           error={!!formErrors.country}
           helperText={getErrorMessage(formErrors.country, intl)}
@@ -189,30 +187,36 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
           choices={countries}
           InputProps={{
             spellCheck: false,
+            autoComplete: "new-password",
           }}
         />
-        <TextField
-          disabled={disabled}
-          error={!!formErrors.countryArea}
-          helperText={getErrorMessage(formErrors.countryArea, intl)}
-          label={intl.formatMessage({
-            id: "AuwpCm",
-            defaultMessage: "Country area",
-          })}
-          name={"countryArea" as keyof AddressTypeInput}
-          onChange={onChange}
-          value={data.countryArea}
-          fullWidth
-          InputProps={{
-            autoComplete: "address-level1",
-            spellCheck: false,
-          }}
-        />
+        {isFieldAllowed("countryArea") && (
+          <SingleAutocompleteSelectField
+            disabled={disabled}
+            autocomplete="new-password"
+            data-test-id="address-edit-country-area-field"
+            displayValue={getDisplayValue(data.countryArea)}
+            error={!!formErrors.countryArea}
+            helperText={getErrorMessage(formErrors.countryArea, intl)}
+            label={intl.formatMessage({
+              id: "AuwpCm",
+              defaultMessage: "Country area",
+            })}
+            name="countryArea"
+            onChange={onChange}
+            value={data.countryArea}
+            choices={areas}
+            InputProps={{
+              spellCheck: false,
+            }}
+          />
+        )}
       </Grid>
       <FormSpacer />
       <TextField
         disabled={disabled}
         error={!!formErrors.phone}
+        data-test-id="company-phone-input"
         fullWidth
         helperText={getErrorMessage(formErrors.phone, intl)}
         label={intl.formatMessage({
@@ -230,5 +234,6 @@ const CompanyAddressForm: React.FC<CompanyAddressFormProps> = props => {
     </div>
   );
 };
+
 CompanyAddressForm.displayName = "CompanyAddressForm";
 export default CompanyAddressForm;

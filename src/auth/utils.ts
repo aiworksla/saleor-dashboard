@@ -1,16 +1,13 @@
 import { ApolloError, ServerError } from "@apollo/client/core";
-import { IMessage, IMessageContext } from "@saleor/components/messages";
-import { UseNotifierResult } from "@saleor/hooks/useNotifier";
-import { commonMessages } from "@saleor/intl";
-import { getMutationErrors, parseLogMessage } from "@saleor/misc";
+import { IMessage, IMessageContext } from "@dashboard/components/messages";
+import { UseNotifierResult } from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import { getMutationErrors, parseLogMessage } from "@dashboard/misc";
 import { IntlShape } from "react-intl";
 
 import { isJwtError, isTokenExpired } from "./errors";
 
-export const displayDemoMessage = (
-  intl: IntlShape,
-  notify: UseNotifierResult,
-) => {
+export const displayDemoMessage = (intl: IntlShape, notify: UseNotifierResult) => {
   notify({
     text: intl.formatMessage(commonMessages.demo),
   });
@@ -21,12 +18,17 @@ const getNetworkErrors = (error: ApolloError): string[] => {
 
   if (networkErrors) {
     // Apparently network errors can be an object or an array
+
     if (Array.isArray(networkErrors.result)) {
       networkErrors.result.forEach(result => {
         if (result.errors) {
-          return result.errors.map(({ message }) => message);
+          return result.errors.map(({ message }: { message: string }) => message);
         }
       });
+    }
+
+    if (networkErrors.result?.errors) {
+      return networkErrors.result.errors.map(({ message }: { message: string }) => message);
     }
 
     return [networkErrors.message];
@@ -34,7 +36,6 @@ const getNetworkErrors = (error: ApolloError): string[] => {
 
   return [];
 };
-
 const getAllErrorMessages = (error: ApolloError) => [
   ...(error.graphQLErrors?.map(err => err.message) || []),
   ...getNetworkErrors(error),
@@ -76,6 +77,7 @@ export const handleNestedMutationErrors = ({
           intl,
           code: error.code,
           field: error.field,
+          voucherCodes: error.voucherCodes,
         }),
       });
     });
@@ -90,6 +92,7 @@ export async function handleQueryAuthError(
 ) {
   if (error.graphQLErrors.some(isJwtError)) {
     logout();
+
     if (error.graphQLErrors.every(isTokenExpired)) {
       notify({
         status: "error",

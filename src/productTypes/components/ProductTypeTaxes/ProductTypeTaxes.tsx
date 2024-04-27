@@ -1,22 +1,25 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import SingleAutocompleteSelectField from "@dashboard/components/SingleAutocompleteSelectField";
+import { TaxClassBaseFragment } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { taxesMessages } from "@dashboard/taxes/messages";
+import { FetchMoreProps } from "@dashboard/types";
 import { Card, CardContent } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import { ProductTypeDetailsQuery } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { useIntl } from "react-intl";
 
-import { maybe } from "../../../misc";
 import { ProductTypeForm } from "../ProductTypeDetailsPage/ProductTypeDetailsPage";
 
 interface ProductTypeTaxesProps {
   data: {
-    taxType: string;
+    taxClassId: string;
   };
-  taxTypeDisplayName: string;
-  taxTypes: ProductTypeDetailsQuery["taxTypes"];
+  taxClassDisplayName: string;
+  taxClasses: TaxClassBaseFragment[];
   disabled: boolean;
   onChange: (event: React.ChangeEvent<any>) => void;
+  onFetchMore: FetchMoreProps;
 }
 
 const useStyles = makeStyles(
@@ -27,45 +30,36 @@ const useStyles = makeStyles(
   },
   { name: "ProductTypeTaxes" },
 );
-
 const ProductTypeTaxes: React.FC<ProductTypeTaxesProps> = props => {
-  const { data, disabled, taxTypes, taxTypeDisplayName, onChange } = props;
+  const { data, disabled, taxClasses, taxClassDisplayName, onChange, onFetchMore } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
     <Card className={classes.root}>
-      <CardTitle
-        title={intl.formatMessage({
-          id: "mUb8Gt",
-          defaultMessage: "Taxes",
-          description: "section header",
-        })}
-      />
+      <CardTitle title={intl.formatMessage(sectionNames.taxes)} />
       <CardContent>
         <SingleAutocompleteSelectField
+          emptyOption
           disabled={disabled}
-          displayValue={taxTypeDisplayName}
-          label={intl.formatMessage({
-            id: "9xUIAh",
-            defaultMessage: "Tax group",
-          })}
-          name={"taxType" as keyof ProductTypeForm}
+          displayValue={taxClassDisplayName}
+          label={intl.formatMessage(taxesMessages.taxClass)}
+          name={"taxClassId" as keyof ProductTypeForm}
           onChange={onChange}
-          value={data.taxType}
-          choices={maybe(
-            () =>
-              taxTypes.map(c => ({ label: c.description, value: c.taxCode })),
-            [],
-          )}
+          value={data.taxClassId}
+          choices={taxClasses.map(choice => ({
+            label: choice.name,
+            value: choice.id,
+          }))}
           InputProps={{
             autoComplete: "off",
           }}
+          {...onFetchMore}
         />
       </CardContent>
     </Card>
   );
 };
+
 ProductTypeTaxes.displayName = "ProductTypeTaxes";
 export default ProductTypeTaxes;

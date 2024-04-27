@@ -1,5 +1,5 @@
-import { PermissionEnum } from "@saleor/graphql";
-import { FetchMoreProps, KeyValue, SearchPageProps } from "@saleor/types";
+import { PermissionEnum } from "@dashboard/graphql";
+import { FetchMoreProps, KeyValue, SearchPageProps } from "@dashboard/types";
 import { MessageDescriptor } from "react-intl";
 
 import { MultiAutocompleteChoiceType } from "../MultiAutocompleteSelectField";
@@ -38,16 +38,11 @@ export interface UnknownFilterElementData {
   type: KeyValueFilterElementData["type"] | RegularFilterElementData["type"];
 }
 
-export type FilterElementValueData =
-  | RegularFilterElementData
-  | KeyValueFilterElementData;
+export type FilterElementValueData = RegularFilterElementData | KeyValueFilterElementData;
 
-export type IFilterElementMutableData = FilterElementCommonData &
-  FilterElementValueData;
+export type IFilterElementMutableData = FilterElementCommonData & FilterElementValueData;
 
-export type IFilterElementMutableDataGeneric<
-  T extends FieldType
-> = T extends FieldType.keyValue
+export type IFilterElementMutableDataGeneric<T extends FieldType> = T extends FieldType.keyValue
   ? KeyValueFilterElementData & FilterElementCommonData
   : RegularFilterElementData & FilterElementCommonData;
 
@@ -68,17 +63,15 @@ type FilterElementCommon<K extends string = string> = {
 export type FilterElement<K extends string = string> = FilterElementCommon<K> &
   Partial<UnknownFilterElementData>;
 
-export type FilterElementRegular<
-  K extends string = string
-> = FilterElementCommon<K> & RegularFilterElementData;
+export type FilterElementRegular<K extends string = string> = FilterElementCommon<K> &
+  RegularFilterElementData;
 
-export type FilterElementKeyValue<
-  K extends string = string
-> = FilterElementCommon<K> & KeyValueFilterElementData;
+export type FilterElementKeyValue<K extends string = string> = FilterElementCommon<K> &
+  KeyValueFilterElementData;
 
 export type FilterElementGeneric<
   K extends string,
-  T extends FieldType
+  T extends FieldType,
 > = T extends FieldType.keyValue
   ? FilterElementKeyValue<K> & { type: T }
   : FilterElementRegular<K> & { type: T };
@@ -100,7 +93,7 @@ export const isFilterType = <T extends FieldType, K extends string = string>(
 
 export interface FilterFieldBaseProps<
   K extends string = string,
-  T extends FieldType | unknown = unknown
+  T extends FieldType | unknown = unknown,
 > {
   filter: T extends FieldType ? FilterElementGeneric<K, T> : FilterElement<K>;
   onFilterPropertyChange: FilterDispatchFunction<K>;
@@ -108,19 +101,16 @@ export interface FilterFieldBaseProps<
 
 export type FilterErrors = string[];
 
-export type FilterErrorMessages<T extends string> = Record<
-  T,
-  MessageDescriptor
->;
+export type FilterErrorMessages<T extends string> = Record<T, MessageDescriptor>;
 
 export type IFilter<
   K extends string = string,
-  T extends FieldType | unknown = unknown
+  T extends FieldType | unknown = unknown,
 > = T extends unknown
   ? Array<FilterElement<K>>
   : T extends FieldType.keyValue
-  ? Array<FilterElementKeyValue<K>>
-  : Array<FilterElementRegular<K>>;
+    ? Array<FilterElementKeyValue<K>>
+    : Array<FilterElementRegular<K>>;
 
 export enum FilterType {
   MULTIPLE = "MULTIPLE",

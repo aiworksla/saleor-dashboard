@@ -1,13 +1,11 @@
-import {
-  useCreateShippingZoneMutation,
-  useShopCountriesQuery,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors } from "@saleor/misc";
-import { mapCountriesToCountriesCodes } from "@saleor/utils/maps";
+// @ts-strict-ignore
+import { useCreateShippingZoneMutation, useShopCountriesQuery } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors } from "@dashboard/misc";
+import { mapCountriesToCountriesCodes } from "@dashboard/utils/maps";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -21,7 +19,6 @@ const ShippingZoneCreate: React.FC<{}> = () => {
   const notify = useNotifier();
   const shop = useShop();
   const intl = useIntl();
-
   const { data: restWorldCountries } = useShopCountriesQuery({
     variables: {
       filter: {
@@ -29,11 +26,7 @@ const ShippingZoneCreate: React.FC<{}> = () => {
       },
     },
   });
-
-  const [
-    createShippingZone,
-    createShippingZoneOpts,
-  ] = useCreateShippingZoneMutation({
+  const [createShippingZone, createShippingZoneOpts] = useCreateShippingZoneMutation({
     onCompleted: data => {
       if (data.shippingZoneCreate.errors.length === 0) {
         notify({
@@ -44,7 +37,6 @@ const ShippingZoneCreate: React.FC<{}> = () => {
       }
     },
   });
-
   const handleSubmit = (data: ShippingZoneCreateFormData) =>
     extractMutationErrors(
       createShippingZone({
@@ -57,9 +49,7 @@ const ShippingZoneCreate: React.FC<{}> = () => {
   return (
     <ShippingZoneCreatePage
       countries={shop?.countries || []}
-      restWorldCountries={
-        mapCountriesToCountriesCodes(restWorldCountries?.shop?.countries) || []
-      }
+      restWorldCountries={mapCountriesToCountriesCodes(restWorldCountries?.shop?.countries) || []}
       disabled={createShippingZoneOpts.loading}
       errors={createShippingZoneOpts.data?.shippingZoneCreate.errors || []}
       onSubmit={handleSubmit}
@@ -67,4 +57,5 @@ const ShippingZoneCreate: React.FC<{}> = () => {
     />
   );
 };
+
 export default ShippingZoneCreate;

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import React from "react";
 
 export interface DebounceProps<T> {
@@ -11,9 +12,11 @@ export class Debounce<T> extends React.Component<DebounceProps<T>> {
 
   handleDebounce = (...args: T[]) => {
     const { debounceFn, time } = this.props;
+
     if (this.timer) {
       clearTimeout(this.timer);
     }
+
     this.timer = setTimeout(() => debounceFn(...args), time || 200);
   };
 

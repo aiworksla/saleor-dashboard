@@ -1,12 +1,9 @@
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import { getGiftCardSettingsErrorMessage } from "@dashboard/giftCards/GiftCardSettings/messages";
+import { GiftCardSettingsErrorFragment, TimePeriodTypeEnum } from "@dashboard/graphql";
+import { FormChange } from "@dashboard/hooks/useForm";
 import { Typography } from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import { getGiftCardSettingsErrorMessage } from "@saleor/giftCards/GiftCardSettings/messages";
-import {
-  GiftCardSettingsErrorFragment,
-  TimePeriodTypeEnum,
-} from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -55,10 +52,7 @@ const GiftCardSettingsExpirySelect: React.FC<GiftCardSettingsExpirySelectProps> 
           <VerticalSpacer spacing={2} />
           <TimePeriodField
             isError={!!errors?.expiryPeriod}
-            helperText={getGiftCardSettingsErrorMessage(
-              errors?.expiryPeriod,
-              intl,
-            )}
+            helperText={getGiftCardSettingsErrorMessage(errors?.expiryPeriod, intl)}
             change={change}
             periodType={expiryPeriodType}
             periodAmount={expiryPeriodAmount}

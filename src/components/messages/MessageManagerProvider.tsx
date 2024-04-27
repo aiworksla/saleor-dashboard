@@ -1,5 +1,6 @@
-import { DEFAULT_NOTIFICATION_SHOW_TIME } from "@saleor/config";
-import { commonMessages } from "@saleor/intl";
+// @ts-strict-ignore
+import { DEFAULT_NOTIFICATION_SHOW_TIME } from "@dashboard/config";
+import { commonMessages } from "@dashboard/intl";
 import { Notification } from "@saleor/macaw-ui";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useIntl } from "react-intl";
@@ -28,73 +29,64 @@ const MessageManagerProvider = ({ children }) => {
 
   const timerCallback = (notification: INotification) => {
     remove(notification.id);
-    timersArr.current = timersArr.current.filter(
-      timer => timer.id !== notification.id,
-    );
+    timersArr.current = timersArr.current.filter(timer => timer.id !== notification.id);
   };
-
   const remove = useCallback(notificationId => {
     setNotifications(currentNotifications =>
       currentNotifications.filter(n => n.id !== notificationId),
     );
   }, []);
-
   const clearErrorNotifications = useCallback(() => {
     setNotifications(notifications =>
-      notifications.filter(
-        notification => notification.message.status !== "error",
-      ),
+      notifications.filter(notification => notification.message.status !== "error"),
     );
   }, []);
+  const show = useCallback((message = {}, timeout = DEFAULT_NOTIFICATION_SHOW_TIME) => {
+    const id = timer.current;
 
-  const show = useCallback(
-    (message = {}, timeout = DEFAULT_NOTIFICATION_SHOW_TIME) => {
-      const id = timer.current;
-      timer.current += 1;
-      const notification = {
-        close: () => remove(id),
-        id,
-        message,
-        timeout,
-      };
-      if (timeout !== null) {
-        const timeoutId = window.setTimeout(() => {
-          timerCallback(notification);
-        }, timeout);
+    timer.current += 1;
 
-        timersArr.current.push({
-          id: notification.id,
-          notification,
-          remaining: timeout,
-          start: new Date().getTime(),
-          timeoutId,
-        });
-      }
+    const notification = {
+      close: () => remove(id),
+      id,
+      message,
+      timeout,
+    };
 
-      setNotifications(state => [notification, ...state]);
+    if (timeout !== null) {
+      const timeoutId = window.setTimeout(() => {
+        timerCallback(notification);
+      }, timeout);
 
-      return notification;
-    },
-    [],
-  );
+      timersArr.current.push({
+        id: notification.id,
+        notification,
+        remaining: timeout,
+        start: new Date().getTime(),
+        timeoutId,
+      });
+    }
 
+    setNotifications(state => [notification, ...state]);
+
+    return notification;
+  }, []);
   const getCurrentTimer = (notification: INotification) => {
-    const currentTimerIndex = timersArr.current.findIndex(
-      timer => timer.id === notification.id,
-    );
+    const currentTimerIndex = timersArr.current.findIndex(timer => timer.id === notification.id);
+
     return timersArr.current[currentTimerIndex];
   };
-
   const pauseTimer = (notification: INotification) => {
     const currentTimer = getCurrentTimer(notification);
+
     if (currentTimer) {
-      currentTimer.remaining =
-        currentTimer.remaining - (new Date().getTime() - currentTimer.start);
+      currentTimer.remaining = currentTimer.remaining - (new Date().getTime() - currentTimer.start);
       window.clearTimeout(currentTimer.timeoutId);
     }
   };
   const resumeTimer = (notification: INotification) => {
     const currentTimer = getCurrentTimer(notification);
+
     if (currentTimer) {
       currentTimer.start = new Date().getTime();
       currentTimer.timeoutId = window.setTimeout(
@@ -106,21 +98,15 @@ const MessageManagerProvider = ({ children }) => {
 
   return (
     <>
-      <MessageContext.Provider
-        value={{ remove, show, clearErrorNotifications }}
-      >
+      <MessageContext.Provider value={{ remove, show, clearErrorNotifications }}>
         {children}
       </MessageContext.Provider>
-      <TransitionGroup
-        appear
-        options={{ position: "top right" }}
-        component={Container}
-      >
+      <TransitionGroup appear options={{ position: "top right" }} component={Container}>
         {!!notifications.length &&
           notifications.map(notification => (
             <Transition key={notification.id}>
               <Notification
-                {...(!!notification.timeout
+                {...(notification.timeout
                   ? {
                       onMouseEnter: () => pauseTimer(notification),
                       onMouseLeave: () => resumeTimer(notification),
@@ -146,15 +132,11 @@ const MessageManagerProvider = ({ children }) => {
                         {notification.message.apiMessage}
                       </pre>
                     ),
-                    hideApiLabel: intl.formatMessage(
-                      notificationMessages.hideError,
-                    ),
-                    showApiLabel: intl.formatMessage(
-                      notificationMessages.seeError,
-                    ),
+                    hideApiLabel: intl.formatMessage(notificationMessages.hideError),
+                    showApiLabel: intl.formatMessage(notificationMessages.seeError),
                   }
                 }
-                {...(!!notification.message.actionBtn
+                {...(notification.message.actionBtn
                   ? {
                       action: {
                         label: notification.message.actionBtn.label,

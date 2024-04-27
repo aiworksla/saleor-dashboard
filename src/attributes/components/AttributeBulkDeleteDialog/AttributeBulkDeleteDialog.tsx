@@ -1,6 +1,6 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -33,11 +33,13 @@ const AttributeBulkDeleteDialog: React.FC<AttributeBulkDeleteDialogProps> = ({
         description: "dialog title",
       })}
       variant="delete"
+      data-test-id="attribute-bulk-delete-dialog"
     >
       <DialogContentText>
         <FormattedMessage
           id="lG/MDw"
           defaultMessage="{counter,plural,one{Are you sure you want to delete this attribute?} other{Are you sure you want to delete {displayQuantity} attributes?}}"
+          data-test-id="delete-attr-from-list-dialog-text"
           description="dialog content"
           values={{
             counter: quantity,
@@ -48,5 +50,6 @@ const AttributeBulkDeleteDialog: React.FC<AttributeBulkDeleteDialogProps> = ({
     </ActionDialog>
   );
 };
+
 AttributeBulkDeleteDialog.displayName = "AttributeBulkDeleteDialog";
 export default AttributeBulkDeleteDialog;

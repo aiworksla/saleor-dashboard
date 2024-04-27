@@ -1,7 +1,8 @@
 export const urlList = {
   apiUri: Cypress.env("API_URI"),
+  dashboard: "dashboard/",
   addProduct: "products/add",
-  apps: "apps/",
+  apps: "custom-apps/",
   attributes: "attributes/",
   channels: "channels/",
   categories: "categories/",
@@ -15,6 +16,7 @@ export const urlList = {
   navigation: "navigation/",
   orders: "orders/",
   pages: "pages/",
+  addPageType: "pages/add?page-type-id=",
   pageTypes: "page-types/",
   permissionsGroups: "permission-groups/",
   plugins: "plugins/",
@@ -29,13 +31,14 @@ export const urlList = {
   variants: "variant/",
   vouchers: "discounts/vouchers/",
   variant: "variant/",
-  warehouses: "warehouses/"
+  warehouses: "warehouses/",
+  webhooksAndEvents: "custom-apps/",
 };
 
 export const addVariantUrl = productId =>
   `${urlList.products}${productId}/${urlList.variants}add`;
 
-export const appDetailsUrl = appId => `${urlList.apps}custom/${appId}`;
+export const appDetailsUrl = appId => `${urlList.webhooksAndEvents}${appId}`;
 
 export const attributeDetailsUrl = attributeId =>
   `${urlList.attributes}${attributeId}`;

@@ -1,15 +1,14 @@
-import { attributeListUrl } from "@saleor/attributes/urls";
-import { ATTRIBUTE_TYPES_WITH_DEDICATED_VALUES } from "@saleor/attributes/utils/data";
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import Metadata from "@saleor/components/Metadata/Metadata";
-import { MetadataFormData } from "@saleor/components/Metadata/types";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import { ListSettingsUpdate } from "@saleor/components/TablePagination";
+import { attributeListUrl } from "@dashboard/attributes/urls";
+import { ATTRIBUTE_TYPES_WITH_DEDICATED_VALUES } from "@dashboard/attributes/utils/data";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata/Metadata";
+import { MetadataFormData } from "@dashboard/components/Metadata/types";
+import Savebar from "@dashboard/components/Savebar";
+import { ListSettingsUpdate } from "@dashboard/components/TablePagination";
 import {
   AttributeDetailsFragment,
   AttributeDetailsQuery,
@@ -18,15 +17,12 @@ import {
   AttributeInputTypeEnum,
   AttributeTypeEnum,
   MeasurementUnitsEnum,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import { ListSettings, ReorderAction } from "@saleor/types";
-import { mapEdgesToItems, mapMetadataItemToInput } from "@saleor/utils/maps";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { ListSettings, ReorderAction } from "@dashboard/types";
+import { mapEdgesToItems, mapMetadataItemToInput } from "@dashboard/utils/maps";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
 import React from "react";
 import { useIntl } from "react-intl";
 import slugify from "slugify";
@@ -37,11 +33,11 @@ import AttributeProperties from "../AttributeProperties";
 import AttributeValues from "../AttributeValues";
 
 export interface AttributePageProps {
-  attribute: AttributeDetailsFragment | null;
+  attribute?: AttributeDetailsFragment | null | undefined;
   disabled: boolean;
   errors: AttributeErrorFragment[];
   saveButtonBarState: ConfirmButtonTransitionState;
-  values: AttributeDetailsQuery["attribute"]["choices"];
+  values?: NonNullable<AttributeDetailsQuery["attribute"]>["choices"] | undefined;
   onDelete: () => void;
   onSubmit: (data: AttributePageFormData) => SubmitPromise;
   onValueAdd: () => void;
@@ -60,11 +56,11 @@ export interface AttributePageProps {
 }
 
 export interface AttributePageFormData extends MetadataFormData {
-  type: AttributeTypeEnum;
+  type?: AttributeTypeEnum;
   availableInGrid: boolean;
   filterableInDashboard: boolean;
   inputType: AttributeInputTypeEnum;
-  entityType: AttributeEntityTypeEnum;
+  entityType: AttributeEntityTypeEnum | null;
   filterableInStorefront: boolean;
   name: string;
   slug: string;
@@ -95,95 +91,60 @@ const AttributePage: React.FC<AttributePageProps> = ({
 }) => {
   const intl = useIntl();
   const navigate = useNavigator();
-
-  const {
-    isMetadataModified,
-    isPrivateMetadataModified,
-    makeChangeHandler: makeMetadataChangeHandler,
-  } = useMetadataChangeTrigger();
-
-  const initialForm: AttributePageFormData =
-    attribute === null
-      ? {
-          availableInGrid: true,
-          entityType: null,
-          filterableInDashboard: true,
-          filterableInStorefront: true,
-          inputType: AttributeInputTypeEnum.DROPDOWN,
-          metadata: [],
-          name: "",
-          privateMetadata: [],
-          slug: "",
-          storefrontSearchPosition: "",
-          type: AttributeTypeEnum.PRODUCT_TYPE,
-          valueRequired: true,
-          visibleInStorefront: true,
-          unit: undefined,
-        }
-      : {
-          availableInGrid: attribute?.availableInGrid ?? true,
-          entityType: attribute?.entityType ?? null,
-          filterableInDashboard: attribute?.filterableInDashboard ?? true,
-          filterableInStorefront: attribute?.filterableInStorefront ?? true,
-          inputType: attribute?.inputType ?? AttributeInputTypeEnum.DROPDOWN,
-          metadata: attribute?.metadata?.map(mapMetadataItemToInput),
-          name: attribute?.name ?? "",
-          privateMetadata: attribute?.privateMetadata?.map(
-            mapMetadataItemToInput,
-          ),
-          slug: attribute?.slug ?? "",
-          storefrontSearchPosition:
-            attribute?.storefrontSearchPosition.toString() ?? "",
-          type: attribute?.type || AttributeTypeEnum.PRODUCT_TYPE,
-          valueRequired: !!attribute?.valueRequired ?? true,
-          visibleInStorefront: attribute?.visibleInStorefront ?? true,
-          unit: attribute?.unit || null,
-        };
-
+  const { makeChangeHandler: makeMetadataChangeHandler } = useMetadataChangeTrigger();
+  const initialForm: AttributePageFormData = !attribute
+    ? {
+        availableInGrid: true,
+        entityType: null,
+        filterableInDashboard: true,
+        filterableInStorefront: true,
+        inputType: AttributeInputTypeEnum.DROPDOWN,
+        metadata: [],
+        name: "",
+        privateMetadata: [],
+        slug: "",
+        storefrontSearchPosition: "",
+        type: AttributeTypeEnum.PRODUCT_TYPE,
+        valueRequired: true,
+        visibleInStorefront: true,
+        unit: undefined,
+      }
+    : {
+        availableInGrid: attribute.availableInGrid,
+        entityType: attribute.entityType,
+        filterableInDashboard: attribute.filterableInDashboard,
+        filterableInStorefront: attribute.filterableInStorefront,
+        inputType: attribute?.inputType ?? AttributeInputTypeEnum.DROPDOWN,
+        metadata: attribute.metadata.map(mapMetadataItemToInput),
+        name: attribute?.name ?? "",
+        privateMetadata: attribute.privateMetadata.map(mapMetadataItemToInput),
+        slug: attribute?.slug ?? "",
+        storefrontSearchPosition: attribute.storefrontSearchPosition.toString(),
+        type: attribute?.type ?? AttributeTypeEnum.PRODUCT_TYPE,
+        valueRequired: !!attribute.valueRequired,
+        visibleInStorefront: attribute.visibleInStorefront,
+        unit: attribute?.unit ?? null,
+      };
   const handleSubmit = (data: AttributePageFormData) => {
-    const metadata =
-      !attribute || isMetadataModified ? data.metadata : undefined;
-    const privateMetadata =
-      !attribute || isPrivateMetadataModified
-        ? data.privateMetadata
-        : undefined;
     const type = attribute === null ? data.type : undefined;
 
     return onSubmit({
       ...data,
-      metadata,
-      privateMetadata,
       slug: data.slug || slugify(data.name).toLowerCase(),
       type,
     });
   };
 
   return (
-    <Form
-      confirmLeave
-      initial={initialForm}
-      onSubmit={handleSubmit}
-      disabled={disabled}
-    >
-      {({
-        change,
-        set,
-        data,
-        isSaveDisabled,
-        submit,
-        errors,
-        setError,
-        clearErrors,
-      }) => {
+    <Form confirmLeave initial={initialForm} onSubmit={handleSubmit} disabled={disabled}>
+      {({ change, set, data, isSaveDisabled, submit, errors, setError, clearErrors }) => {
         const changeMetadata = makeMetadataChangeHandler(change);
 
         return (
           <>
-            <Container>
-              <Backlink href={attributeListUrl()}>
-                {intl.formatMessage(sectionNames.attributes)}
-              </Backlink>
-              <PageHeader
+            <DetailPageLayout>
+              <TopNav
+                href={attributeListUrl()}
                 title={
                   attribute === null
                     ? intl.formatMessage({
@@ -191,70 +152,66 @@ const AttributePage: React.FC<AttributePageProps> = ({
                         defaultMessage: "Create New Attribute",
                         description: "page title",
                       })
-                    : maybe(() => attribute.name)
+                    : attribute?.name
                 }
               />
-              <Grid>
-                <div>
-                  <AttributeDetails
-                    canChangeType={attribute === null}
-                    data={data}
-                    disabled={disabled}
-                    apiErrors={apiErrors}
-                    onChange={change}
-                    set={set}
-                    errors={errors}
-                    setError={setError}
-                    clearErrors={clearErrors}
-                  />
-                  {ATTRIBUTE_TYPES_WITH_DEDICATED_VALUES.includes(
-                    data.inputType,
-                  ) && (
-                    <>
-                      <CardSpacer />
-                      <AttributeValues
-                        inputType={data.inputType}
-                        disabled={disabled}
-                        values={mapEdgesToItems(values)}
-                        onValueAdd={onValueAdd}
-                        onValueDelete={onValueDelete}
-                        onValueReorder={onValueReorder}
-                        onValueUpdate={onValueUpdate}
-                        settings={settings}
-                        onUpdateListSettings={onUpdateListSettings}
-                        pageInfo={pageInfo}
-                        onNextPage={onNextPage}
-                        onPreviousPage={onPreviousPage}
-                      />
-                    </>
-                  )}
-                  <CardSpacer />
-                  <Metadata data={data} onChange={changeMetadata} />
-                </div>
-                <div>
-                  <AttributeOrganization
-                    canChangeType={attribute === null}
-                    data={data}
-                    disabled={disabled}
-                    onChange={change}
-                  />
-                  <CardSpacer />
-                  <AttributeProperties
-                    data={data}
-                    errors={apiErrors}
-                    disabled={disabled}
-                    onChange={change}
-                  />
-                </div>
-              </Grid>
+              <DetailPageLayout.Content>
+                <AttributeDetails
+                  canChangeType={attribute === null}
+                  data={data}
+                  disabled={disabled}
+                  apiErrors={apiErrors}
+                  onChange={change}
+                  set={set}
+                  errors={errors}
+                  setError={setError}
+                  clearErrors={clearErrors}
+                />
+                {ATTRIBUTE_TYPES_WITH_DEDICATED_VALUES.includes(data.inputType) && (
+                  <>
+                    <CardSpacer />
+                    <AttributeValues
+                      inputType={data.inputType}
+                      disabled={disabled}
+                      values={mapEdgesToItems(values)}
+                      onValueAdd={onValueAdd}
+                      onValueDelete={onValueDelete}
+                      onValueReorder={onValueReorder}
+                      onValueUpdate={onValueUpdate}
+                      settings={settings}
+                      onUpdateListSettings={onUpdateListSettings}
+                      pageInfo={pageInfo}
+                      onNextPage={onNextPage}
+                      onPreviousPage={onPreviousPage}
+                    />
+                  </>
+                )}
+                <CardSpacer />
+                <Metadata data={data} isLoading={disabled} onChange={changeMetadata} />
+              </DetailPageLayout.Content>
+              <DetailPageLayout.RightSidebar>
+                <AttributeOrganization
+                  canChangeType={attribute === null}
+                  data={data}
+                  disabled={disabled}
+                  onChange={change}
+                />
+                <CardSpacer />
+                <AttributeProperties
+                  data={data}
+                  errors={apiErrors}
+                  disabled={disabled}
+                  onChange={change}
+                />
+              </DetailPageLayout.RightSidebar>
               <Savebar
-                disabled={isSaveDisabled}
+                disabled={!!isSaveDisabled}
                 state={saveButtonBarState}
                 onCancel={() => navigate(attributeListUrl())}
                 onSubmit={submit}
                 onDelete={attribute === null ? undefined : onDelete}
               />
-            </Container>
+            </DetailPageLayout>
             {children(data)}
           </>
         );
@@ -262,5 +219,6 @@ const AttributePage: React.FC<AttributePageProps> = ({
     </Form>
   );
 };
+
 AttributePage.displayName = "AttributePage";
 export default AttributePage;

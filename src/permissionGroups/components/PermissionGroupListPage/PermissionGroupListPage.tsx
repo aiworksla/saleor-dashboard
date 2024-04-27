@@ -1,40 +1,38 @@
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { PermissionGroupFragment } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { sectionNames } from "@dashboard/intl";
 import { Card } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import PageHeader from "@saleor/components/PageHeader";
-import { configurationMenuUrl } from "@saleor/configuration";
-import { PermissionGroupFragment } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
+import { Button } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { PageListProps, SortPage } from "../../../types";
-import {
-  permissionGroupAddUrl,
-  PermissionGroupListUrlSortField,
-} from "../../urls";
-import PermissionGroupList from "../PermissionGroupList";
+import { permissionGroupAddUrl, PermissionGroupListUrlSortField } from "../../urls";
+import { PermissionGroupListDatagrid } from "../PermissionGroupListDatagrid";
 
 export interface PermissionGroupListPageProps
   extends PageListProps,
     SortPage<PermissionGroupListUrlSortField> {
   permissionGroups: PermissionGroupFragment[];
-  onDelete: (id: string) => void;
 }
 
 const PermissionGroupListPage: React.FC<PermissionGroupListPageProps> = listProps => {
   const intl = useIntl();
+  const navigate = useNavigator();
 
   return (
-    <Container>
-      <Backlink href={configurationMenuUrl}>
-        {intl.formatMessage(sectionNames.configuration)}
-      </Backlink>
-      <PageHeader title={intl.formatMessage(sectionNames.permissionGroups)}>
+    <ListPageLayout>
+      <TopNav
+        withoutBorder
+        href={configurationMenuUrl}
+        title={intl.formatMessage(sectionNames.permissionGroups)}
+      >
         <Button
           variant="primary"
-          href={permissionGroupAddUrl}
+          onClick={() => navigate(permissionGroupAddUrl)}
           data-test-id="create-permission-group"
         >
           <FormattedMessage
@@ -43,12 +41,13 @@ const PermissionGroupListPage: React.FC<PermissionGroupListPageProps> = listProp
             description="button"
           />
         </Button>
-      </PageHeader>
+      </TopNav>
       <Card>
-        <PermissionGroupList {...listProps} />
+        <PermissionGroupListDatagrid {...listProps} />
       </Card>
-    </Container>
+    </ListPageLayout>
   );
 };
+
 PermissionGroupListPage.displayName = "PermissionGroupListPage";
 export default PermissionGroupListPage;

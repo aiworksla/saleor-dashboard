@@ -1,12 +1,7 @@
-import {
-  ConfigurationItemFragment,
-  ConfigurationTypeFieldEnum,
-} from "@saleor/graphql";
+// @ts-strict-ignore
+import { ConfigurationItemFragment, ConfigurationTypeFieldEnum } from "@dashboard/graphql";
 
-export function isSecretField(
-  config: ConfigurationItemFragment[],
-  field: string,
-) {
+export function isSecretField(config: ConfigurationItemFragment[], field: string) {
   return [
     ConfigurationTypeFieldEnum.PASSWORD,
     ConfigurationTypeFieldEnum.SECRET,

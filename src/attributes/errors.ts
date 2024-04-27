@@ -1,5 +1,5 @@
-import { AttributeErrorCode, AttributeErrorFragment } from "@saleor/graphql";
-import getAttributeErrorMessage from "@saleor/utils/errors/attribute";
+import { AttributeErrorCode, AttributeErrorFragment } from "@dashboard/graphql";
+import getAttributeErrorMessage from "@dashboard/utils/errors/attribute";
 import { defineMessages, IntlShape } from "react-intl";
 
 const messages = defineMessages({
@@ -14,9 +14,9 @@ const messages = defineMessages({
 });
 
 export function getAttributeSlugErrorMessage(
-  err: AttributeErrorFragment,
+  err: AttributeErrorFragment | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   switch (err?.code) {
     case AttributeErrorCode.UNIQUE:
       return intl.formatMessage(messages.attributeSlugUnique);
@@ -26,9 +26,9 @@ export function getAttributeSlugErrorMessage(
 }
 
 export function getAttributeValueErrorMessage(
-  err: AttributeErrorFragment,
+  err: AttributeErrorFragment | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   switch (err?.code) {
     case AttributeErrorCode.ALREADY_EXISTS:
       return intl.formatMessage(messages.attributeValueAlreadyExists);

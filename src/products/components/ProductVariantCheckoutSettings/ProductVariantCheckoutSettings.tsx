@@ -1,9 +1,9 @@
-import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import PreviewPill from "@saleor/components/PreviewPill";
-import { ProductErrorFragment } from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
-import { getFormErrors } from "@saleor/utils/errors";
+import { DashboardCard } from "@dashboard/components/Card";
+import PreviewPill from "@dashboard/components/PreviewPill";
+import { ProductErrorFragment } from "@dashboard/graphql";
+import { FormChange } from "@dashboard/hooks/useForm";
+import { getFormErrors } from "@dashboard/utils/errors";
+import { Input } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -21,46 +21,33 @@ interface ProductVariantCheckoutSettingsProps {
 
 const ProductVariantCheckoutSettings: React.FC<ProductVariantCheckoutSettingsProps> = props => {
   const { data, disabled, errors, onChange } = props;
-
   const intl = useIntl();
   const classes = useStyles();
-
   const formErrors = getFormErrors(["quantityLimitPerCustomer"], errors);
 
   return (
-    <Card>
-      <CardTitle
-        title={
-          <>
-            {intl.formatMessage(messages.checkoutLimits)}
-            <PreviewPill className={classes.preview} />
-          </>
-        }
-      />
-      <CardContent>
-        <TextField
+    <DashboardCard>
+      <DashboardCard.Title>
+        {intl.formatMessage(messages.checkoutLimits)}
+        <PreviewPill className={classes.preview} />
+      </DashboardCard.Title>
+      <DashboardCard.Content>
+        <Input
+          data-test-id="checkout-limit-input"
+          width="100%"
           disabled={disabled}
           error={!!formErrors.quantityLimitPerCustomer}
           type="number"
-          fullWidth
           name="quantityLimitPerCustomer"
           label={intl.formatMessage(messages.checkoutLineLimit)}
           helperText={intl.formatMessage(messages.checkoutLimitsDescription)}
-          value={
-            !!data.quantityLimitPerCustomer
-              ? String(data.quantityLimitPerCustomer)
-              : ""
-          }
+          value={data.quantityLimitPerCustomer ? String(data.quantityLimitPerCustomer) : ""}
           onChange={onChange}
-          InputProps={{
-            inputProps: {
-              autoComplete: "none",
-              min: 1,
-            },
-          }}
+          min={1}
+          autoComplete="off"
         />
-      </CardContent>
-    </Card>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
 

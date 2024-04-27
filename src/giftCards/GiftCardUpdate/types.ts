@@ -1,4 +1,4 @@
-import { Dialog } from "@saleor/types";
+import { Dialog } from "@dashboard/types";
 
 export enum GiftCardUpdatePageActionParamsEnum {
   SET_BALANCE = "set-balance",
@@ -6,8 +6,6 @@ export enum GiftCardUpdatePageActionParamsEnum {
   RESEND_CODE = "resend-code",
 }
 
-export type GiftCardUpdatePageUrlQueryParams = Dialog<
-  GiftCardUpdatePageActionParamsEnum
->;
+export type GiftCardUpdatePageUrlQueryParams = Dialog<GiftCardUpdatePageActionParamsEnum>;
 
 export const PLACEHOLDER = "-";

@@ -1,8 +1,9 @@
+// @ts-strict-ignore
 import { FetchResult } from "@apollo/client";
-import { ChannelVoucherData } from "@saleor/channels/utils";
-import { VoucherDetailsPageFormData } from "@saleor/discounts/components/VoucherDetailsPage";
-import { getChannelsVariables } from "@saleor/discounts/handlers";
-import { DiscountTypeEnum, RequirementsPicker } from "@saleor/discounts/types";
+import { ChannelVoucherData } from "@dashboard/channels/utils";
+import { VoucherDetailsPageFormData } from "@dashboard/discounts/components/VoucherDetailsPage";
+import { getChannelsVariables } from "@dashboard/discounts/handlers";
+import { DiscountTypeEnum, RequirementsPicker } from "@dashboard/discounts/types";
 import {
   DiscountValueTypeEnum,
   VoucherChannelListingUpdateMutation,
@@ -11,8 +12,8 @@ import {
   VoucherTypeEnum,
   VoucherUpdateMutation,
   VoucherUpdateMutationVariables,
-} from "@saleor/graphql";
-import { joinDateTime } from "@saleor/misc";
+} from "@dashboard/graphql";
+import { joinDateTime } from "@dashboard/misc";
 
 export function createUpdateHandler(
   voucher: VoucherDetailsFragment,
@@ -26,11 +27,11 @@ export function createUpdateHandler(
 ) {
   return async (formData: VoucherDetailsPageFormData) => {
     const { id } = voucher;
-
     const errors = await Promise.all([
       updateVoucher({
         id,
         input: {
+          name: formData.name,
           applyOncePerCustomer: formData.applyOncePerCustomer,
           applyOncePerOrder: formData.applyOncePerOrder,
           onlyForStaff: formData.onlyForStaff,
@@ -38,11 +39,9 @@ export function createUpdateHandler(
             formData.discountType === DiscountTypeEnum.VALUE_PERCENTAGE
               ? DiscountValueTypeEnum.PERCENTAGE
               : formData.discountType === DiscountTypeEnum.VALUE_FIXED
-              ? DiscountValueTypeEnum.FIXED
-              : DiscountValueTypeEnum.PERCENTAGE,
-          endDate: formData.hasEndDate
-            ? joinDateTime(formData.endDate, formData.endTime)
-            : null,
+                ? DiscountValueTypeEnum.FIXED
+                : DiscountValueTypeEnum.PERCENTAGE,
+          endDate: formData.hasEndDate ? joinDateTime(formData.endDate, formData.endTime) : null,
           minCheckoutItemsQuantity:
             formData.requirementsPicker !== RequirementsPicker.ITEM
               ? 0
@@ -53,6 +52,8 @@ export function createUpdateHandler(
               ? VoucherTypeEnum.SHIPPING
               : formData.type,
           usageLimit: formData.hasUsageLimit ? formData.usageLimit : null,
+          singleUse: formData.singleUse,
+          addCodes: formData.codes.map(({ code }) => code),
         },
       }).then(({ data }) => data?.voucherUpdate.errors ?? []),
 

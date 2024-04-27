@@ -14,20 +14,15 @@ const useStyles = makeStyles(
 
 interface FilterTabsProps {
   children?: React.ReactNode;
-  currentTab: number;
+  currentTab: number | undefined;
 }
 
 export const FilterTabs: React.FC<FilterTabsProps> = props => {
   const { children, currentTab } = props;
-
   const classes = useStyles(props);
 
   return (
-    <Tabs
-      className={classes.tabsRoot}
-      value={currentTab}
-      indicatorColor={"primary"}
-    >
+    <Tabs className={classes.tabsRoot} value={currentTab} indicatorColor={"primary"}>
       {children}
     </Tabs>
   );

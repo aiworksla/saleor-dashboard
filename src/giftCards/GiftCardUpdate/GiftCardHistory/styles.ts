@@ -1,13 +1,19 @@
+// @ts-strict-ignore
 import { makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
 
 const useStyles = makeStyles(
-  theme => ({
+  {
     header: {
       fontWeight: 500,
-      marginBottom: theme.spacing(1),
+      marginBottom: vars.spacing.px,
     },
-    root: { marginTop: theme.spacing(4) },
-  }),
+    root: {
+      marginTop: vars.spacing[1.5],
+      paddingLeft: vars.spacing[6],
+      paddingRight: vars.spacing[6],
+    },
+  },
   { name: "GiftCardHistory" },
 );
 

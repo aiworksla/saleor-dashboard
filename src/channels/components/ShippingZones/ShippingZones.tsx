@@ -1,9 +1,9 @@
+import { ChannelShippingZones } from "@dashboard/channels/pages/ChannelDetailsPage/types";
+import CardTitle from "@dashboard/components/CardTitle";
+import { SearchShippingZonesQuery } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import { ChannelShippingZones } from "@saleor/channels/pages/ChannelDetailsPage/types";
-import CardTitle from "@saleor/components/CardTitle";
-import { SearchShippingZonesQuery } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -32,19 +32,18 @@ const ShippingZones: React.FC<ShippingZonesProps> = props => {
     shippingZones,
     shippingZonesChoices,
   } = props;
-
   const intl = useIntl();
 
   return (
-    <Card>
+    <Card data-test-id="shipping-zones-section">
       <CardTitle title={intl.formatMessage(sectionNames.shippingZones)} />
       <CardContent>
         <Typography>{intl.formatMessage(messages.subtitle)}</Typography>
       </CardContent>
       <AssignmentList
         loading={loading}
-        items={shippingZones}
-        itemsChoices={shippingZonesChoices}
+        items={shippingZones!}
+        itemsChoices={shippingZonesChoices!}
         addItem={addShippingZone}
         removeItem={removeShippingZone}
         searchItems={searchShippingZones}

@@ -1,11 +1,11 @@
-import { WindowTitle } from "@saleor/components/WindowTitle";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
 import {
   CountryCode,
   useShopSettingsUpdateMutation,
   useSiteSettingsQuery,
-} from "@saleor/graphql";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages, sectionNames } from "@saleor/intl";
+} from "@dashboard/graphql";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages, sectionNames } from "@dashboard/intl";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -23,18 +23,13 @@ export interface SiteSettingsProps {
 export const SiteSettings: React.FC<SiteSettingsProps> = () => {
   const notify = useNotifier();
   const intl = useIntl();
-
   const siteSettings = useSiteSettingsQuery({
     displayLoader: true,
   });
-
-  const [
-    updateShopSettings,
-    updateShopSettingsOpts,
-  ] = useShopSettingsUpdateMutation({
+  const [updateShopSettings, updateShopSettingsOpts] = useShopSettingsUpdateMutation({
     onCompleted: data => {
       if (
-        [...data.shopAddressUpdate.errors, ...data.shopSettingsUpdate.errors]
+        [...(data?.shopAddressUpdate?.errors || []), ...(data?.shopSettingsUpdate?.errors || [])]
           .length === 0
       ) {
         notify({
@@ -44,13 +39,11 @@ export const SiteSettings: React.FC<SiteSettingsProps> = () => {
       }
     },
   });
-
   const errors = [
-    ...(updateShopSettingsOpts.data?.shopSettingsUpdate.errors || []),
-    ...(updateShopSettingsOpts.data?.shopAddressUpdate.errors || []),
+    ...(updateShopSettingsOpts.data?.shopSettingsUpdate?.errors || []),
+    ...(updateShopSettingsOpts.data?.shopAddressUpdate?.errors || []),
   ];
   const loading = siteSettings.loading || updateShopSettingsOpts.loading;
-
   const handleUpdateShopSettings = async (data: SiteSettingsPageFormData) => {
     const addressInput = areAddressInputFieldsModified(data)
       ? {
@@ -73,10 +66,10 @@ export const SiteSettings: React.FC<SiteSettingsProps> = () => {
           addressInput,
           shopSettingsInput: {
             description: data.description,
-            reserveStockDurationAnonymousUser:
-              data.reserveStockDurationAnonymousUser || null,
+            reserveStockDurationAnonymousUser: data.reserveStockDurationAnonymousUser || null,
             reserveStockDurationAuthenticatedUser:
               data.reserveStockDurationAuthenticatedUser || null,
+            enableAccountConfirmationByEmail: data.emailConfirmation,
           },
         },
       }),

@@ -1,3 +1,9 @@
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import useSearchQuery from "@dashboard/hooks/useSearchQuery";
+import useScrollableDialogStyle from "@dashboard/styles/useScrollableDialogStyle";
+import { DialogProps, FetchMoreProps, Node } from "@dashboard/types";
 import {
   CircularProgress,
   Dialog,
@@ -8,18 +14,12 @@ import {
   TableCell,
   TextField,
 } from "@material-ui/core";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import TableRowLink from "@saleor/components/TableRowLink";
-import useSearchQuery from "@saleor/hooks/useSearchQuery";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import useScrollableDialogStyle from "@saleor/styles/useScrollableDialogStyle";
-import { DialogProps, FetchMoreProps, Node } from "@saleor/types";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 import BackButton from "../BackButton";
 import Checkbox from "../Checkbox";
-import ConfirmButton from "../ConfirmButton";
+import { ConfirmButton } from "../ConfirmButton";
 import { useStyles } from "./styles";
 
 export interface AssignContainerDialogFormData {
@@ -28,39 +28,34 @@ export interface AssignContainerDialogFormData {
 }
 
 type Labels = Record<"confirmBtn" | "title" | "label" | "placeholder", string>;
-interface Container extends Node {
+export interface Container extends Node {
   name: string;
 }
-export interface AssignContainerDialogProps
-  extends FetchMoreProps,
-    DialogProps {
+export interface AssignContainerDialogProps extends FetchMoreProps, DialogProps {
   confirmButtonState: ConfirmButtonTransitionState;
   containers: Container[];
   loading: boolean;
   labels: Labels;
   onFetch: (value: string) => void;
-  onSubmit: (data: string[]) => void;
+  onSubmit: (data: Container[]) => void;
 }
 
 function handleContainerAssign(
-  containerId: string,
+  container: Container,
   isSelected: boolean,
-  selectedContainers: string[],
-  setSelectedContainers: (data: string[]) => void,
+  selectedContainers: Container[],
+  setSelectedContainers: (data: Container[]) => void,
 ) {
   if (isSelected) {
     setSelectedContainers(
-      selectedContainers.filter(
-        selectedContainer => selectedContainer !== containerId,
-      ),
+      selectedContainers.filter(selectedContainer => selectedContainer.id !== container.id),
     );
   } else {
-    setSelectedContainers([...selectedContainers, containerId]);
+    setSelectedContainers([...selectedContainers, container]);
   }
 }
 
 const scrollableTargetId = "assignContainerScrollableDialog";
-
 const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
   const {
     confirmButtonState,
@@ -76,23 +71,23 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
   } = props;
   const classes = useStyles(props);
   const scrollableDialogClasses = useScrollableDialogStyle({});
-
-  const [query, onQueryChange] = useSearchQuery(onFetch);
-  const [selectedContainers, setSelectedContainers] = React.useState<string[]>(
-    [],
-  );
-
+  const [query, onQueryChange, queryReset] = useSearchQuery(onFetch);
+  const [selectedContainers, setSelectedContainers] = React.useState<Container[]>([]);
   const handleSubmit = () => onSubmit(selectedContainers);
+  const handleClose = () => {
+    queryReset();
+    onClose();
+  };
 
   return (
     <Dialog
-      onClose={onClose}
+      onClose={handleClose}
       open={open}
       classes={{ paper: scrollableDialogClasses.dialog }}
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>{labels.title}</DialogTitle>
+      <DialogTitle disableTypography>{labels.title}</DialogTitle>
       <DialogContent>
         <TextField
           name="query"
@@ -107,10 +102,7 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
           }}
         />
       </DialogContent>
-      <DialogContent
-        className={scrollableDialogClasses.scrollArea}
-        id={scrollableTargetId}
-      >
+      <DialogContent className={scrollableDialogClasses.scrollArea} id={scrollableTargetId}>
         <InfiniteScroll
           dataLength={containers?.length}
           next={onFetchMore}
@@ -127,20 +119,17 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
             <TableBody>
               {containers?.map(container => {
                 const isSelected = !!selectedContainers.find(
-                  selectedContainer => selectedContainer === container.id,
+                  selectedContainer => selectedContainer.id === container.id,
                 );
 
                 return (
-                  <TableRowLink key={container.id}>
-                    <TableCell
-                      padding="checkbox"
-                      className={classes.checkboxCell}
-                    >
+                  <TableRowLink key={container.id} data-test-id="dialog-row">
+                    <TableCell padding="checkbox" className={classes.checkboxCell}>
                       <Checkbox
                         checked={isSelected}
                         onChange={() =>
                           handleContainerAssign(
-                            container.id,
+                            container,
                             isSelected,
                             selectedContainers,
                             setSelectedContainers,
@@ -148,7 +137,7 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
                         }
                       />
                     </TableCell>
-                    <TableCell className={classes.wideCell}>
+                    <TableCell className={classes.wideCell} data-test-id={container.name}>
                       {container.name}
                     </TableCell>
                   </TableRowLink>
@@ -161,6 +150,7 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
       <DialogActions>
         <BackButton onClick={onClose} />
         <ConfirmButton
+          data-test-id="assign-and-save-button"
           transitionState={confirmButtonState}
           type="submit"
           onClick={handleSubmit}
@@ -171,5 +161,6 @@ const AssignContainerDialog: React.FC<AssignContainerDialogProps> = props => {
     </Dialog>
   );
 };
+
 AssignContainerDialog.displayName = "AssignContainerDialog";
 export default AssignContainerDialog;

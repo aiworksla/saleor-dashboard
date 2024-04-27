@@ -1,7 +1,8 @@
-import useForm, { SubmitPromise, UseFormResult } from "@saleor/hooks/useForm";
+// @ts-strict-ignore
+import useForm, { SubmitPromise, UseFormResult } from "@dashboard/hooks/useForm";
 import React from "react";
 
-import { FormId } from "./ExitFormDialogProvider";
+import { FormId } from "./types";
 
 export type CheckIfSaveIsDisabledFnType<T> = (data: T) => boolean;
 
@@ -14,6 +15,7 @@ export interface FormProps<TData, TErrors>
   onSubmit?: (data: TData) => SubmitPromise<TErrors[]> | void;
   formId?: FormId;
   checkIfSaveIsDisabled?: CheckIfSaveIsDisabledFnType<TData>;
+  mergeData?: boolean;
 }
 
 function Form<TData, Terrors>({
@@ -25,6 +27,7 @@ function Form<TData, Terrors>({
   formId,
   checkIfSaveIsDisabled,
   disabled,
+  mergeData,
   ...rest
 }: FormProps<TData, Terrors>) {
   const renderProps = useForm(initial, onSubmit, {
@@ -32,9 +35,10 @@ function Form<TData, Terrors>({
     formId,
     checkIfSaveIsDisabled,
     disabled,
+    mergeData,
   });
 
-  function handleSubmit(event?: React.FormEvent<any>, cb?: () => void) {
+  function handleSubmit(event?: React.FormEvent<HTMLFormElement>, cb?: () => void) {
     const { reset, submit } = renderProps;
 
     if (event) {

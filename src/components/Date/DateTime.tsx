@@ -1,4 +1,5 @@
-import { Tooltip } from "@material-ui/core";
+// @ts-strict-ignore
+import { Tooltip } from "@saleor/macaw-ui-next";
 import moment from "moment-timezone";
 import React from "react";
 import ReactMoment from "react-moment";
@@ -6,7 +7,6 @@ import ReactMoment from "react-moment";
 import { LocaleConsumer } from "../Locale";
 import { TimezoneConsumer } from "../Timezone";
 import { Consumer } from "./DateContext";
-import { useStyles } from "./styles";
 
 interface DateTimeProps {
   date: string;
@@ -14,13 +14,13 @@ interface DateTimeProps {
 }
 
 export const DateTime: React.FC<DateTimeProps> = ({ date, plain }) => {
-  const classes = useStyles();
-
   const getTitle = (value: string, locale?: string, tz?: string) => {
     let date = moment(value).locale(locale);
+
     if (tz !== undefined) {
       date = date.tz(tz);
     }
+
     return date.format("lll");
   };
 
@@ -34,15 +34,18 @@ export const DateTime: React.FC<DateTimeProps> = ({ date, plain }) => {
                 plain ? (
                   getTitle(date, locale, tz)
                 ) : (
-                  <Tooltip
-                    title={getTitle(date, locale, tz)}
-                    PopperProps={{
-                      className: classes.tooltip,
-                    }}
-                  >
-                    <ReactMoment from={currentDate} locale={locale} tz={tz}>
-                      {date}
-                    </ReactMoment>
+                  <Tooltip>
+                    <Tooltip.Trigger>
+                      <div>
+                        <ReactMoment from={currentDate} locale={locale} tz={tz}>
+                          {date}
+                        </ReactMoment>
+                      </div>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content side="bottom">
+                      <Tooltip.Arrow />
+                      {getTitle(date, locale, tz)}
+                    </Tooltip.Content>
                   </Tooltip>
                 )
               }

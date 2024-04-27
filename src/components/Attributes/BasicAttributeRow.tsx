@@ -1,52 +1,61 @@
-import { Typography } from "@material-ui/core";
-import HelpOutline from "@material-ui/icons/HelpOutline";
-import Grid from "@saleor/components/Grid";
-import { Tooltip } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { Box, InfoIcon, sprinkles, Text, Tooltip } from "@saleor/macaw-ui-next";
 import React from "react";
-
-import { useBasicAttributeStyles } from "./styles";
 
 interface BasicAttributeRowProps {
   label: string | React.ReactNode;
   description?: string | React.ReactNode;
-  flexValueContainer?: boolean;
+  id?: string;
+  clickableLabel?: boolean;
 }
 
-const BasicAttributeRow: React.FC<BasicAttributeRowProps> = ({
+const capitalize = (str: BasicAttributeRowProps["label"]) =>
+  typeof str === "string" ? str.charAt(0).toUpperCase() + str.slice(1) : str;
+
+export const BasicAttributeRow: React.FC<BasicAttributeRowProps> = ({
   label,
   description,
   children,
-  flexValueContainer,
-}) => {
-  const classes = useBasicAttributeStyles();
-
-  return (
-    <Grid className={classes.attributeSection} variant="uniform">
-      <div
-        className={classes.attributeSectionLabel}
-        data-test-id="attribute-label"
-      >
-        <Typography>
-          {label}
-          {description && (
-            <Tooltip title={description}>
-              <HelpOutline className={classes.tooltipIcon} />
-            </Tooltip>
-          )}
-        </Typography>
-      </div>
-      <div
-        data-test-id="attribute-value"
-        className={classNames(classes.value, {
-          [classes.flex]: flexValueContainer,
-        })}
-      >
-        {children}
-      </div>
-    </Grid>
-  );
-};
-
-BasicAttributeRow.displayName = "BasicAttributeRow";
-export default BasicAttributeRow;
+  id,
+  clickableLabel = false,
+}) => (
+  <Box
+    as="li"
+    justifyContent="space-between"
+    alignItems="center"
+    paddingY={2}
+    display="grid"
+    gridTemplateColumns={2}
+    __gridTemplateColumns="1fr 2fr"
+    gap={5}
+  >
+    <Box
+      data-test-id="attribute-label"
+      as="label"
+      htmlFor={id}
+      display="flex"
+      gap={1}
+      cursor={clickableLabel ? "pointer" : "auto"}
+    >
+      <Text>{capitalize(label)}</Text>
+      {description && (
+        <Tooltip>
+          <Tooltip.Trigger>
+            <Box>
+              <InfoIcon
+                size="small"
+                className={sprinkles({
+                  display: "block",
+                })}
+              />
+            </Box>
+          </Tooltip.Trigger>
+          <Tooltip.Content side="top">
+            <Tooltip.Arrow />
+            {description}
+          </Tooltip.Content>
+        </Tooltip>
+      )}
+    </Box>
+    <Box data-test-id="attribute-value">{children}</Box>
+  </Box>
+);

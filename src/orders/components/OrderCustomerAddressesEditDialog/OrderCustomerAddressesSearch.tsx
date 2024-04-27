@@ -1,3 +1,11 @@
+// @ts-strict-ignore
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import CustomerAddressChoiceCard from "@dashboard/customers/components/CustomerAddressChoiceCard";
+import { AddressFragment, AddressTypeEnum } from "@dashboard/graphql";
+import { FormChange } from "@dashboard/hooks/useForm";
+import { buttonMessages } from "@dashboard/intl";
+import { getById } from "@dashboard/misc";
 import {
   Checkbox,
   DialogActions,
@@ -6,21 +14,10 @@ import {
   InputAdornment,
   TextField,
 } from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import { ConfirmButton } from "@saleor/components/ConfirmButton";
-import CustomerAddressChoiceCard from "@saleor/customers/components/CustomerAddressChoiceCard";
-import { AddressFragment, AddressTypeEnum } from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
-import { buttonMessages } from "@saleor/intl";
-import {
-  Button,
-  ConfirmButtonTransitionState,
-  SearchIcon,
-} from "@saleor/macaw-ui";
+import { Button, SearchIcon } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { getById } from "../OrderReturnPage/utils";
 import { dialogMessages as messages } from "./messages";
 import { useStyles } from "./styles";
 import { parseQuery, stringifyAddress } from "./utils";
@@ -35,7 +32,7 @@ export interface OrderCustomerAddressesSearchProps {
   customerAddresses: AddressFragment[];
   onChangeCustomerShippingAddress: (customerAddress: AddressFragment) => void;
   onChangeCustomerBillingAddress: (customerAddress: AddressFragment) => void;
-  exitSearch();
+  exitSearch: () => any;
 }
 
 const OrderCustomerAddressesSearch: React.FC<OrderCustomerAddressesSearchProps> = props => {
@@ -51,35 +48,25 @@ const OrderCustomerAddressesSearch: React.FC<OrderCustomerAddressesSearchProps> 
     onChangeCustomerBillingAddress,
     exitSearch,
   } = props;
-
   const intl = useIntl();
   const classes = useStyles(props);
-
-  const initialAddress = customerAddresses.find(
-    getById(selectedCustomerAddressId),
-  );
-
+  const initialAddress = customerAddresses.find(getById(selectedCustomerAddressId));
   const [query, setQuery] = React.useState("");
-  const [
-    temporarySelectedAddress,
-    setTemporarySelectedAddress,
-  ] = React.useState(initialAddress);
-
+  const [temporarySelectedAddress, setTemporarySelectedAddress] = React.useState(initialAddress);
   const handleSelect = () => {
     if (type === AddressTypeEnum.SHIPPING) {
       onChangeCustomerShippingAddress(temporarySelectedAddress);
     } else {
       onChangeCustomerBillingAddress(temporarySelectedAddress);
     }
+
     if (openFromCustomerChange) {
       exitSearch();
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
-
   const filteredCustomerAddresses = customerAddresses.filter(address => {
     const parsedAddress = stringifyAddress(address);
 

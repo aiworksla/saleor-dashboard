@@ -1,26 +1,22 @@
-import { Typography } from "@material-ui/core";
-import { Channel as ChannelList, ChannelData } from "@saleor/channels/utils";
-import Hr from "@saleor/components/Hr";
-import { PermissionEnum } from "@saleor/graphql";
-import useDateLocalize from "@saleor/hooks/useDateLocalize";
-import { RequireOnlyOne } from "@saleor/misc";
+// @ts-strict-ignore
+import { Channel as ChannelList, ChannelData } from "@dashboard/channels/utils";
+import { PermissionEnum } from "@dashboard/graphql";
+import useDateLocalize from "@dashboard/hooks/useDateLocalize";
+import { RequireOnlyOne } from "@dashboard/misc";
+import { Box, Divider, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
-import ChannelAvailabilityItemContent from "./Channel/ChannelAvailabilityItemContent";
-import ChannelAvailabilityItemWrapper from "./Channel/ChannelAvailabilityItemWrapper";
-import ChannelsAvailabilityCardWrapper, {
+import { ChannelAvailabilityItemContent, ChannelAvailabilityItemWrapper } from "./Channel";
+import {
+  ChannelsAvailabilityCardWrapper,
   ChannelsAvailabilityWrapperProps,
 } from "./ChannelsAvailabilityCardWrapper";
-import { useStyles } from "./styles";
 import { ChannelOpts, ChannelsAvailabilityError, Messages } from "./types";
 import { getChannelsAvailabilityMessages } from "./utils";
 
 export interface ChannelsAvailability
-  extends Omit<
-    ChannelsAvailabilityWrapperProps,
-    "children" | "selectedChannelsCount"
-  > {
+  extends Omit<ChannelsAvailabilityWrapperProps, "children" | "selectedChannelsCount"> {
   channels: ChannelData[];
   /** Channels that have no settings */
   channelsList: ChannelList[];
@@ -49,8 +45,6 @@ export const ChannelsAvailability: React.FC<ChannelsAvailabilityCardProps> = pro
   } = props;
   const intl = useIntl();
   const localizeDate = useDateLocalize();
-  const classes = useStyles({});
-
   const channelsMessages = getChannelsAvailabilityMessages({
     messages,
     channels,
@@ -67,15 +61,10 @@ export const ChannelsAvailability: React.FC<ChannelsAvailabilityCardProps> = pro
     >
       {channels
         ? channels.map(data => {
-            const channelErrors =
-              errors?.filter(error => error.channels.includes(data.id)) || [];
+            const channelErrors = errors?.filter(error => error.channels.includes(data.id)) || [];
 
             return (
-              <ChannelAvailabilityItemWrapper
-                messages={messages}
-                data={data}
-                key={data.id}
-              >
+              <ChannelAvailabilityItemWrapper messages={messages} data={data} key={data.id}>
                 <ChannelAvailabilityItemContent
                   data={data}
                   onChange={onChange}
@@ -86,17 +75,15 @@ export const ChannelsAvailability: React.FC<ChannelsAvailabilityCardProps> = pro
             );
           })
         : channelsList
-        ? channelsList.map(data => (
-            <React.Fragment key={data.id}>
-              <div className={classes.channelItem}>
-                <div className={classes.channelName}>
-                  <Typography>{data.name}</Typography>
-                </div>
-              </div>
-              <Hr className={classes.hr} />
-            </React.Fragment>
-          ))
-        : null}
+          ? channelsList.map(data => (
+              <React.Fragment key={data.id}>
+                <Box>
+                  <Text>{data.name}</Text>
+                </Box>
+                <Divider />
+              </React.Fragment>
+            ))
+          : null}
     </ChannelsAvailabilityCardWrapper>
   );
 };

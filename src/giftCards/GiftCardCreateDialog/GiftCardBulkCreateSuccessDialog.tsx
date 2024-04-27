@@ -1,12 +1,6 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import { DialogProps } from "@saleor/types";
+import { Button } from "@dashboard/components/Button";
+import { DialogProps } from "@dashboard/types";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@material-ui/core";
 import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -24,7 +18,6 @@ const GiftCardBulkCreateSuccessDialog: React.FC<GiftCardBulkCreateSuccessDialogP
 }) => {
   const intl = useIntl();
   const [openEmailExport, setOpenEmailExport] = useState(false);
-
   const onExportDialogClose = () => {
     setOpenEmailExport(false);
     onClose();
@@ -33,13 +26,11 @@ const GiftCardBulkCreateSuccessDialog: React.FC<GiftCardBulkCreateSuccessDialogP
   return (
     <>
       <Dialog open={open} maxWidth="sm">
-        <DialogTitle>
+        <DialogTitle disableTypography>
           {intl.formatMessage(messages.bulkCreateIssuedTitle)}
         </DialogTitle>
         <DialogContent>
-          <Typography>
-            {intl.formatMessage(messages.bulkCreateIssuedExplanation)}
-          </Typography>
+          <Typography>{intl.formatMessage(messages.bulkCreateIssuedExplanation)}</Typography>
         </DialogContent>
         <DialogActions>
           <Button variant="secondary" onClick={() => setOpenEmailExport(true)}>
@@ -51,10 +42,7 @@ const GiftCardBulkCreateSuccessDialog: React.FC<GiftCardBulkCreateSuccessDialogP
         </DialogActions>
       </Dialog>
       <Dialog open={openEmailExport} maxWidth="sm">
-        <GiftCardExportDialogContent
-          idsToExport={idsToExport}
-          onClose={onExportDialogClose}
-        />
+        <GiftCardExportDialogContent idsToExport={idsToExport} onClose={onExportDialogClose} />
       </Dialog>
     </>
   );

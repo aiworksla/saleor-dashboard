@@ -1,30 +1,29 @@
+// @ts-strict-ignore
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import {
+  MoneyFragment,
   OrderDetailsFragment,
   useOrderDiscountAddMutation,
   useOrderDiscountDeleteMutation,
   useOrderDiscountUpdateMutation,
-} from "@saleor/graphql";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { getDefaultNotifierSuccessErrorData } from "@saleor/hooks/useNotifier/utils";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { OrderDiscountCommonInput } from "@saleor/orders/components/OrderDiscountCommonModal/types";
+} from "@dashboard/graphql";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { getDefaultNotifierSuccessErrorData } from "@dashboard/hooks/useNotifier/utils";
+import { OrderDiscountCommonInput } from "@dashboard/orders/components/OrderDiscountCommonModal/types";
 import React, { createContext } from "react";
 import { useIntl } from "react-intl";
 
 import { OrderDiscountConsumerCommonProps, OrderDiscountData } from "./types";
-import {
-  getManualOrderDiscount,
-  getParsedDiscountData,
-  useDiscountDialog,
-} from "./utils";
+import { getManualOrderDiscount, getParsedDiscountData, useDiscountDialog } from "./utils";
 
-export interface OrderDiscountContextConsumerProps
-  extends OrderDiscountConsumerCommonProps {
+export interface OrderDiscountContextConsumerProps extends OrderDiscountConsumerCommonProps {
   orderDiscountAddStatus: ConfirmButtonTransitionState;
   orderDiscountRemoveStatus: ConfirmButtonTransitionState;
   orderDiscount?: OrderDiscountData;
   addOrderDiscount: (data: OrderDiscountCommonInput) => void;
   removeOrderDiscount: () => void;
+  discountedPrice: MoneyFragment;
+  undiscountedPrice: MoneyFragment;
 }
 
 interface OrderDiscountProviderProps {
@@ -38,39 +37,22 @@ export const OrderDiscountProvider: React.FC<OrderDiscountProviderProps> = ({
 }) => {
   const intl = useIntl();
   const notify = useNotifier();
-
   const { id: orderId } = order;
-
   const { isDialogOpen, openDialog, closeDialog } = useDiscountDialog();
-
   const orderDiscount = getManualOrderDiscount(order);
-
   const [orderDiscountAdd, orderDiscountAddOpts] = useOrderDiscountAddMutation({
-    onCompleted: ({ orderDiscountAdd: { errors } }) =>
-      handleDiscountDataSubmission(errors),
+    onCompleted: ({ orderDiscountAdd: { errors } }) => handleDiscountDataSubmission(errors),
   });
-
-  const [
-    orderDiscountUpdate,
-    orderDiscountUpdateOpts,
-  ] = useOrderDiscountUpdateMutation({
-    onCompleted: ({ orderDiscountUpdate: { errors } }) =>
-      handleDiscountDataSubmission(errors),
+  const [orderDiscountUpdate, orderDiscountUpdateOpts] = useOrderDiscountUpdateMutation({
+    onCompleted: ({ orderDiscountUpdate: { errors } }) => handleDiscountDataSubmission(errors),
   });
-
-  const [
-    orderDiscountRemove,
-    orderDiscountRemoveOpts,
-  ] = useOrderDiscountDeleteMutation({
-    onCompleted: ({ orderDiscountDelete: { errors } }) =>
-      handleDiscountDataSubmission(errors),
+  const [orderDiscountRemove, orderDiscountRemoveOpts] = useOrderDiscountDeleteMutation({
+    onCompleted: ({ orderDiscountDelete: { errors } }) => handleDiscountDataSubmission(errors),
   });
-
   const handleDiscountDataSubmission = (errors: any[]) => {
     closeDialog();
     notify(getDefaultNotifierSuccessErrorData(errors, intl));
   };
-
   const addOrderDiscount = (data: OrderDiscountCommonInput) =>
     orderDiscountAdd({
       variables: {
@@ -78,7 +60,6 @@ export const OrderDiscountProvider: React.FC<OrderDiscountProviderProps> = ({
         input: getParsedDiscountData(data),
       },
     });
-
   const updateOrderDiscount = (data: OrderDiscountCommonInput) =>
     orderDiscount &&
     orderDiscountUpdate({
@@ -87,19 +68,15 @@ export const OrderDiscountProvider: React.FC<OrderDiscountProviderProps> = ({
         input: getParsedDiscountData(data),
       },
     });
-
   const removeOrderDiscount = () =>
     orderDiscount &&
-    orderDiscountRemove({ variables: { discountId: orderDiscount.id } });
-
-  const orderDiscountAction = orderDiscount
-    ? updateOrderDiscount
-    : addOrderDiscount;
-
+    orderDiscountRemove({
+      variables: { discountId: orderDiscount.id },
+    });
+  const orderDiscountAction = orderDiscount ? updateOrderDiscount : addOrderDiscount;
   const orderDiscountAddStatus = orderDiscount
     ? orderDiscountUpdateOpts.status
     : orderDiscountAddOpts.status;
-
   const discountProviderValues: OrderDiscountContextConsumerProps = {
     orderDiscountAddStatus,
     orderDiscountRemoveStatus: orderDiscountRemoveOpts.status,
@@ -120,6 +97,4 @@ export const OrderDiscountProvider: React.FC<OrderDiscountProviderProps> = ({
   );
 };
 
-export const OrderDiscountContext = createContext<
-  OrderDiscountContextConsumerProps
->(null);
+export const OrderDiscountContext = createContext<OrderDiscountContextConsumerProps>(null);

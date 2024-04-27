@@ -1,7 +1,7 @@
-import { IFilter } from "@saleor/components/Filter";
-import { StaffMemberStatus } from "@saleor/graphql";
-import { FilterOpts } from "@saleor/types";
-import { createOptionsField } from "@saleor/utils/filters/fields";
+import { IFilter } from "@dashboard/components/Filter";
+import { StaffMemberStatus } from "@dashboard/graphql";
+import { FilterOpts } from "@dashboard/types";
+import { createOptionsField } from "@dashboard/utils/filters/fields";
 import { defineMessages, IntlShape } from "react-intl";
 
 export enum StaffFilterKeys {
@@ -9,7 +9,7 @@ export enum StaffFilterKeys {
 }
 
 export interface StaffListFilterOpts {
-  status: FilterOpts<StaffMemberStatus>;
+  status: FilterOpts<StaffMemberStatus | null>;
 }
 
 const messages = defineMessages({
@@ -39,7 +39,7 @@ export function createFilterStructure(
       ...createOptionsField(
         StaffFilterKeys.status,
         intl.formatMessage(messages.status),
-        [opts.status.value],
+        [opts.status.value ?? ""],
         false,
         [
           {

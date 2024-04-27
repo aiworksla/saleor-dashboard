@@ -3,11 +3,8 @@
 
 import faker from "faker";
 
-import {
-  CATEGORIES_LIST,
-  categoryRow,
-} from "../../elements/catalog/categories/categories-list";
-import { CATEGORY_DETAILS } from "../../elements/catalog/categories/category-details";
+import { CATEGORIES_LIST_SELECTORS } from "../../elements/catalog/categories/categories-list";
+import { CATEGORY_DETAILS_SELECTORS } from "../../elements/catalog/categories/category-details";
 import { BUTTON_SELECTORS } from "../../elements/shared/button-selectors";
 import { SHARED_ELEMENTS } from "../../elements/shared/sharedElements";
 import { categoryDetailsUrl, urlList } from "../../fixtures/urlList";
@@ -15,10 +12,9 @@ import {
   createCategory as createCategoryRequest,
   getCategory,
 } from "../../support/api/requests/Category";
-import { deleteCategoriesStartsWith } from "../../support/api/utils/catalog/categoryUtils";
 import * as channelsUtils from "../../support/api/utils/channelsUtils";
 import * as productsUtils from "../../support/api/utils/products/productsUtils";
-import { deleteShippingStartsWith } from "../../support/api/utils/shippingUtils";
+import { ensureCanvasStatic } from "../../support/customCommands/sharedElementsOperations/canvas";
 import {
   createCategory,
   updateCategory,
@@ -36,11 +32,7 @@ describe("As an admin I want to manage categories", () => {
   let defaultChannel;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    productsUtils.deleteProductsStartsWith(startsWith);
-    deleteCategoriesStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
-    channelsUtils.deleteChannelsStartsWith(startsWith);
+    cy.loginUserViaRequest();
 
     channelsUtils
       .getDefaultChannel()
@@ -66,11 +58,20 @@ describe("As an admin I want to manage categories", () => {
           });
         },
       )
-      .then(({ product: productResp }) => (product = productResp));
+      .then(({ product: productResp }) => {
+        product = productResp;
+        cy.checkIfDataAreNotNull({
+          attribute,
+          category,
+          productType,
+          product,
+          defaultChannel,
+        });
+      });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
@@ -80,7 +81,7 @@ describe("As an admin I want to manage categories", () => {
       const categoryName = `${startsWith}${faker.datatype.number()}`;
 
       cy.visit(urlList.categories)
-        .get(CATEGORIES_LIST.addCategoryButton)
+        .get(CATEGORIES_LIST_SELECTORS.addCategoryButton)
         .click();
       createCategory({ name: categoryName, description: categoryName })
         .its("response.body.data.categoryCreate.category")
@@ -102,12 +103,17 @@ describe("As an admin I want to manage categories", () => {
       const categoryName = `${startsWith}${faker.datatype.number()}`;
 
       cy.visit(categoryDetailsUrl(category.id))
-        .get(CATEGORY_DETAILS.createSubcategoryButton)
+        .get(CATEGORY_DETAILS_SELECTORS.createSubcategoryButton)
         .click();
       createCategory({ name: categoryName, description: categoryName })
         .visit(categoryDetailsUrl(category.id))
-        .contains(CATEGORY_DETAILS.categoryChildrenRow, categoryName)
-        .should("be.visible");
+        .get(SHARED_ELEMENTS.dataGridTable)
+        .scrollIntoView();
+      ensureCanvasStatic(SHARED_ELEMENTS.dataGridTable);
+
+      cy.contains(SHARED_ELEMENTS.dataGridTable, categoryName).should(
+        "be.visible",
+      );
       getCategory(category.id).then(categoryResp => {
         expect(categoryResp.children.edges[0].node.name).to.eq(categoryName);
       });
@@ -119,9 +125,9 @@ describe("As an admin I want to manage categories", () => {
     { tags: ["@category", "@allEnv", "@stable"] },
     () => {
       cy.visit(categoryDetailsUrl(category.id))
-        .get(CATEGORY_DETAILS.productsTab)
+        .get(CATEGORY_DETAILS_SELECTORS.productsTab)
         .click()
-        .get(CATEGORY_DETAILS.addProducts)
+        .get(CATEGORY_DETAILS_SELECTORS.addProducts)
         .click()
         .url()
         .should("include", urlList.addProduct);
@@ -130,21 +136,24 @@ describe("As an admin I want to manage categories", () => {
 
   it(
     "should be able to remove product from category. TC: SALEOR_0204",
-    { tags: ["@category", "@allEnv"] },
+    { tags: ["@category", "@allEnv", "@stable"] },
     () => {
+      cy.addAliasToGraphRequest("productBulkDelete");
       cy.visit(categoryDetailsUrl(category.id))
-        .get(CATEGORY_DETAILS.productsTab)
+        .get(CATEGORY_DETAILS_SELECTORS.productsTab)
         .click();
-      cy.contains(CATEGORY_DETAILS.productRow, product.name)
-        .find(BUTTON_SELECTORS.checkbox)
+      ensureCanvasStatic(SHARED_ELEMENTS.dataGridTable);
+      cy.contains(SHARED_ELEMENTS.dataGridTable, product.name).should(
+        "be.visible",
+      );
+      // selects first row
+      cy.clickGridCell(0, 0);
+      cy.get(CATEGORY_DETAILS_SELECTORS.deleteCategoriesButton)
         .click()
-        .get(BUTTON_SELECTORS.deleteIcon)
-        .click()
-        .addAliasToGraphRequest("productBulkDelete")
         .get(BUTTON_SELECTORS.submit)
         .click()
         .confirmationMessageShouldDisappear();
-      cy.contains(CATEGORY_DETAILS.productRow, product.name)
+      cy.contains(SHARED_ELEMENTS.dataGridTable, product.name)
         .should("not.exist")
         .waitForRequestAndCheckIfNoErrors("@productBulkDelete");
       getCategory(category.id).then(categoryResp => {
@@ -155,12 +164,17 @@ describe("As an admin I want to manage categories", () => {
 
   it(
     "should be able to enter category details page. TC: SALEOR_0205",
-    { tags: ["@category", "@allEnv"] },
+    { tags: ["@category", "@allEnv", "@stable"] },
     () => {
       cy.visit(urlList.categories)
         .get(SHARED_ELEMENTS.searchInput)
         .type(category.name);
-      cy.contains(SHARED_ELEMENTS.tableRow, category.name).click();
+      ensureCanvasStatic(SHARED_ELEMENTS.dataGridTable);
+      cy.contains(SHARED_ELEMENTS.dataGridTable, category.name).should(
+        "be.visible",
+      );
+      // opens first row details
+      cy.clickGridCell(1, 0);
       cy.contains(SHARED_ELEMENTS.header, category.name).should("be.visible");
     },
   );
@@ -170,6 +184,7 @@ describe("As an admin I want to manage categories", () => {
     { tags: ["@category", "@allEnv", "@stable"] },
     () => {
       const categoryName = `${startsWith}${faker.datatype.number()}`;
+      cy.addAliasToGraphRequest("CategoryDelete");
 
       createCategoryRequest({
         name: categoryName,
@@ -177,7 +192,6 @@ describe("As an admin I want to manage categories", () => {
         cy.visit(categoryDetailsUrl(categoryResp.id))
           .get(BUTTON_SELECTORS.deleteButton)
           .click()
-          .addAliasToGraphRequest("CategoryDelete")
           .get(BUTTON_SELECTORS.submit)
           .click()
           .waitForRequestAndCheckIfNoErrors("@CategoryDelete");
@@ -214,39 +228,20 @@ describe("As an admin I want to manage categories", () => {
 
   it(
     "should be able to delete several categories on categories list page. TC: SALEOR_0209",
-    { tags: ["@category", "@allEnv"] },
+    { tags: ["@category", "@allEnv", "@stable"] },
     () => {
       const firstCategoryName = `${startsWith}${faker.datatype.number()}`;
       const secondCategoryName = `${startsWith}${faker.datatype.number()}`;
-      let firstCategory;
-      let secondCategory;
+      cy.addAliasToGraphRequest("CategoryBulkDelete");
 
       createCategoryRequest({
         name: firstCategoryName,
-      }).then(categoryResp => {
-        firstCategory = categoryResp;
       });
-
       createCategoryRequest({
         name: secondCategoryName,
-      }).then(categoryResp => {
-        secondCategory = categoryResp;
-        cy.visit(urlList.categories)
-          .searchInTable(startsWith)
-          .get(categoryRow(firstCategory.id))
-          .find(BUTTON_SELECTORS.checkbox)
-          .click()
-          .get(categoryRow(secondCategory.id))
-          .find(BUTTON_SELECTORS.checkbox)
-          .click()
-          .get(BUTTON_SELECTORS.deleteIcon)
-          .click()
-          .addAliasToGraphRequest("CategoryBulkDelete")
-          .get(BUTTON_SELECTORS.submit)
-          .click()
-          .waitForRequestAndCheckIfNoErrors("@CategoryBulkDelete");
-        getCategory(firstCategory.id).should("be.null");
-        getCategory(secondCategory.id).should("be.null");
+      }).then(() => {
+        cy.visit(urlList.categories).searchInTable(startsWith);
+        cy.deleteTwoFirstRecordsFromGridListAndValidate("CategoryBulkDelete");
       });
     },
   );
@@ -259,6 +254,7 @@ describe("As an admin I want to manage categories", () => {
       const mainCategoryName = `${startsWith}${faker.datatype.number()}`;
       let subCategory;
       let mainCategory;
+      cy.addAliasToGraphRequest("CategoryBulkDelete");
 
       createCategoryRequest({
         name: mainCategoryName,
@@ -273,14 +269,16 @@ describe("As an admin I want to manage categories", () => {
         .then(categoryResp => {
           subCategory = categoryResp;
           cy.visit(categoryDetailsUrl(mainCategory.id))
-            .get(categoryRow(subCategory.id))
-            .find(BUTTON_SELECTORS.checkbox)
+            .get(SHARED_ELEMENTS.dataGridTable)
+            .scrollIntoView();
+          ensureCanvasStatic(SHARED_ELEMENTS.dataGridTable);
+          // selects first row of subcategories
+          cy.clickGridCell(0, 0);
+          cy.get(CATEGORY_DETAILS_SELECTORS.deleteCategoriesButton)
             .click()
-            .get(BUTTON_SELECTORS.deleteIcon)
-            .click()
-            .addAliasToGraphRequest("CategoryBulkDelete")
             .get(BUTTON_SELECTORS.submit)
             .click()
+            .confirmationMessageShouldDisappear()
             .waitForRequestAndCheckIfNoErrors("@CategoryBulkDelete");
           getCategory(subCategory.id).should("be.null");
           getCategory(mainCategory.id);

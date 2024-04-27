@@ -1,16 +1,14 @@
+// @ts-strict-ignore
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { getById } from "@dashboard/misc";
+import ModalTitle from "@dashboard/orders/components/OrderDiscountCommonModal/ModalTitle";
 import { Card, CardContent, CircularProgress, Modal } from "@material-ui/core";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import ModalTitle from "@saleor/orders/components/OrderDiscountCommonModal/ModalTitle";
-import { getById } from "@saleor/orders/components/OrderReturnPage/utils";
 import React from "react";
 import { useIntl } from "react-intl";
 
 import { useTypeDeleteWarningDialogStyles as useStyles } from "./styles";
 import ProductTypeDeleteWarningDialogContent from "./TypeDeleteWarningDialogContent";
-import {
-  CommonTypeDeleteWarningMessages,
-  TypeDeleteWarningMessages,
-} from "./types";
+import { CommonTypeDeleteWarningMessages, TypeDeleteWarningMessages } from "./types";
 
 export interface TypeBaseData {
   id: string;
@@ -25,8 +23,7 @@ export interface TypeDeleteMessages {
   multipleWithoutItemsMessages: TypeDeleteWarningMessages;
 }
 
-export interface TypeDeleteWarningDialogProps<T extends TypeBaseData>
-  extends TypeDeleteMessages {
+export interface TypeDeleteWarningDialogProps<T extends TypeBaseData> extends TypeDeleteMessages {
   isOpen: boolean;
   deleteButtonState: ConfirmButtonTransitionState;
   onClose: () => void;
@@ -58,11 +55,8 @@ function TypeDeleteWarningDialog<T extends TypeBaseData>({
 }: TypeDeleteWarningDialogProps<T>) {
   const intl = useIntl();
   const classes = useStyles({});
-
   const showMultiple = typesToDelete.length > 1;
-
   const hasAssignedItems = !!assignedItemsCount;
-
   const selectMessages = () => {
     if (showMultiple) {
       const multipleMessages = hasAssignedItems
@@ -74,21 +68,15 @@ function TypeDeleteWarningDialog<T extends TypeBaseData>({
       };
     }
 
-    const singleMessages = hasAssignedItems
-      ? singleWithItemsMessages
-      : singleWithoutItemsMessages;
+    const singleMessages = hasAssignedItems ? singleWithItemsMessages : singleWithoutItemsMessages;
 
     return {
       ...singleMessages,
     };
   };
-
   const { description, consentLabel } = selectMessages();
-
   const singleItemSelectedId = typesToDelete[0];
-
-  const singleItemSelectedName = typesData.find(getById(singleItemSelectedId))
-    ?.name;
+  const singleItemSelectedName = typesData.find(getById(singleItemSelectedId))?.name;
 
   return (
     <Modal open={isOpen}>
@@ -115,9 +103,7 @@ function TypeDeleteWarningDialog<T extends TypeBaseData>({
               onDelete={onDelete}
               description={description}
               consentLabel={consentLabel}
-              viewAssignedItemsButtonLabel={
-                baseMessages.viewAssignedItemsButtonLabel
-              }
+              viewAssignedItemsButtonLabel={baseMessages.viewAssignedItemsButtonLabel}
             />
           )}
         </Card>

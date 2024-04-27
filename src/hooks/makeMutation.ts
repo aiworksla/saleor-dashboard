@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
   ApolloError,
   MutationFunction,
@@ -5,23 +6,18 @@ import {
   MutationResult,
   useMutation as useBaseMutation,
 } from "@apollo/client";
-import {
-  handleNestedMutationErrors,
-  showAllErrors,
-  useUser,
-} from "@saleor/auth";
-import { isJwtError } from "@saleor/auth/errors";
-import { commonMessages } from "@saleor/intl";
-import { getMutationStatus } from "@saleor/misc";
-import { MutationResultAdditionalProps } from "@saleor/types";
-import { GqlErrors, hasError } from "@saleor/utils/api";
+import { handleNestedMutationErrors, showAllErrors, useUser } from "@dashboard/auth";
+import { isJwtError } from "@dashboard/auth/errors";
+import { commonMessages } from "@dashboard/intl";
+import { getMutationStatus } from "@dashboard/misc";
+import { MutationResultAdditionalProps } from "@dashboard/types";
+import { GqlErrors, hasError } from "@dashboard/utils/api";
 import { DocumentNode } from "graphql";
 import { useIntl } from "react-intl";
 
 import useNotifier from "./useNotifier";
 
-export type MutationResultWithOpts<TData> = MutationResult<TData> &
-  MutationResultAdditionalProps;
+export type MutationResultWithOpts<TData> = MutationResult<TData> & MutationResultAdditionalProps;
 
 export type UseMutation<TData, TVariables> = [
   MutationFunction<TData, TVariables>,
@@ -31,24 +27,17 @@ export type UseMutationHook<TData, TVariables> = (
   cbs: MutationHookOptions<TData, TVariables>,
 ) => UseMutation<TData, TVariables>;
 
-export type MutationHookOptions<TData, TVariables> = BaseMutationHookOptions<
-  TData,
-  TVariables
-> & { disableErrorHandling?: boolean };
+export type MutationHookOptions<TData, TVariables> = BaseMutationHookOptions<TData, TVariables> & {
+  disableErrorHandling?: boolean;
+};
 
 export function useMutation<TData, TVariables>(
   mutation: DocumentNode,
-  {
-    onCompleted,
-    onError,
-    disableErrorHandling,
-    ...opts
-  }: MutationHookOptions<TData, TVariables>,
+  { onCompleted, onError, disableErrorHandling, ...opts }: MutationHookOptions<TData, TVariables>,
 ): UseMutation<TData, TVariables> {
   const notify = useNotifier();
   const intl = useIntl();
   const user = useUser();
-
   const [mutateFn, result] = useBaseMutation(mutation, {
     ...opts,
     onCompleted: data => {
@@ -66,7 +55,7 @@ export function useMutation<TData, TVariables>(
     },
     onError: (err: ApolloError) => {
       if (!disableErrorHandling) {
-        if (err.graphQLErrors) {
+        if (err?.graphQLErrors.length > 0) {
           if (hasError(err, GqlErrors.ReadOnlyException)) {
             notify({
               status: "error",
@@ -79,7 +68,7 @@ export function useMutation<TData, TVariables>(
               text: intl.formatMessage(commonMessages.sessionExpired),
             });
           } else if (!hasError(err, GqlErrors.LimitReachedException)) {
-            err.graphQLErrors.map(graphQLError => {
+            err.graphQLErrors.forEach(graphQLError => {
               notify({
                 status: "error",
                 apiMessage: graphQLError.message,

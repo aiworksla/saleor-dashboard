@@ -1,4 +1,4 @@
-import { MetadataFormData } from "@saleor/components/Metadata";
+import { MetadataFormData } from "@dashboard/components/Metadata";
 
 function getMetadata(
   data: MetadataFormData,
@@ -7,9 +7,7 @@ function getMetadata(
 ) {
   return {
     metadata: isMetadataModified ? data.metadata : undefined,
-    privateMetadata: isPrivateMetadataModified
-      ? data.privateMetadata
-      : undefined,
+    privateMetadata: isPrivateMetadataModified ? data.privateMetadata : undefined,
   };
 }
 

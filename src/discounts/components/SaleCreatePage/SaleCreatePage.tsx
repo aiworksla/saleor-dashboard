@@ -1,24 +1,21 @@
-import { validateSalePrice } from "@saleor/channels/utils";
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ChannelsAvailabilityCard from "@saleor/components/ChannelsAvailabilityCard";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import Metadata, { MetadataFormData } from "@saleor/components/Metadata";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import { createSaleChannelsChangeHandler } from "@saleor/discounts/handlers";
-import { SALE_CREATE_FORM_ID } from "@saleor/discounts/views/SaleCreate/consts";
+import { validateSalePrice } from "@dashboard/channels/utils";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import ChannelsAvailabilityCard from "@dashboard/components/ChannelsAvailabilityCard";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata, MetadataFormData } from "@dashboard/components/Metadata";
+import Savebar from "@dashboard/components/Savebar";
+import { createSaleChannelsChangeHandler } from "@dashboard/discounts/handlers";
+import { saleListUrl } from "@dashboard/discounts/urls";
+import { SALE_CREATE_FORM_ID } from "@dashboard/discounts/views/SaleCreate/consts";
 import {
   DiscountErrorFragment,
   PermissionEnum,
   SaleType as SaleTypeEnum,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -64,10 +61,7 @@ const SaleCreatePage: React.FC<SaleCreatePageProps> = ({
   onBack,
 }) => {
   const intl = useIntl();
-  const {
-    makeChangeHandler: makeMetadataChangeHandler,
-  } = useMetadataChangeTrigger();
-
+  const { makeChangeHandler: makeMetadataChangeHandler } = useMetadataChangeTrigger();
   const initialForm: FormData = {
     channelListings,
     endDate: "",
@@ -81,10 +75,8 @@ const SaleCreatePage: React.FC<SaleCreatePageProps> = ({
     metadata: [],
     privateMetadata: [],
   };
-
   const checkIfSaveIsDisabled = (data: FormData) =>
-    data.channelListings?.some(channel => validateSalePrice(data, channel)) ||
-    disabled;
+    data.channelListings?.some(channel => validateSalePrice(data, channel)) || disabled;
 
   return (
     <Form
@@ -104,67 +96,51 @@ const SaleCreatePage: React.FC<SaleCreatePageProps> = ({
         const changeMetadata = makeMetadataChangeHandler(change);
 
         return (
-          <Container>
-            <Backlink onClick={onBack}>
-              {intl.formatMessage(sectionNames.sales)}
-            </Backlink>
-            <PageHeader
+          <DetailPageLayout>
+            <TopNav
+              href={saleListUrl()}
               title={intl.formatMessage({
-                id: "2E1xZ0",
-                defaultMessage: "Create Sale",
+                id: "FWbv/u",
+                defaultMessage: "Create Discount",
                 description: "page header",
               })}
             />
-            <Grid>
-              <div>
-                <SaleInfo
-                  data={data}
-                  disabled={disabled}
-                  errors={errors}
-                  onChange={change}
-                />
-                <CardSpacer />
-                <SaleType data={data} disabled={disabled} onChange={change} />
-                <CardSpacer />
-                <SaleValue
-                  data={data}
-                  disabled={disabled}
-                  errors={errors}
-                  onChange={handleChannelChange}
-                />
-                <CardSpacer />
-                <DiscountDates
-                  data={data}
-                  disabled={disabled}
-                  errors={errors}
-                  onChange={change}
-                />
-              </div>
-              <div>
-                <ChannelsAvailabilityCard
-                  managePermissions={[PermissionEnum.MANAGE_DISCOUNTS]}
-                  allChannelsCount={allChannelsCount}
-                  channelsList={data.channelListings.map(channel => ({
-                    id: channel.id,
-                    name: channel.name,
-                  }))}
-                  disabled={disabled}
-                  openModal={openChannelsModal}
-                />
-              </div>
+            <DetailPageLayout.Content>
+              <SaleInfo data={data} disabled={disabled} errors={errors} onChange={change} />
+              <SaleType data={data} disabled={disabled} onChange={change} />
+              <SaleValue
+                data={data}
+                disabled={disabled}
+                errors={errors}
+                onChange={handleChannelChange}
+              />
+              <DiscountDates data={data} disabled={disabled} errors={errors} onChange={change} />
               <Metadata data={data} onChange={changeMetadata} />
-            </Grid>
+            </DetailPageLayout.Content>
+            <DetailPageLayout.RightSidebar>
+              <ChannelsAvailabilityCard
+                managePermissions={[PermissionEnum.MANAGE_DISCOUNTS]}
+                allChannelsCount={allChannelsCount}
+                channelsList={data.channelListings.map(channel => ({
+                  id: channel.id,
+                  name: channel.name,
+                }))}
+                disabled={disabled}
+                openModal={openChannelsModal}
+              />
+            </DetailPageLayout.RightSidebar>
             <Savebar
               disabled={disabled}
               onCancel={onBack}
               onSubmit={submit}
               state={saveButtonBarState}
             />
-          </Container>
+          </DetailPageLayout>
         );
       }}
     </Form>
   );
 };
+
 SaleCreatePage.displayName = "SaleCreatePage";
 export default SaleCreatePage;

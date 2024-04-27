@@ -1,6 +1,7 @@
-import useNavigator from "@saleor/hooks/useNavigator";
-import { Sort } from "@saleor/types";
-import { useEffect } from "react";
+// @ts-strict-ignore
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { Sort } from "@dashboard/types";
+import { useEffect, useRef } from "react";
 
 export type SortByRankUrlQueryParams<T extends string> = Sort<T> & {
   query?: string;
@@ -24,22 +25,37 @@ export function useSortRedirects<SortField extends string>({
   resetToDefault,
 }: UseSortRedirectsOpts<SortField>) {
   const navigate = useNavigator();
-
+  const prevAscParams = useRef<boolean | null>(null);
   const hasQuery = !!params.query?.trim();
+  const getAscParam = () => {
+    if (hasQuery) {
+      return false;
+    }
+
+    if (!hasQuery && prevAscParams.current !== null) {
+      return true;
+    }
+
+    return params.asc;
+  };
 
   useEffect(() => {
     const sortWithQuery = "rank" as SortField;
-    const sortWithoutQuery =
-      params.sort === "rank" ? defaultSortField : params.sort;
+    const sortWithoutQuery = params.sort === "rank" ? defaultSortField : params.sort;
+
+    if (hasQuery || params.sort === "rank") {
+      prevAscParams.current = params.asc;
+    }
+
     navigate(
       urlFunc({
         ...params,
-        asc: hasQuery ? false : params.asc,
+        asc: getAscParam(),
         sort: hasQuery ? sortWithQuery : sortWithoutQuery,
       }),
+      { replace: true },
     );
   }, [params.query]);
-
   useEffect(() => {
     if (resetToDefault) {
       navigate(
@@ -47,6 +63,7 @@ export function useSortRedirects<SortField extends string>({
           ...params,
           sort: defaultSortField,
         }),
+        { replace: true },
       );
     }
   }, [params]);

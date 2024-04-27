@@ -1,97 +1,98 @@
-import {
-  Card,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-} from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { DateTime } from "@saleor/components/Date";
-import Skeleton from "@saleor/components/Skeleton";
-import { HomeQuery } from "@saleor/graphql";
-import { makeStyles } from "@saleor/macaw-ui";
-import { RelayToFlat } from "@saleor/types";
+import { DashboardCard } from "@dashboard/components/Card";
+import { DateTime } from "@dashboard/components/Date";
+import { Activities, HomeData } from "@dashboard/home/types";
+import { Box, List, Skeleton, Text, useTheme } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { renderCollection } from "../../../misc";
 import { getActivityMessage } from "./activityMessages";
 
-const useStyles = makeStyles(
-  {
-    loadingProducts: {
-      paddingBottom: "10px",
-      paddingTop: "10px",
-    },
-    noProducts: {
-      paddingBottom: "16px",
-      paddingTop: "16px",
-    },
-  },
-  { name: "HomeActivityCard" },
-);
-
 interface HomeActivityCardProps {
-  activities: RelayToFlat<HomeQuery["activities"]>;
+  activities: HomeData<Activities>;
   testId?: string;
 }
 
-const HomeActivityCard: React.FC<HomeActivityCardProps> = props => {
-  const { activities, testId } = props;
-  const classes = useStyles(props);
-
+export const HomeActivityCard = ({ activities, testId }: HomeActivityCardProps) => {
   const intl = useIntl();
+  const { themeValues } = useTheme();
+  const title = intl.formatMessage({
+    id: "BXkF8Z",
+    defaultMessage: "Activity",
+    description: "header",
+  });
+
+  if (activities.hasError) {
+    return (
+      <DashboardCard data-test-id={testId}>
+        <DashboardCard.Title>{title}</DashboardCard.Title>
+        <DashboardCard.Content>
+          <Text color="default2">
+            <FormattedMessage id="/U8FUp" defaultMessage="Couldn't load activities" />
+          </Text>
+        </DashboardCard.Content>
+      </DashboardCard>
+    );
+  }
+
+  if (activities.loading) {
+    return (
+      <DashboardCard data-test-id={testId}>
+        <DashboardCard.Title>{title}</DashboardCard.Title>
+        <DashboardCard.Content>
+          <Box display="flex" flexDirection="column" gap={5}>
+            <Skeleton />
+            <Skeleton __width="80%" />
+            <Skeleton />
+          </Box>
+        </DashboardCard.Content>
+      </DashboardCard>
+    );
+  }
 
   return (
-    <Card data-test-id={testId}>
-      <CardTitle
-        title={intl.formatMessage({
-          id: "BXkF8Z",
-          defaultMessage: "Activity",
-          description: "header",
-        })}
-      />
-      <List dense={true}>
-        {renderCollection(
-          activities,
-          (activity, activityId) => (
-            <ListItem key={activityId}>
-              {activity ? (
-                <ListItemText
-                  primary={
-                    <Typography>
-                      {getActivityMessage(activity, intl)}
-                    </Typography>
-                  }
-                  secondary={<DateTime date={activity.date} />}
-                />
-              ) : (
-                <ListItemText className={classes.loadingProducts}>
-                  <Typography>
+    <DashboardCard data-test-id={testId}>
+      <DashboardCard.Title>{title}</DashboardCard.Title>
+      <DashboardCard.Content>
+        <List>
+          {renderCollection(
+            activities.data,
+            (activity, activityId) => (
+              <List.Item
+                key={activityId}
+                flexDirection="column"
+                alignItems="flex-start"
+                cursor="auto"
+                paddingY={1}
+                paddingX={6}
+                __marginLeft={"-" + themeValues.spacing[6]}
+                __marginRight={"-" + themeValues.spacing[6]}
+                marginBottom={3}
+              >
+                {activity ? (
+                  <>
+                    <Text size={3}>{getActivityMessage(activity, intl)}</Text>
+                    <Text size={3} color="default2">
+                      <DateTime date={activity.date} plain />
+                    </Text>
+                  </>
+                ) : (
+                  <Box paddingY={4}>
                     <Skeleton />
-                  </Typography>
-                </ListItemText>
-              )}
-            </ListItem>
-          ),
-          () => (
-            <ListItem className={classes.noProducts}>
-              <ListItemText
-                primary={
-                  <Typography>
-                    <FormattedMessage
-                      id="wWTUrM"
-                      defaultMessage="No activities found"
-                    />
-                  </Typography>
-                }
-              />
-            </ListItem>
-          ),
-        )}
-      </List>
-    </Card>
+                  </Box>
+                )}
+              </List.Item>
+            ),
+            () => (
+              <Box paddingY={4}>
+                <Text size={3}>
+                  <FormattedMessage id="wWTUrM" defaultMessage="No activities found" />
+                </Text>
+              </Box>
+            ),
+          )}
+        </List>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-HomeActivityCard.displayName = "HomeActivityCard";
-export default HomeActivityCard;

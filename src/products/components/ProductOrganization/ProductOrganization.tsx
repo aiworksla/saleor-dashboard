@@ -1,27 +1,17 @@
-import { Card, CardContent, Typography } from "@material-ui/core";
-import CardSpacer from "@saleor/components/CardSpacer";
-import CardTitle from "@saleor/components/CardTitle";
-import { FormSpacer } from "@saleor/components/FormSpacer";
-import Hr from "@saleor/components/Hr";
-import Link from "@saleor/components/Link";
-import MultiAutocompleteSelectField, {
-  MultiAutocompleteChoiceType,
-} from "@saleor/components/MultiAutocompleteSelectField";
-import SingleAutocompleteSelectField, {
-  SingleAutocompleteChoiceType,
-} from "@saleor/components/SingleAutocompleteSelectField";
+// @ts-strict-ignore
+import { DashboardCard } from "@dashboard/components/Card";
+import { Combobox, Multiselect } from "@dashboard/components/Combobox";
+import Link from "@dashboard/components/Link";
 import {
   ProductChannelListingErrorFragment,
   ProductErrorCode,
   ProductErrorFragment,
-} from "@saleor/graphql";
-import { ChangeEvent } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
-import { makeStyles } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import { productTypeUrl } from "@saleor/productTypes/urls";
-import { FetchMoreProps } from "@saleor/types";
-import { getFormErrors, getProductErrorMessage } from "@saleor/utils/errors";
+} from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import { productTypeUrl } from "@dashboard/productTypes/urls";
+import { FetchMoreProps } from "@dashboard/types";
+import { getFormErrors, getProductErrorMessage } from "@dashboard/utils/errors";
+import { Box, Option, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -31,38 +21,22 @@ interface ProductType {
   name: string;
 }
 
-const useStyles = makeStyles(
-  theme => ({
-    card: {
-      overflow: "visible",
-    },
-    cardSubtitle: {
-      fontSize: theme.typography.body1.fontSize,
-      marginBottom: theme.spacing(0.5),
-    },
-    label: {
-      marginBottom: theme.spacing(0.5),
-    },
-  }),
-  { name: "ProductOrganization" },
-);
-
 interface ProductOrganizationProps {
   canChangeType: boolean;
-  categories?: SingleAutocompleteChoiceType[];
+  categories?: Option[];
   categoryInputDisplayValue: string;
-  collections?: MultiAutocompleteChoiceType[];
-  collectionsInputDisplayValue: MultiAutocompleteChoiceType[];
+  collections?: Option[];
+  collectionsInputDisplayValue: Option[];
   data: {
     category: string;
-    collections: string[];
+    collections: Option[];
     productType?: ProductType;
   };
   disabled: boolean;
   errors: Array<ProductErrorFragment | ProductChannelListingErrorFragment>;
   productType?: ProductType;
   productTypeInputDisplayValue?: string;
-  productTypes?: SingleAutocompleteChoiceType[];
+  productTypes?: Option[];
   fetchCategories: (query: string) => void;
   fetchCollections: (query: string) => void;
   fetchMoreCategories: FetchMoreProps;
@@ -74,7 +48,7 @@ interface ProductOrganizationProps {
   onProductTypeChange?: (event: ChangeEvent) => void;
 }
 
-const ProductOrganization: React.FC<ProductOrganizationProps> = props => {
+export const ProductOrganization: React.FC<ProductOrganizationProps> = props => {
   const {
     canChangeType,
     categories,
@@ -97,10 +71,7 @@ const ProductOrganization: React.FC<ProductOrganizationProps> = props => {
     onCollectionChange,
     onProductTypeChange,
   } = props;
-
-  const classes = useStyles(props);
   const intl = useIntl();
-
   const formErrors = getFormErrors(
     ["productType", "category", "collections", "isPublished"],
     errors,
@@ -111,115 +82,99 @@ const ProductOrganization: React.FC<ProductOrganizationProps> = props => {
       : null;
 
   return (
-    <Card className={classes.card}>
-      <CardTitle
-        title={intl.formatMessage({
+    <DashboardCard>
+      <DashboardCard.Title>
+        {intl.formatMessage({
           id: "JjeZEG",
           defaultMessage: "Organize Product",
           description: "section header",
         })}
-      />
-      <CardContent>
+      </DashboardCard.Title>
+      <DashboardCard.Content gap={2} display="flex" flexDirection="column">
         {canChangeType ? (
-          <SingleAutocompleteSelectField
-            displayValue={productTypeInputDisplayValue}
+          <Combobox
+            disabled={disabled}
+            data-test-id="product-type"
+            options={productTypes}
+            value={
+              data.productType?.id
+                ? {
+                    value: data.productType.id,
+                    label: productTypeInputDisplayValue,
+                  }
+                : null
+            }
             error={!!formErrors.productType}
             helperText={getProductErrorMessage(formErrors.productType, intl)}
+            onChange={onProductTypeChange}
+            fetchOptions={fetchProductTypes}
+            fetchMore={fetchMoreProductTypes}
             name="productType"
-            disabled={disabled}
             label={intl.formatMessage({
               id: "anK7jD",
               defaultMessage: "Product Type",
             })}
-            choices={productTypes}
-            value={data.productType?.id}
-            onChange={onProductTypeChange}
-            fetchChoices={fetchProductTypes}
-            data-test-id="product-type"
-            {...fetchMoreProductTypes}
           />
         ) : (
-          <>
-            <Typography className={classes.label} variant="caption">
-              <FormattedMessage id="anK7jD" defaultMessage="Product Type" />
-            </Typography>
-            <Typography>
-              <Link
-                href={productTypeUrl(productType?.id) ?? ""}
-                disabled={!productType?.id}
-              >
-                {productType?.name ?? "..."}
-              </Link>
-            </Typography>
-            <CardSpacer />
-            <Typography className={classes.label} variant="caption">
-              <FormattedMessage id="Be+J13" defaultMessage="Configurable" />
-            </Typography>
-            <Typography>
-              {maybe(
-                () =>
-                  productType.hasVariants
-                    ? intl.formatMessage(commonMessages.yes)
-                    : intl.formatMessage(commonMessages.no),
-                "...",
+          <Box display="flex" flexDirection="column" gap={3}>
+            <Box display="flex" flexDirection="column">
+              <Text size={4} fontWeight="bold">
+                <FormattedMessage id="anK7jD" defaultMessage="Product Type" />
+              </Text>
+              {productType?.id ? (
+                <Text size={2}>
+                  <Link href={productTypeUrl(productType?.id) ?? ""}>
+                    {productType?.name ?? "..."}
+                  </Link>
+                </Text>
+              ) : (
+                <Text size={2}>{productType?.name ?? "..."}</Text>
               )}
-            </Typography>
-          </>
+            </Box>
+          </Box>
         )}
-        <FormSpacer />
-        <Hr />
-        <FormSpacer />
-        <SingleAutocompleteSelectField
-          displayValue={categoryInputDisplayValue}
-          error={!!(formErrors.category || noCategoryError)}
-          helperText={getProductErrorMessage(
-            formErrors.category || noCategoryError,
-            intl,
-          )}
+
+        <Box data-test-id="category">
+          <Combobox
+            disabled={disabled}
+            options={disabled ? [] : categories}
+            value={
+              data.category
+                ? {
+                    value: data.category,
+                    label: categoryInputDisplayValue,
+                  }
+                : null
+            }
+            error={!!(formErrors.category || noCategoryError)}
+            helperText={getProductErrorMessage(formErrors.category || noCategoryError, intl)}
+            onChange={onCategoryChange}
+            fetchOptions={fetchCategories}
+            fetchMore={fetchMoreCategories}
+            name="category"
+            label={intl.formatMessage({
+              id: "ccXLVi",
+              defaultMessage: "Category",
+            })}
+          />
+        </Box>
+        <Multiselect
           disabled={disabled}
-          label={intl.formatMessage({
-            id: "ccXLVi",
-            defaultMessage: "Category",
-          })}
-          choices={disabled ? [] : categories}
-          name="category"
-          value={data.category}
-          onChange={onCategoryChange}
-          fetchChoices={fetchCategories}
-          data-test-id="category"
-          {...fetchMoreCategories}
-        />
-        <FormSpacer />
-        <Hr />
-        <FormSpacer />
-        <MultiAutocompleteSelectField
-          displayValues={collectionsInputDisplayValue}
+          options={collections}
+          data-test-id="collections"
+          value={collectionsInputDisplayValue}
           error={!!formErrors.collections}
+          name="collections"
+          onChange={onCollectionChange}
+          fetchOptions={fetchCollections}
+          fetchMore={fetchMoreCollections}
           label={intl.formatMessage({
             id: "ulh3kf",
             defaultMessage: "Collections",
           })}
-          choices={disabled ? [] : collections}
-          name="collections"
-          value={data.collections}
-          helperText={
-            getProductErrorMessage(formErrors.collections, intl) ||
-            intl.formatMessage({
-              id: "v+Pkm+",
-              defaultMessage:
-                "*Optional. Adding product to collection helps users find it.",
-              description: "field is optional",
-            })
-          }
-          onChange={onCollectionChange}
-          fetchChoices={fetchCollections}
-          data-test-id="collections"
-          testId="collection"
-          {...fetchMoreCollections}
+          helperText={getProductErrorMessage(formErrors.collections, intl)}
         />
-      </CardContent>
-    </Card>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-ProductOrganization.displayName = "ProductOrganization";
-export default ProductOrganization;

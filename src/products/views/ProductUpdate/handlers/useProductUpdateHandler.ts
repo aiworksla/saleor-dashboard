@@ -1,15 +1,15 @@
-import { FetchResult } from "@apollo/client";
+// @ts-strict-ignore
 import {
   mergeAttributeValueDeleteErrors,
   mergeFileUploadErrors,
-} from "@saleor/attributes/utils/data";
+} from "@dashboard/attributes/utils/data";
 import {
   handleDeleteMultipleAttributeValues,
   handleUploadMultipleFiles,
-} from "@saleor/attributes/utils/handlers";
+} from "@dashboard/attributes/utils/handlers";
 import {
   AttributeErrorFragment,
-  BulkProductErrorFragment,
+  ErrorPolicyEnum,
   MetadataErrorFragment,
   ProductChannelListingErrorFragment,
   ProductErrorFragment,
@@ -22,38 +22,34 @@ import {
   useProductUpdateMutation,
   useProductVariantBulkCreateMutation,
   useProductVariantBulkDeleteMutation,
+  useProductVariantBulkUpdateMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-  useVariantDatagridChannelListingUpdateMutation,
-  useVariantDatagridStockUpdateMutation,
-  useVariantDatagridUpdateMutation,
-} from "@saleor/graphql";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages } from "@saleor/intl";
-import { ProductUpdateSubmitData } from "@saleor/products/components/ProductUpdatePage/types";
-import { getVariantChannelsInputs } from "@saleor/products/components/ProductVariants/datagrid/getVariantChannelsInputs";
-import {
-  getStockInputs,
-  getStocks,
-  getVariantChannels,
-  getVariantInput,
-  getVariantInputs,
-} from "@saleor/products/components/ProductVariants/utils";
-import { getProductErrorMessage } from "@saleor/utils/errors";
-import createMetadataUpdateHandler from "@saleor/utils/handlers/metadataUpdateHandler";
+} from "@dashboard/graphql";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import { ProductUpdateSubmitData } from "@dashboard/products/components/ProductUpdatePage/types";
+import { getProductErrorMessage } from "@dashboard/utils/errors";
+import createMetadataUpdateHandler from "@dashboard/utils/handlers/metadataUpdateHandler";
 import { useState } from "react";
 import { useIntl } from "react-intl";
 
-import { getProductVariantListErrors, ProductVariantListError } from "./errors";
 import {
+  getCreateVariantMutationError,
+  getVariantUpdateMutationErrors,
+  ProductVariantListError,
+} from "./errors";
+import {
+  getBulkVariantUpdateInputs,
+  getCreateVariantInput,
   getProductChannelsUpdateVariables,
   getProductUpdateVariables,
+  hasProductChannelsUpdate,
 } from "./utils";
 
 export type UseProductUpdateHandlerError =
   | ProductErrorWithAttributesFragment
   | ProductErrorFragment
-  | BulkProductErrorFragment
   | AttributeErrorFragment
   | UploadErrorFragment
   | ProductChannelListingErrorFragment
@@ -62,6 +58,7 @@ export type UseProductUpdateHandlerError =
 type UseProductUpdateHandler = (
   data: ProductUpdateSubmitData,
 ) => Promise<Array<UseProductUpdateHandlerError | MetadataErrorFragment>>;
+
 interface UseProductUpdateHandlerOpts {
   called: boolean;
   loading: boolean;
@@ -75,28 +72,19 @@ export function useProductUpdateHandler(
 ): [UseProductUpdateHandler, UseProductUpdateHandlerOpts] {
   const intl = useIntl();
   const notify = useNotifier();
-  const [variantListErrors, setVariantListErrors] = useState<
-    ProductVariantListError[]
-  >([]);
+  const [variantListErrors, setVariantListErrors] = useState<ProductVariantListError[]>([]);
   const [called, setCalled] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-  const [updateStocks] = useVariantDatagridStockUpdateMutation({});
-  const [updateVariant] = useVariantDatagridUpdateMutation();
+  const [updateVariants] = useProductVariantBulkUpdateMutation();
   const [createVariants] = useProductVariantBulkCreateMutation();
   const [deleteVariants] = useProductVariantBulkDeleteMutation();
-
   const [uploadFile] = useFileUploadMutation();
-
   const [updateProduct, updateProductOpts] = useProductUpdateMutation();
-  const [
-    updateChannels,
-    updateChannelsOpts,
-  ] = useProductChannelListingUpdateMutation({
+  const [updateChannels, updateChannelsOpts] = useProductChannelListingUpdateMutation({
     onCompleted: data => {
-      if (!!data.productChannelListingUpdate.errors.length) {
+      if (data.productChannelListingUpdate.errors.length) {
         data.productChannelListingUpdate.errors.forEach(error =>
           notify({
             status: "error",
@@ -106,100 +94,99 @@ export function useProductUpdateHandler(
       }
     },
   });
-
-  const [
-    updateVariantChannels,
-  ] = useVariantDatagridChannelListingUpdateMutation();
-
   const [deleteAttributeValue] = useAttributeValueDeleteMutation();
-
   const sendMutations = async (
     data: ProductUpdateSubmitData,
   ): Promise<UseProductUpdateHandlerError[]> => {
     let errors: UseProductUpdateHandlerError[] = [];
+    const variantErrors: ProductVariantListError[] = [];
     const uploadFilesResult = await handleUploadMultipleFiles(
       data.attributesWithNewFileValue,
       variables => uploadFile({ variables }),
     );
-
     const deleteAttributeValuesResult = await handleDeleteMultipleAttributeValues(
       data.attributesWithNewFileValue,
       product?.attributes,
       variables => deleteAttributeValue({ variables }),
     );
+    const updateProductChannelsData = getProductChannelsUpdateVariables(product, data);
+
+    if (hasProductChannelsUpdate(updateProductChannelsData.input)) {
+      const updateChannelsResult = await updateChannels({
+        variables: updateProductChannelsData,
+      });
+
+      errors = [...errors, ...updateChannelsResult.data.productChannelListingUpdate.errors];
+    }
+
+    if (data.variants.removed.length > 0) {
+      const deleteVaraintsResult = await deleteVariants({
+        variables: {
+          ids: data.variants.removed.map(index => product.variants[index].id),
+        },
+      });
+
+      errors = [...errors, ...deleteVaraintsResult.data.productVariantBulkDelete.errors];
+    }
+
+    const updateProductResult = await updateProduct({
+      variables: getProductUpdateVariables(product, data, uploadFilesResult),
+    });
+
+    if (data.variants.added.length > 0) {
+      const createVariantsResults = await createVariants({
+        variables: {
+          id: product.id,
+          inputs: data.variants.added.map(index => ({
+            ...getCreateVariantInput(
+              data.variants,
+              index,
+              product?.productType?.variantAttributes ?? [],
+            ),
+          })),
+        },
+      });
+      const createVariantsErrors = getCreateVariantMutationError(createVariantsResults);
+
+      errors.push(...createVariantsErrors);
+      variantErrors.push(...createVariantsErrors);
+    }
+
+    if (data.variants.updates.length > 0) {
+      const updateInputdData = getBulkVariantUpdateInputs(
+        product.variants,
+        data.variants,
+        product?.productType?.variantAttributes ?? [],
+      );
+
+      if (updateInputdData.length) {
+        const updateVariantsResults = await updateVariants({
+          variables: {
+            product: product.id,
+            input: updateInputdData,
+            errorPolicy: ErrorPolicyEnum.REJECT_FAILED_ROWS,
+          },
+        });
+        const updateVariantsErrors = getVariantUpdateMutationErrors(
+          updateVariantsResults,
+          updateInputdData.map(data => data.id),
+        );
+
+        variantErrors.push(...updateVariantsErrors);
+        errors.push(...updateVariantsErrors);
+      }
+    }
 
     errors = [
       ...errors,
       ...mergeFileUploadErrors(uploadFilesResult),
       ...mergeAttributeValueDeleteErrors(deleteAttributeValuesResult),
+      ...(updateProductResult?.data?.productUpdate?.errors ?? []),
     ];
-
-    if (data.variants.removed.length > 0) {
-      errors.push(
-        ...(
-          await deleteVariants({
-            variables: {
-              ids: data.variants.removed.map(
-                index => product.variants[index].id,
-              ),
-            },
-          })
-        ).data.productVariantBulkDelete.errors,
-      );
-    }
-
-    const result = await updateProduct({
-      variables: getProductUpdateVariables(product, data, uploadFilesResult),
-    });
-    errors = [...errors, ...result.data.productUpdate.errors];
-
-    const productChannelsUpdateResult = await updateChannels({
-      variables: getProductChannelsUpdateVariables(product, data),
-    });
-
-    const mutations: Array<Promise<FetchResult>> = [
-      ...getStocks(product.variants, data.variants).map(variables =>
-        updateStocks({ variables }),
-      ),
-      ...getVariantInputs(product.variants, data.variants).map(variables =>
-        updateVariant({ variables }),
-      ),
-      ...getVariantChannels(product.variants, data.variants).map(variables =>
-        updateVariantChannels({
-          variables,
-        }),
-      ),
-    ];
-
-    if (data.variants.added.length > 0) {
-      mutations.push(
-        createVariants({
-          variables: {
-            id: product.id,
-            inputs: data.variants.added.map(index => ({
-              ...getVariantInput(data.variants, index),
-              channelListings: getVariantChannelsInputs(data.variants, index),
-              stocks: getStockInputs(data.variants, index).stocks,
-            })),
-          },
-        }),
-      );
-    }
-
-    const variantMutationResults = await Promise.all<FetchResult>(mutations);
-
-    const variantErrors = getProductVariantListErrors(
-      productChannelsUpdateResult,
-      variantMutationResults,
-    );
-
-    errors = [...errors, ...variantErrors];
-
     setVariantListErrors(variantErrors);
 
     return errors;
   };
-
   const submit = async (data: ProductUpdateSubmitData) => {
     setCalled(true);
     setLoading(true);
@@ -222,11 +209,8 @@ export function useProductUpdateHandler(
 
     return errors;
   };
-
   const errors = updateProductOpts.data?.productUpdate.errors ?? [];
-
-  const channelsErrors =
-    updateChannelsOpts?.data?.productChannelListingUpdate?.errors ?? [];
+  const channelsErrors = updateChannelsOpts?.data?.productChannelListingUpdate?.errors ?? [];
 
   return [
     submit,

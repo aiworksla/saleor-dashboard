@@ -1,4 +1,5 @@
-import * as avatarImg from "@assets/images/avatars/avatar1.png";
+import avatarImg from "@assets/images/avatars/avatar.png";
+import { channels } from "@dashboard/fixtures";
 import {
   PermissionEnum,
   PermissionGroupDetailsFragment,
@@ -7,8 +8,8 @@ import {
   PermissionGroupFragment,
   SearchStaffMembersQuery,
   StaffMemberDetailsFragment,
-} from "@saleor/graphql";
-import { RelayToFlat } from "@saleor/types";
+} from "@dashboard/graphql";
+import { RelayToFlat } from "@dashboard/types";
 
 export const permissionGroups: PermissionGroupFragment[] = [
   {
@@ -21,12 +22,12 @@ export const permissionGroups: PermissionGroupFragment[] = [
           id: "VXNlcjoyMQ==",
           firstName: "",
           lastName: "",
-          __typename: "User" as "User",
+          __typename: "User" as const,
         },
       ],
-      __typename: "Group" as "Group",
+      __typename: "Group" as const,
     },
-    __typename: "GroupCountableEdge" as "GroupCountableEdge",
+    __typename: "GroupCountableEdge" as const,
   },
   {
     node: {
@@ -38,12 +39,12 @@ export const permissionGroups: PermissionGroupFragment[] = [
           id: "VXNlcjoyMQ==",
           firstName: "",
           lastName: "",
-          __typename: "User" as "User",
+          __typename: "User" as const,
         },
       ],
-      __typename: "Group" as "Group",
+      __typename: "Group" as const,
     },
-    __typename: "GroupCountableEdge" as "GroupCountableEdge",
+    __typename: "GroupCountableEdge" as const,
   },
   {
     node: {
@@ -51,9 +52,9 @@ export const permissionGroups: PermissionGroupFragment[] = [
       name: "Management",
       users: [],
       userCanManage: true,
-      __typename: "Group" as "Group",
+      __typename: "Group" as const,
     },
-    __typename: "GroupCountableEdge" as "GroupCountableEdge",
+    __typename: "GroupCountableEdge" as const,
   },
   {
     node: {
@@ -65,18 +66,18 @@ export const permissionGroups: PermissionGroupFragment[] = [
           id: "VXNlcjoyMw==",
           firstName: "Bryan",
           lastName: "Rodgers",
-          __typename: "User" as "User",
+          __typename: "User" as const,
         },
         {
           id: "VXNlcjoyMg==",
           firstName: "Joshua",
           lastName: "Mitchell",
-          __typename: "User" as "User",
+          __typename: "User" as const,
         },
       ],
-      __typename: "Group" as "Group",
+      __typename: "Group" as const,
     },
-    __typename: "GroupCountableEdge" as "GroupCountableEdge",
+    __typename: "GroupCountableEdge" as const,
   },
   {
     node: {
@@ -84,9 +85,9 @@ export const permissionGroups: PermissionGroupFragment[] = [
       name: "Publishers",
       userCanManage: true,
       users: [],
-      __typename: "Group" as "Group",
+      __typename: "Group" as const,
     },
-    __typename: "GroupCountableEdge" as "GroupCountableEdge",
+    __typename: "GroupCountableEdge" as const,
   },
 ].map(edge => edge.node);
 
@@ -111,6 +112,7 @@ export const emptyPermissionGroup: PermissionGroupDetailsFragment = {
   userCanManage: true,
   users: [],
   __typename: "Group",
+
   permissions: [
     {
       code: PermissionEnum.MANAGE_PAGES,
@@ -118,6 +120,8 @@ export const emptyPermissionGroup: PermissionGroupDetailsFragment = {
       __typename: "Permission",
     },
   ],
+  accessibleChannels: [],
+  restrictedAccessToChannels: false,
 };
 
 export const errorsOfPermissionGroupCreate: PermissionGroupErrorFragment[] = [
@@ -159,6 +163,8 @@ export const permissionGroup: PermissionGroupDetailsFragment = {
       avatar: null,
     },
   ],
+  accessibleChannels: [],
+  restrictedAccessToChannels: false,
   __typename: "Group",
   permissions: [
     {
@@ -169,7 +175,43 @@ export const permissionGroup: PermissionGroupDetailsFragment = {
   ],
 };
 
-export const users: RelayToFlat<SearchStaffMembersQuery["search"]> = [
+export const permissionGroupWithChannels: NonNullable<PermissionGroupDetailsFragment> = {
+  id: "R3JvdXA6Mw==",
+  name: "Editors",
+  userCanManage: true,
+  users: [
+    {
+      id: "VXNlcjoyMg==",
+      firstName: "Joshua",
+      lastName: "Mitchell",
+      __typename: "User",
+      email: "joshua.mitchell@example.com",
+      isActive: true,
+      avatar: null,
+    },
+    {
+      id: "VXNlcjoyMw==",
+      firstName: "Bryan",
+      lastName: "Rodgers",
+      __typename: "User",
+      email: "bryan.rodgers@example.com",
+      isActive: true,
+      avatar: null,
+    },
+  ],
+  accessibleChannels: [channels[0]],
+  restrictedAccessToChannels: true,
+  __typename: "Group",
+  permissions: [
+    {
+      code: PermissionEnum.MANAGE_PAGES,
+      name: "Manage pages.",
+      __typename: "Permission",
+    },
+  ],
+};
+
+export const users: RelayToFlat<NonNullable<SearchStaffMembersQuery["search"]>> = [
   {
     node: {
       id: "VXNlcjoyMQ==",
@@ -180,11 +222,11 @@ export const users: RelayToFlat<SearchStaffMembersQuery["search"]> = [
       avatar: {
         alt: null,
         url: avatarImg,
-        __typename: "Image" as "Image",
+        __typename: "Image" as const,
       },
-      __typename: "User" as "User",
+      __typename: "User" as const,
     },
-    __typename: "UserCountableEdge" as "UserCountableEdge",
+    __typename: "UserCountableEdge" as const,
   },
   {
     node: {
@@ -196,11 +238,11 @@ export const users: RelayToFlat<SearchStaffMembersQuery["search"]> = [
       avatar: {
         alt: null,
         url: avatarImg,
-        __typename: "Image" as "Image",
+        __typename: "Image" as const,
       },
-      __typename: "User" as "User",
+      __typename: "User" as const,
     },
-    __typename: "UserCountableEdge" as "UserCountableEdge",
+    __typename: "UserCountableEdge" as const,
   },
   {
     node: {
@@ -212,11 +254,11 @@ export const users: RelayToFlat<SearchStaffMembersQuery["search"]> = [
       avatar: {
         alt: null,
         url: avatarImg,
-        __typename: "Image" as "Image",
+        __typename: "Image" as const,
       },
-      __typename: "User" as "User",
+      __typename: "User" as const,
     },
-    __typename: "UserCountableEdge" as "UserCountableEdge",
+    __typename: "UserCountableEdge" as const,
   },
   {
     node: {
@@ -228,10 +270,10 @@ export const users: RelayToFlat<SearchStaffMembersQuery["search"]> = [
       avatar: {
         alt: null,
         url: avatarImg,
-        __typename: "Image" as "Image",
+        __typename: "Image" as const,
       },
-      __typename: "User" as "User",
+      __typename: "User" as const,
     },
-    __typename: "UserCountableEdge" as "UserCountableEdge",
+    __typename: "UserCountableEdge" as const,
   },
 ].map(edge => edge.node);

@@ -3,6 +3,7 @@ import { PRODUCT_DETAILS } from "../../../../elements/catalog/products/product-d
 import { VARIANTS_SELECTORS } from "../../../../elements/catalog/products/variants-selectors";
 import { AVAILABLE_CHANNELS_FORM } from "../../../../elements/channels/available-channels-form";
 import { BUTTON_SELECTORS } from "../../../../elements/shared/button-selectors";
+import { updateVariantWarehouse } from "../../../../support/api/requests/Product";
 import { formatDate } from "../../../formatData/formatDate";
 import { selectChannelVariantInDetailsPage } from "../../channelsPage";
 
@@ -14,22 +15,26 @@ export function variantsShouldBeVisible({ price }) {
 export function createVariant({
   sku,
   warehouseName,
+  warehouseId,
   attributeName,
   price,
   costPrice = price,
   quantity = 10,
+  variantName,
 }) {
   fillUpVariantDetails({
     attributeName,
     sku,
     warehouseName,
+    warehouseId,
     quantity,
     costPrice,
     price,
+    variantName,
   });
   cy.get(VARIANTS_SELECTORS.saveButton)
     .click()
-    .get(VARIANTS_SELECTORS.skuInput)
+    .get(VARIANTS_SELECTORS.skuTextField)
     .should("be.enabled")
     .get(BUTTON_SELECTORS.back)
     .click()
@@ -50,9 +55,7 @@ export function fillUpGeneralVariantInputs({
       force: true,
     });
   } else {
-    cy.get(VARIANTS_SELECTORS.warehouseOption)
-      .first()
-      .click({ force: true });
+    cy.get(VARIANTS_SELECTORS.warehouseOption).first().click({ force: true });
   }
   cy.get(VARIANTS_SELECTORS.stockInput).type(quantity);
 }
@@ -62,13 +65,29 @@ export function fillUpVariantDetails({
   attributeType = "DROPDOWN",
   sku,
   warehouseName,
+  warehouseId,
   quantity,
   costPrice,
   price,
+  variantName,
 }) {
+  if (variantName) {
+    cy.get(VARIANTS_SELECTORS.variantNameInput).type(variantName, {
+      force: true,
+    });
+  }
   selectAttributeWithType({ attributeType, attributeName });
+
+  cy.get(PRICE_LIST.priceInput)
+    .each(input => {
+      cy.wrap(input).type(price, { force: true });
+    })
+    .get(PRICE_LIST.costPriceInput)
+    .each(input => {
+      cy.wrap(input).type(costPrice, { force: true });
+    });
   if (sku) {
-    cy.get(VARIANTS_SELECTORS.skuInputInAddVariant).type(sku);
+    cy.get(VARIANTS_SELECTORS.skuTextField).click({ force: true }).type(sku);
   }
   if (warehouseName) {
     cy.get(VARIANTS_SELECTORS.addWarehouseButton).click();
@@ -79,16 +98,13 @@ export function fillUpVariantDetails({
       .get(VARIANTS_SELECTORS.stockInput)
       .type(quantity);
   }
-
-  cy.get(PRICE_LIST.priceInput)
-    .each(input => {
-      cy.wrap(input).type(price);
-    })
-    .get(PRICE_LIST.costPriceInput)
-    .each(input => {
-      cy.wrap(input).type(costPrice);
+  if (warehouseId) {
+    saveVariant().then(({ response }) => {
+      const variantId =
+        response.body.data.productVariantCreate.productVariant.id;
+      updateVariantWarehouse({ variantId, warehouseId, quantity });
     });
-
+  }
   cy.get(VARIANTS_SELECTORS.saveButton).click();
 }
 
@@ -99,7 +115,7 @@ export function fillUpVariantAttributeAndSku({ attributeName, sku }) {
     .contains(attributeName)
     .click();
   if (sku) {
-    cy.get(VARIANTS_SELECTORS.skuInputInAddVariant).type(sku);
+    cy.get(VARIANTS_SELECTORS.skuTextField).click({ force: true }).type(sku);
   }
 }
 
@@ -135,7 +151,7 @@ export function selectChannelForVariantAndFillUpPrices({
     .get(BUTTON_SELECTORS.back)
     .click()
     .waitForProgressBarToNotBeVisible()
-    .get(AVAILABLE_CHANNELS_FORM.menageChannelsButton)
+    .get(AVAILABLE_CHANNELS_FORM.manageChannelsButton)
     .should("be.visible");
 }
 
@@ -148,17 +164,18 @@ export function selectOptionsAttribute(attributeName) {
 }
 
 export function selectBooleanAttributeToTrue() {
-  cy.get(VARIANTS_SELECTORS.booleanAttributeCheckbox).click();
+  cy.get(VARIANTS_SELECTORS.attributeSelector).first().click();
 }
 
 export function selectDateAttribute() {
   cy.get(VARIANTS_SELECTORS.attributeSelector)
+    .first()
     .find("input")
     .type(formatDate(new Date()));
 }
 
 export function selectNumericAttribute(numeric) {
-  cy.get(VARIANTS_SELECTORS.attributeSelector).type(numeric);
+  cy.get(VARIANTS_SELECTORS.attributeSelector).first().type(numeric);
 }
 
 export function selectAttributeWithType({ attributeType, attributeName }) {
@@ -175,22 +192,6 @@ export function selectAttributeWithType({ attributeType, attributeName }) {
     default:
       selectOptionsAttribute(attributeName);
   }
-}
-
-export function enablePreorderWithThreshold(threshold) {
-  cy.get(VARIANTS_SELECTORS.preorderCheckbox)
-    .click()
-    .get(VARIANTS_SELECTORS.globalThresholdInput)
-    .type(threshold);
-}
-
-export function setUpPreorderEndDate(endDate, endTime) {
-  cy.get(VARIANTS_SELECTORS.setUpEndDateButton)
-    .click()
-    .get(VARIANTS_SELECTORS.preorderEndDateInput)
-    .type(endDate)
-    .get(VARIANTS_SELECTORS.preorderEndTimeInput)
-    .type(endTime);
 }
 
 export function saveVariant(waitForAlias = "VariantCreate") {

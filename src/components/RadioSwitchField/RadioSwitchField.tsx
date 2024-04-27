@@ -1,11 +1,7 @@
-import {
-  FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-} from "@material-ui/core";
+// @ts-strict-ignore
+import { FormControl, FormControlLabel, Radio, RadioGroup } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 const useStyles = makeStyles(
@@ -57,24 +53,18 @@ export const RadioSwitchField: React.FC<RadioSwitchFieldProps> = props => {
     value,
   } = props;
   const classes = useStyles(props);
-
   const initialValue = value ? "true" : "false";
-
   const change = event => {
     onChange({
       target: {
         name: event.target.name,
-        value: event.target.value === "true" ? true : false,
+        value: event.target.value === "true",
       },
     } as any);
   };
 
   return (
-    <FormControl
-      className={classNames(classes.formControl, className)}
-      error={error}
-      disabled={disabled}
-    >
+    <FormControl className={clsx(classes.formControl, className)} error={error} disabled={disabled}>
       <RadioGroup
         aria-label={name}
         name={name}
@@ -83,21 +73,15 @@ export const RadioSwitchField: React.FC<RadioSwitchFieldProps> = props => {
       >
         <FormControlLabel
           value="true"
-          className={classNames(
-            classes.radioLabel,
-            overrideClasses?.radioLabel,
-          )}
-          control={<Radio color="primary" />}
+          className={clsx(classes.radioLabel, overrideClasses?.radioLabel)}
+          control={<Radio color="secondary" />}
           label={firstOptionLabel}
           name={name}
         />
         <FormControlLabel
           value="false"
-          className={classNames(
-            classes.radioLabel,
-            overrideClasses?.radioLabel,
-          )}
-          control={<Radio color="primary" />}
+          className={clsx(classes.radioLabel, overrideClasses?.radioLabel)}
+          control={<Radio color="secondary" />}
           label={secondOptionLabel}
           name={name}
         />

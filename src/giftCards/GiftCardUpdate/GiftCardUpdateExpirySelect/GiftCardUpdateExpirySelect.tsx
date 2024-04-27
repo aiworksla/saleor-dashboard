@@ -1,9 +1,9 @@
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import { getGiftCardErrorMessage } from "@dashboard/giftCards/GiftCardUpdate/messages";
+import useGiftCardUpdateForm from "@dashboard/giftCards/GiftCardUpdate/providers/GiftCardUpdateFormProvider/hooks/useGiftCardUpdateForm";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
 import { TextField, Typography } from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import { getGiftCardErrorMessage } from "@saleor/giftCards/GiftCardUpdate/messages";
-import useGiftCardUpdateForm from "@saleor/giftCards/GiftCardUpdate/providers/GiftCardUpdateFormProvider/hooks/useGiftCardUpdateForm";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
 import React, { useEffect } from "react";
 import { useIntl } from "react-intl";
 
@@ -13,16 +13,12 @@ import { useGiftCardExpirySelectStyles as useStyles } from "./styles";
 const GiftCardUpdateExpirySelect: React.FC = () => {
   const intl = useIntl();
   const classes = useStyles({});
-
   const {
     change,
     data: { expiryDate },
     formErrors,
   } = useGiftCardUpdateForm();
-
-  const [cardExpiresSelected, setCardExpiresSelected] = useStateFromProps(
-    !!expiryDate,
-  );
+  const [cardExpiresSelected, setCardExpiresSelected] = useStateFromProps(!!expiryDate);
 
   useEffect(() => {
     if (!cardExpiresSelected) {

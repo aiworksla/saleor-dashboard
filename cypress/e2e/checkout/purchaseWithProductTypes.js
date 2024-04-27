@@ -33,7 +33,7 @@ describe("As an unlogged customer I want to order physical and digital products"
   let physicalVariants;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
     createDigitalAndPhysicalProductWithNewDataAndDefaultChannel({
       physicalProductName: physicalName,
       digitalProductName: digitalName,
@@ -43,13 +43,23 @@ describe("As an unlogged customer I want to order physical and digital products"
       shippingMethod = resp.shippingMethod;
       digitalVariants = resp.digitalVariants;
       physicalVariants = resp.physicalVariants;
-      cy.clearSessionData();
+      cy.checkIfDataAreNotNull({
+        defaultChannel,
+        address,
+        shippingMethod,
+        digitalVariants,
+        physicalVariants,
+      });
     });
   });
 
+  beforeEach(() => {
+    cy.loginUserViaRequest();
+  });
+
   it(
-    "should purchase digital product as unlogged customer. TC: SALEOR_0402",
-    { tags: ["@checkout", "@allEnv", "@stable", "@oldRelease"] },
+    "should purchase digital product as unlogged customer. TC: SALEOR_0402 - should not be migrated to playwright",
+    { tags: ["@checkout", "@allEnv", "@stable", "@oldRelease", "@critical"] },
     () => {
       createAndCompleteCheckoutWithoutShipping({
         channelSlug: defaultChannel.slug,
@@ -72,8 +82,8 @@ describe("As an unlogged customer I want to order physical and digital products"
   );
 
   it(
-    "should purchase physical product as unlogged customer. TC: SALEOR_0403",
-    { tags: ["@checkout", "@allEnv", "@stable", "@oldRelease"] },
+    "should purchase physical product as unlogged customer. TC: SALEOR_0403 should not be migrated to playwright",
+    { tags: ["@checkout", "@allEnv", "@stable", "@oldRelease", "@critical"] },
     () => {
       createWaitingForCaptureOrder({
         channelSlug: defaultChannel.slug,
@@ -97,7 +107,7 @@ describe("As an unlogged customer I want to order physical and digital products"
 
   it(
     "should purchase multiple products with all product types as unlogged customer. TC: SALEOR_0404",
-    { tags: ["@checkout", "@allEnv"] },
+    { tags: ["@checkout", "@allEnv", "@stable"] },
     () => {
       let checkout;
 

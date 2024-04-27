@@ -1,10 +1,11 @@
+// @ts-strict-ignore
 import {
   MenuDeleteMutation,
   MenuItemCreateMutation,
   MenuItemUpdateMutation,
   MenuUpdateMutation,
-} from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
+} from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
 import { IntlShape } from "react-intl";
 
 import { UseNavigatorResult } from "../../../hooks/useNavigator";

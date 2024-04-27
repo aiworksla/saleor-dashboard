@@ -1,23 +1,22 @@
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import Grid from "@dashboard/components/Grid";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
 import {
   ConfigurationItemInput,
   PluginConfigurationExtendedFragment,
   PluginErrorFragment,
   PluginsDetailsFragment,
-} from "@saleor/graphql";
-import { ChangeEvent, SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { getStringOrPlaceholder } from "@saleor/misc";
-import { pluginListUrl } from "@saleor/plugins/urls";
-import { isSecretField } from "@saleor/plugins/utils";
+} from "@dashboard/graphql";
+import { ChangeEvent, SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { getStringOrPlaceholder } from "@dashboard/misc";
+import { pluginListUrl } from "@dashboard/plugins/urls";
+import { isSecretField } from "@dashboard/plugins/utils";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -56,20 +55,15 @@ const PluginsDetailsPage: React.FC<PluginsDetailsPageProps> = ({
 }) => {
   const intl = useIntl();
   const navigate = useNavigator();
-
   const initialFormData: PluginDetailsPageFormData = {
     active: selectedConfig?.active,
     configuration: selectedConfig?.configuration
-      ?.filter(
-        field =>
-          !isSecretField(selectedConfig?.configuration || [], field.name),
-      )
+      ?.filter(field => !isSecretField(selectedConfig?.configuration || [], field.name))
       .map(field => ({
         ...field,
         value: field.value || "",
       })),
   };
-
   const selectedChannelId = selectedConfig?.channel?.id;
 
   return (
@@ -97,12 +91,11 @@ const PluginsDetailsPage: React.FC<PluginsDetailsPageProps> = ({
 
           set(newData);
         };
+
         return (
-          <Container>
-            <Backlink href={pluginListUrl()}>
-              {intl.formatMessage(sectionNames.plugins)}
-            </Backlink>
-            <PageHeader
+          <DetailPageLayout gridTemplateColumns={1}>
+            <TopNav
+              href={pluginListUrl()}
               title={intl.formatMessage(
                 {
                   id: "EtGDeK",
@@ -114,55 +107,57 @@ const PluginsDetailsPage: React.FC<PluginsDetailsPageProps> = ({
                 },
               )}
             />
-            <Grid variant="inverted">
-              <div>
-                <PluginDetailsChannelsCard
-                  plugin={plugin}
-                  selectedChannelId={selectedChannelId}
-                  setSelectedChannelId={setSelectedChannelId}
-                />
-              </div>
-              <div>
-                <PluginInfo
-                  data={data}
-                  description={plugin?.description || ""}
-                  errors={errors}
-                  name={plugin?.name || ""}
-                  onChange={onChange}
-                />
-                <CardSpacer />
-                {data.configuration && (
-                  <div>
-                    <PluginSettings
-                      data={data}
-                      fields={selectedConfig?.configuration || []}
-                      errors={errors}
-                      disabled={disabled}
-                      onChange={onChange}
-                    />
-                    {selectedConfig?.configuration.some(field =>
-                      isSecretField(selectedConfig?.configuration, field.name),
-                    ) && (
-                      <>
-                        <CardSpacer />
-                        <PluginAuthorization
-                          fields={selectedConfig.configuration}
-                          onClear={onClear}
-                          onEdit={onEdit}
-                        />
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Grid>
-            <Savebar
-              disabled={isSaveDisabled}
-              state={saveButtonBarState}
-              onCancel={() => navigate(pluginListUrl())}
-              onSubmit={submit}
-            />
-          </Container>
+            <DetailPageLayout.Content>
+              <Grid variant="inverted">
+                <div>
+                  <PluginDetailsChannelsCard
+                    plugin={plugin}
+                    selectedChannelId={selectedChannelId}
+                    setSelectedChannelId={setSelectedChannelId}
+                  />
+                </div>
+                <div>
+                  <PluginInfo
+                    data={data}
+                    description={plugin?.description || ""}
+                    errors={errors}
+                    name={plugin?.name || ""}
+                    onChange={onChange}
+                  />
+                  <CardSpacer />
+                  {data.configuration && (
+                    <div>
+                      <PluginSettings
+                        data={data}
+                        fields={selectedConfig?.configuration || []}
+                        errors={errors}
+                        disabled={disabled}
+                        onChange={onChange}
+                      />
+                      {selectedConfig?.configuration.some(field =>
+                        isSecretField(selectedConfig?.configuration, field.name),
+                      ) && (
+                        <>
+                          <CardSpacer />
+                          <PluginAuthorization
+                            fields={selectedConfig.configuration}
+                            onClear={onClear}
+                            onEdit={onEdit}
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Grid>
+              <Savebar
+                disabled={isSaveDisabled}
+                state={saveButtonBarState}
+                onCancel={() => navigate(pluginListUrl())}
+                onSubmit={submit}
+              />
+            </DetailPageLayout.Content>
+          </DetailPageLayout>
         );
       }}
     </Form>

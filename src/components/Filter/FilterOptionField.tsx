@@ -1,7 +1,8 @@
+// @ts-strict-ignore
+import { toggle } from "@dashboard/utils/lists";
 import { FormControlLabel, Radio } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import { toggle } from "@saleor/utils/lists";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 import Checkbox from "../Checkbox";
@@ -20,11 +21,11 @@ const useStyles = makeStyles(
   }),
   { name: "FilterOptionField" },
 );
-
-const FilterOptionField: React.FC<FilterFieldBaseProps<
-  string,
-  FieldType.options
->> = ({ filter, onFilterPropertyChange, ...rest }) => {
+const FilterOptionField: React.FC<FilterFieldBaseProps<string, FieldType.options>> = ({
+  filter,
+  onFilterPropertyChange,
+  ...rest
+}) => {
   const classes = useStyles({});
   const handleSelect = (value: string) =>
     onFilterPropertyChange({
@@ -32,9 +33,7 @@ const FilterOptionField: React.FC<FilterFieldBaseProps<
         name: filter.name,
         update: {
           active: true,
-          value: filter.multiple
-            ? toggle(value, filter.value, (a, b) => a === b)
-            : [value],
+          value: filter.multiple ? toggle(value, filter.value, (a, b) => a === b) : [value],
         },
       },
       type: "set-property",
@@ -44,7 +43,7 @@ const FilterOptionField: React.FC<FilterFieldBaseProps<
     <div className={classes.root} {...rest}>
       {filter.options.map(option => (
         <div
-          className={classNames(classes.option, {
+          className={clsx(classes.option, {
             [classes.optionRadio]: !filter.multiple,
           })}
           key={option.value}

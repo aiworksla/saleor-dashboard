@@ -1,38 +1,42 @@
-import { attributeListUrl } from "@saleor/attributes/urls";
-import { useUser } from "@saleor/auth";
-import { channelsListUrl } from "@saleor/channels/urls";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import { APP_VERSION as dashboardVersion } from "@saleor/config";
-import { PermissionEnum } from "@saleor/graphql";
-import useShop from "@saleor/hooks/useShop";
-import Attributes from "@saleor/icons/Attributes";
-import Channels from "@saleor/icons/Channels";
-import Navigation from "@saleor/icons/Navigation";
-import PageTypes from "@saleor/icons/PageTypes";
-import PermissionGroups from "@saleor/icons/PermissionGroups";
-import Plugins from "@saleor/icons/Plugins";
-import ProductTypes from "@saleor/icons/ProductTypes";
-import ShippingMethods from "@saleor/icons/ShippingMethods";
-import SiteSettings from "@saleor/icons/SiteSettings";
-import StaffMembers from "@saleor/icons/StaffMembers";
-import Taxes from "@saleor/icons/Taxes";
-import Warehouses from "@saleor/icons/Warehouses";
-import { sectionNames } from "@saleor/intl";
-import { maybe } from "@saleor/misc";
-import { menuListUrl } from "@saleor/navigation/urls";
-import { pageTypeListUrl } from "@saleor/pageTypes/urls";
-import { permissionGroupListUrl } from "@saleor/permissionGroups/urls";
-import { pluginListUrl } from "@saleor/plugins/urls";
-import { productTypeListUrl } from "@saleor/productTypes/urls";
-import { shippingZonesListUrl } from "@saleor/shipping/urls";
-import { siteSettingsUrl } from "@saleor/siteSettings/urls";
-import { staffListUrl } from "@saleor/staff/urls";
-import { taxSection } from "@saleor/taxes/urls";
-import { warehouseSection } from "@saleor/warehouses/urls";
+// @ts-strict-ignore
+import { attributeListUrl } from "@dashboard/attributes/urls";
+import { useUser } from "@dashboard/auth";
+import { channelsListUrl } from "@dashboard/channels/urls";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { APP_VERSION as dashboardVersion } from "@dashboard/config";
+import { CustomAppUrls } from "@dashboard/custom-apps/urls";
+import { PermissionEnum } from "@dashboard/graphql";
+import useShop from "@dashboard/hooks/useShop";
+import Attributes from "@dashboard/icons/Attributes";
+import Channels from "@dashboard/icons/Channels";
+import Miscellaneous from "@dashboard/icons/Miscellaneous";
+import Navigation from "@dashboard/icons/Navigation";
+import PageTypes from "@dashboard/icons/PageTypes";
+import PermissionGroups from "@dashboard/icons/PermissionGroups";
+import Plugins from "@dashboard/icons/Plugins";
+import ProductTypes from "@dashboard/icons/ProductTypes";
+import ShippingMethods from "@dashboard/icons/ShippingMethods";
+import SiteSettings from "@dashboard/icons/SiteSettings";
+import StaffMembers from "@dashboard/icons/StaffMembers";
+import Taxes from "@dashboard/icons/Taxes";
+import Warehouses from "@dashboard/icons/Warehouses";
+import { sectionNames } from "@dashboard/intl";
+import { maybe } from "@dashboard/misc";
+import { menuListUrl } from "@dashboard/navigation/urls";
+import { pageTypeListUrl } from "@dashboard/pageTypes/urls";
+import { permissionGroupListUrl } from "@dashboard/permissionGroups/urls";
+import { pluginListUrl } from "@dashboard/plugins/urls";
+import { productTypeListUrl } from "@dashboard/productTypes/urls";
+import { shippingZonesListUrl } from "@dashboard/shipping/urls";
+import { siteSettingsUrl } from "@dashboard/siteSettings/urls";
+import { staffListUrl } from "@dashboard/staff/urls";
+import { taxConfigurationListUrl } from "@dashboard/taxes/urls";
+import { warehouseSection } from "@dashboard/warehouses/urls";
 import React from "react";
 import { IntlShape, useIntl } from "react-intl";
 
-import ConfigurationPage, { MenuSection } from "./ConfigurationPage";
+import { ConfigurationPage } from "./ConfigurationPage";
+import { MenuSection } from "./types";
 
 export function createConfigurationMenu(intl: IntlShape): MenuSection[] {
   return [
@@ -48,6 +52,7 @@ export function createConfigurationMenu(intl: IntlShape): MenuSection[] {
             defaultMessage: "Determine attributes used to create product types",
           }),
           icon: <Attributes />,
+          requireAllPermissions: true,
           permissions: [
             PermissionEnum.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,
             PermissionEnum.MANAGE_PAGE_TYPES_AND_ATTRIBUTES,
@@ -81,9 +86,8 @@ export function createConfigurationMenu(intl: IntlShape): MenuSection[] {
             defaultMessage: "Manage how your store charges tax",
           }),
           icon: <Taxes />,
-          permissions: [PermissionEnum.MANAGE_SETTINGS],
           title: intl.formatMessage(sectionNames.taxes),
-          url: taxSection,
+          url: taxConfigurationListUrl(),
           testId: "configuration-menu-taxes",
         },
       ],
@@ -108,8 +112,7 @@ export function createConfigurationMenu(intl: IntlShape): MenuSection[] {
         {
           description: intl.formatMessage({
             id: "ivJ1qt",
-            defaultMessage:
-              "Manage your permission groups and their permissions",
+            defaultMessage: "Manage your permission groups and their permissions",
           }),
           icon: <PermissionGroups />,
           permissions: [PermissionEnum.MANAGE_STAFF],
@@ -224,16 +227,22 @@ export function createConfigurationMenu(intl: IntlShape): MenuSection[] {
             defaultMessage: "View and update your plugins and their settings.",
           }),
           icon: (
-            <Plugins
-              fontSize="inherit"
-              viewBox="-8 -5 44 44"
-              preserveAspectRatio="xMinYMin meet"
-            />
+            <Plugins fontSize="inherit" viewBox="-8 -5 44 44" preserveAspectRatio="xMinYMin meet" />
           ),
           permissions: [PermissionEnum.MANAGE_PLUGINS],
           title: intl.formatMessage(sectionNames.plugins),
           url: pluginListUrl(),
           testId: "configuration-plugins-pages",
+        },
+        {
+          description: intl.formatMessage({
+            id: "Zz67wc",
+            defaultMessage: "View and update your webhooks and events.",
+          }),
+          icon: <Miscellaneous />,
+          title: intl.formatMessage(sectionNames.webhooksAndEvents),
+          url: CustomAppUrls.resolveAppListUrl(),
+          testId: "configuration-menu-webhooks-and-events",
         },
       ],
     },
@@ -244,12 +253,10 @@ export const configurationMenuUrl = "/configuration/";
 
 export const ConfigurationSection: React.FC = () => {
   const shop = useShop();
-
   const versions = {
     dashboardVersion,
     coreVersion: shop?.version ?? "",
   };
-
   const user = useUser();
   const intl = useIntl();
 

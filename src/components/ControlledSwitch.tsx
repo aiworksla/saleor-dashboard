@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { FormControlLabel, Switch } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
@@ -12,37 +13,28 @@ const useStyles = makeStyles(
 );
 
 interface ControlledSwitchProps {
+  className?: string;
   checked: boolean;
   disabled?: boolean;
   label: string | React.ReactNode;
   name: string;
   secondLabel?: string | React.ReactNode;
   uncheckedLabel?: string | React.ReactNode;
-  onChange?(event: React.ChangeEvent<any>);
+  onChange?: (event: React.ChangeEvent<any>) => any;
 }
 
 export const ControlledSwitch: React.FC<ControlledSwitchProps> = props => {
-  const {
-    checked,
-    disabled,
-    onChange,
-    label,
-    name,
-    secondLabel,
-    uncheckedLabel,
-  } = props;
-
+  const { checked, disabled, onChange, label, name, secondLabel, uncheckedLabel, className } =
+    props;
   const classes = useStyles(props);
 
   return (
     <FormControlLabel
+      className={className}
       control={
         <Switch
-          onChange={() =>
-            onChange({ target: { name, value: !checked } } as any)
-          }
+          onChange={() => onChange({ target: { name, value: !checked } } as any)}
           checked={checked}
-          color="primary"
           name={name}
         />
       }
@@ -59,7 +51,7 @@ export const ControlledSwitch: React.FC<ControlledSwitchProps> = props => {
           ) : (
             label
           )}
-          <div>{secondLabel ? secondLabel : null}</div>
+          <div>{secondLabel || null}</div>
         </div>
       }
       disabled={disabled}

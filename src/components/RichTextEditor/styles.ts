@@ -1,11 +1,11 @@
-import { fade } from "@material-ui/core/styles/colorManipulator";
 import { makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
 
 const useStyles = makeStyles(
   theme => {
     const hover = {
       "&:hover": {
-        background: fade(theme.palette.primary.main, 0.1),
+        background: vars.colors.background.default1Hovered,
       },
     };
 
@@ -18,17 +18,18 @@ const useStyles = makeStyles(
           minHeight: 24,
         },
         "& .ce-block--selected .ce-block__content": {
-          background: `${fade(theme.palette.primary.main, 0.2)} !important`,
+          background: `${vars.colors.background.default1Pressed} !important`,
         },
         "& .ce-block__content": {
           margin: 0,
           maxWidth: "unset",
+          paddingRight: "54px",
         },
         "& .ce-conversion-tool": {
           ...hover,
         },
         "& .ce-conversion-tool--focused": {
-          background: `${fade(theme.palette.primary.main, 0.1)} !important`,
+          background: `${vars.colors.background.default1Hovered} !important`,
         },
         "& .ce-conversion-tool__icon": {
           background: "none",
@@ -71,6 +72,29 @@ const useStyles = makeStyles(
         },
         "& .ce-toolbar__plus": {
           left: -9,
+          color: theme.palette.text.primary,
+          ...hover,
+        },
+        "& .ce-popover": {
+          backgroundColor: vars.colors.background.default1,
+          position: "absolute",
+          top: 0,
+          left: "-186px",
+        },
+        "& .ce-settings": {
+          position: "absolute",
+          left: "-56px",
+        },
+        "& .ce-popover__item": {
+          ...hover,
+        },
+        "& .ce-popover__item-icon": {
+          color: vars.colors.text.default1,
+          backgroundColor: vars.colors.background.default1,
+        },
+
+        "& .codex-editor__loader": {
+          height: "30px",
         },
         "& .ce-toolbox.ce-toolbox--opened": {
           left: 16,
@@ -80,37 +104,63 @@ const useStyles = makeStyles(
           paddingBottom: "0 !important",
         },
         "& a": {
-          color: theme.palette.primary.light,
+          color: vars.colors.text.accent1,
         },
-        "&:not($rootDisabled):hover": {
-          borderColor: theme.palette.primary.main,
+        "& .ce-popover__item--focused": {
+          background: `${vars.colors.background.default1Hovered} !important`,
+        },
+        "& .cdx-search-field": {
+          backgroundColor: vars.colors.background.default1,
         },
       },
       root: {
-        border: `1px solid ${fade(theme.palette.text.secondary, 0.4)}`,
-        borderRadius: 4,
-        boxShadow: `inset 0 0 0 0 ${theme.palette.primary.main}`,
-        fontSize: theme.typography.body1.fontSize,
-        minHeight: 56,
-        padding: theme.spacing(3, 2),
-        paddingBottom: theme.spacing(),
-        paddingLeft: 10,
+        border: `1px solid ${vars.colors.border.default1}`,
+        borderRadius: vars.borderRadius[3],
+        fontSize: vars.fontSize[4],
         position: "relative",
         transition: theme.transitions.duration.short + "ms",
+        padding: theme.spacing(0, 2),
+        paddingLeft: vars.spacing[2],
+        "&:hover": {
+          border: `1px solid ${vars.colors.border.default1}`,
+        },
       },
       rootActive: {
-        boxShadow: `inset 0px 0px 0 2px ${theme.palette.primary.main}`,
+        border: `1px solid ${vars.colors.border.accent1} !important`,
+        backgroundColor: `${vars.colors.background.default1} !important`,
       },
       rootDisabled: {
-        ...theme.overrides.MuiOutlinedInput.root["&$disabled"]["& fieldset"],
-        background: theme.palette.background.default,
-        color: theme.palette.saleor.main[4],
+        pointerEvents: "none",
+        backgroundColor: vars.colors.background.default1,
+        border: `1px solid ${vars.colors.border.default1}`,
+        color: vars.colors.text.defaultDisabled,
       },
       rootError: {
-        borderColor: theme.palette.error.main,
+        backgroundColor: vars.colors.background.critical2,
       },
       rootStatic: {
         fontSize: theme.typography.body1.fontSize,
+      },
+      labelRoot: {
+        marginLeft: "-4px",
+        color: `${vars.colors.text.default2} !important`,
+      },
+      labelError: {
+        color: `${vars.colors.text.critical2} !important`,
+      },
+      rootErrorFocus: {
+        border: "1px solid transparent !important",
+      },
+      labelDisabled: {
+        color: `${vars.colors.text.defaultDisabled} !important`,
+      },
+      rootTyped: {
+        backgroundColor: vars.colors.background.default1,
+      },
+      rootHasLabel: {
+        minHeight: 56,
+        padding: `${vars.spacing[6]} ${vars.spacing[2]}`,
+        paddingBottom: vars.spacing[1.5],
       },
     };
   },

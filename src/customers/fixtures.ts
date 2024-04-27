@@ -1,10 +1,10 @@
 import {
   CustomerAddressesQuery,
   CustomerDetailsQuery,
-  ListCustomersQuery,
   PaymentChargeStatusEnum,
-} from "@saleor/graphql";
-import { RelayToFlat } from "@saleor/types";
+} from "@dashboard/graphql";
+
+import { Customers } from "./types";
 
 export const customers = [
   {
@@ -681,7 +681,7 @@ export const customers = [
   },
 ];
 
-export const customerList: RelayToFlat<ListCustomersQuery["customers"]> = [
+export const customerList: Customers = [
   {
     __typename: "User",
     email: "Curtis.bailey@example.com",
@@ -947,8 +947,7 @@ export const customerList: RelayToFlat<ListCustomersQuery["customers"]> = [
     },
   },
 ];
-export const customer: CustomerDetailsQuery["user"] &
-  CustomerAddressesQuery["user"] = {
+export const customer: CustomerDetailsQuery["user"] & CustomerAddressesQuery["user"] = {
   __typename: "User",
   addresses: [
     {
@@ -974,20 +973,20 @@ export const customer: CustomerDetailsQuery["user"] &
       __typename: "Address",
       city: "West Feliciamouth",
       cityArea: "Montana",
-      companyName: null,
+      companyName: "",
       country: {
         __typename: "CountryDisplay",
         code: "JA",
         country: "Japan",
       },
-      countryArea: null,
+      countryArea: "",
       firstName: "Timmy",
       id: "33855",
       lastName: "Macejkovic",
       phone: "+41 460-907-9374",
       postalCode: "15926",
       streetAddress1: "0238 Cremin Freeway",
-      streetAddress2: null,
+      streetAddress2: "",
     },
   ],
   dateJoined: "2017-05-07T09:37:30.124154+00:00",

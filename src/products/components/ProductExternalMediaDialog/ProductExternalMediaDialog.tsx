@@ -1,17 +1,10 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import { Button } from "@saleor/components/Button";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { ProductFragment } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { ProductFragment } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { buttonMessages } from "@dashboard/intl";
+import { Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core";
+import { Button, Input, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
@@ -33,7 +26,6 @@ const messages = defineMessages({
     description: "modal button",
   },
 });
-
 const ProductExternalMediaDialog: React.FC<ProductExternalMediaDialogProps> = ({
   open,
   onClose,
@@ -43,7 +35,6 @@ const ProductExternalMediaDialog: React.FC<ProductExternalMediaDialogProps> = ({
   const initialValues: FormValues = {
     mediaUrl: "",
   };
-
   const handleOnSubmit = (values: FormValues) => {
     onSubmit(values.mediaUrl);
     onClose();
@@ -51,35 +42,39 @@ const ProductExternalMediaDialog: React.FC<ProductExternalMediaDialogProps> = ({
 
   return (
     <Dialog onClose={onClose} open={open}>
-      <DialogTitle>{intl.formatMessage(messages.buttonMessage)}</DialogTitle>
+      <DialogTitle disableTypography>
+        <Text size={5} fontWeight="bold">
+          {intl.formatMessage(messages.buttonMessage)}
+        </Text>
+      </DialogTitle>
       <Form initial={initialValues} onSubmit={handleOnSubmit}>
         {({ change, data, submit }) => (
           <>
             <DialogContent>
-              <Typography>
+              <Text size={2}>
                 <FormattedMessage
                   id="zDvDnG"
                   defaultMessage="Media from the URL you supply will be shown in the media gallery. You will be able to define the order of the gallery."
                   description="modal header"
                 />
-              </Typography>
+              </Text>
               <FormSpacer />
-              <TextField
+              <Input
                 label="URL"
                 value={data.mediaUrl}
                 name="mediaUrl"
-                type="url"
+                type="text"
                 onChange={change}
                 autoFocus
-                fullWidth
+                size="medium"
               />
             </DialogContent>
 
             <DialogActions>
-              <BackButton onClick={onClose} />
-              <Button onClick={submit}>
-                {intl.formatMessage(messages.buttonMessage)}
+              <Button variant="secondary" onClick={onClose}>
+                <FormattedMessage {...buttonMessages.back} />
               </Button>
+              <Button onClick={submit}>{intl.formatMessage(messages.buttonMessage)}</Button>
             </DialogActions>
           </>
         )}

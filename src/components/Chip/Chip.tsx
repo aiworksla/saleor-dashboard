@@ -1,8 +1,8 @@
 import { Typography } from "@material-ui/core";
-import { fade } from "@material-ui/core/styles/colorManipulator";
+import { alpha } from "@material-ui/core/styles";
 import CloseIcon from "@material-ui/icons/Close";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 export interface ChipProps {
@@ -23,7 +23,7 @@ const useStyles = makeStyles(
       color: theme.palette.common.white,
     },
     root: {
-      background: fade(theme.palette.primary.main, 0.8),
+      background: alpha(theme.palette.primary.main, 0.8),
       borderRadius: 18,
       display: "inline-block",
       marginRight: theme.spacing(2),
@@ -34,19 +34,17 @@ const useStyles = makeStyles(
 );
 const Chip: React.FC<ChipProps> = props => {
   const { className, label, onClose } = props;
-
   const classes = useStyles(props);
 
   return (
-    <div className={classNames(classes.root, className)}>
+    <div className={clsx(classes.root, className)}>
       <Typography className={classes.label} variant="caption">
         {label}
-        {onClose && (
-          <CloseIcon className={classes.closeIcon} onClick={onClose} />
-        )}
+        {onClose && <CloseIcon className={classes.closeIcon} onClick={onClose} />}
       </Typography>
     </div>
   );
 };
+
 Chip.displayName = "Chip";
 export default Chip;

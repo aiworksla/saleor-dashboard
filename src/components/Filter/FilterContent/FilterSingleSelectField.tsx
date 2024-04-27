@@ -1,9 +1,10 @@
-import { FilterFieldBaseProps, FilterType } from "@saleor/components/Filter";
+// @ts-strict-ignore
+import { FilterFieldBaseProps, FilterType } from "@dashboard/components/Filter";
 import {
   getIsFilterMultipleChoices,
   useCommonStyles,
-} from "@saleor/components/Filter/FilterContent/utils";
-import FormSpacer from "@saleor/components/FormSpacer";
+} from "@dashboard/components/Filter/FilterContent/utils";
+import FormSpacer from "@dashboard/components/FormSpacer";
 import React from "react";
 import { useIntl } from "react-intl";
 

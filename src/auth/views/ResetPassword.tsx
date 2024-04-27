@@ -1,38 +1,29 @@
-import { APP_MOUNT_URI } from "@saleor/config";
-import { useRequestPasswordResetMutation } from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors } from "@saleor/misc";
+import { useRequestPasswordResetMutation } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors } from "@dashboard/misc";
+import { getAppMountUriForRedirect } from "@dashboard/utils/urls";
 import React from "react";
 import { useIntl } from "react-intl";
 import urlJoin from "url-join";
 
-import ResetPasswordPage, {
-  ResetPasswordPageFormData,
-} from "../components/ResetPasswordPage";
+import ResetPasswordPage, { ResetPasswordPageFormData } from "../components/ResetPasswordPage";
 import { newPasswordUrl, passwordResetSuccessUrl } from "../urls";
 
 const ResetPasswordView: React.FC = () => {
   const [error, setError] = React.useState<string>();
   const navigate = useNavigator();
   const intl = useIntl();
-
-  const [
-    requestPasswordReset,
-    requestPasswordResetOpts,
-  ] = useRequestPasswordResetMutation({
+  const [requestPasswordReset, requestPasswordResetOpts] = useRequestPasswordResetMutation({
     onCompleted: data => {
-      if (data.requestPasswordReset.errors.length === 0) {
+      if (data?.requestPasswordReset?.errors.length === 0) {
         navigate(passwordResetSuccessUrl);
       } else {
-        if (
-          data.requestPasswordReset.errors.find(err => err.field === "email")
-        ) {
+        if (data?.requestPasswordReset?.errors.find(err => err.field === "email")) {
           setError(
             intl.formatMessage({
               id: "C0JLNW",
-              defaultMessage:
-                "Provided email address does not exist in our database.",
+              defaultMessage: "Provided email address does not exist in our database.",
             }),
           );
         } else {
@@ -41,7 +32,6 @@ const ResetPasswordView: React.FC = () => {
       }
     },
   });
-
   const handleSubmit = (data: ResetPasswordPageFormData) =>
     extractMutationErrors(
       requestPasswordReset({
@@ -49,7 +39,7 @@ const ResetPasswordView: React.FC = () => {
           email: data.email,
           redirectUrl: urlJoin(
             window.location.origin,
-            APP_MOUNT_URI === "/" ? "" : APP_MOUNT_URI,
+            getAppMountUriForRedirect(),
             newPasswordUrl().replace(/\?/, ""),
           ),
         },
@@ -59,10 +49,11 @@ const ResetPasswordView: React.FC = () => {
   return (
     <ResetPasswordPage
       disabled={requestPasswordResetOpts.loading}
-      error={error}
+      error={error as string}
       onSubmit={handleSubmit}
     />
   );
 };
+
 ResetPasswordView.displayName = "ResetPasswordView";
 export default ResetPasswordView;

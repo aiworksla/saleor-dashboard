@@ -1,19 +1,15 @@
+import { ChannelShippingData } from "@dashboard/channels/utils";
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import PriceField from "@dashboard/components/PriceField";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import TableHead from "@dashboard/components/TableHead";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { ShippingChannelsErrorFragment } from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import { ChannelError, getFormChannelError, getFormChannelErrors } from "@dashboard/utils/errors";
+import getShippingErrorMessage from "@dashboard/utils/errors/shipping";
 import { Card, TableBody, TableCell, Typography } from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import { ChannelShippingData } from "@saleor/channels/utils";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import PriceField from "@saleor/components/PriceField";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import TableHead from "@saleor/components/TableHead";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { ShippingChannelsErrorFragment } from "@saleor/graphql";
-import { ChangeEvent } from "@saleor/hooks/useForm";
-import {
-  getFormChannelError,
-  getFormChannelErrors,
-} from "@saleor/utils/errors";
-import getShippingErrorMessage from "@saleor/utils/errors/shipping";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -22,6 +18,7 @@ import { useStyles } from "./styles";
 interface Value {
   maxValue: string;
   minValue: string;
+  price: string;
 }
 export interface OrderValueProps {
   channels: ChannelShippingData[];
@@ -46,11 +43,11 @@ export const OrderValue: React.FC<OrderValueProps> = ({
   const intl = useIntl();
   const formErrors = getFormChannelErrors(
     ["maximumOrderPrice", "minimumOrderPrice"],
-    errors,
+    errors as ChannelError[],
   );
 
   return (
-    <Card>
+    <Card data-test-id="order-value">
       <CardTitle
         title={intl.formatMessage({
           id: "yatGsm",
@@ -61,6 +58,7 @@ export const OrderValue: React.FC<OrderValueProps> = ({
       <div className={classes.content}>
         <div className={classes.subheader}>
           <ControlledCheckbox
+            data-test-id="order-value-checkbox"
             name="orderValueRestricted"
             label={
               <>
@@ -82,13 +80,6 @@ export const OrderValue: React.FC<OrderValueProps> = ({
             onChange={onChange}
             disabled={disabled}
           />
-          <VerticalSpacer />
-          <FormattedMessage
-            id="u5c/tR"
-            defaultMessage="Channels that don’t have assigned discounts will use their parent channel to define the price. Price will be converted to channel’s currency"
-            description="channels discount info"
-          />
-          <VerticalSpacer />
         </div>
         {orderValueRestricted && (
           <ResponsiveTable className={classes.table}>
@@ -123,14 +114,8 @@ export const OrderValue: React.FC<OrderValueProps> = ({
             </TableHead>
             <TableBody>
               {channels?.map(channel => {
-                const minError = getFormChannelError(
-                  formErrors.minimumOrderPrice,
-                  channel.id,
-                );
-                const maxError = getFormChannelError(
-                  formErrors.maximumOrderPrice,
-                  channel.id,
-                );
+                const minError = getFormChannelError(formErrors.minimumOrderPrice, channel.id);
+                const maxError = getFormChannelError(formErrors.maximumOrderPrice, channel.id);
 
                 return (
                   <TableRowLink key={channel.id}>
@@ -139,6 +124,7 @@ export const OrderValue: React.FC<OrderValueProps> = ({
                     </TableCell>
                     <TableCell className={classes.price}>
                       <PriceField
+                        data-test-id="min-value-price-input"
                         disabled={disabled}
                         error={!!minError}
                         label={intl.formatMessage({
@@ -154,13 +140,12 @@ export const OrderValue: React.FC<OrderValueProps> = ({
                           })
                         }
                         currencySymbol={channel.currency}
-                        hint={
-                          minError && getShippingErrorMessage(minError, intl)
-                        }
+                        hint={minError && getShippingErrorMessage(minError, intl)}
                       />
                     </TableCell>
                     <TableCell className={classes.price}>
                       <PriceField
+                        data-test-id="max-value-price-input"
                         disabled={disabled}
                         error={!!maxError}
                         label={intl.formatMessage({
@@ -169,7 +154,7 @@ export const OrderValue: React.FC<OrderValueProps> = ({
                         })}
                         name={`maxValue:${channel.name}`}
                         value={channel.maxValue}
-                        InputProps={{ inputProps: { min: channel.minValue } }}
+                        minValue={channel.minValue}
                         onChange={e =>
                           onChannelsChange(channel.id, {
                             ...channel,
@@ -177,9 +162,7 @@ export const OrderValue: React.FC<OrderValueProps> = ({
                           })
                         }
                         currencySymbol={channel.currency}
-                        hint={
-                          maxError && getShippingErrorMessage(maxError, intl)
-                        }
+                        hint={maxError && getShippingErrorMessage(maxError, intl)}
                       />
                     </TableCell>
                   </TableRowLink>

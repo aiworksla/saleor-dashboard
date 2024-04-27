@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import CollectionWithDividers from "@dashboard/components/CollectionWithDividers";
+import Skeleton from "@dashboard/components/Skeleton";
+import { PluginsDetailsFragment } from "@dashboard/graphql";
+import { isPluginGlobal } from "@dashboard/plugins/views/utils";
 import { CardContent, Typography } from "@material-ui/core";
-import CollectionWithDividers from "@saleor/components/CollectionWithDividers";
-import Skeleton from "@saleor/components/Skeleton";
-import { PluginsDetailsFragment } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
-import { isPluginGlobal } from "@saleor/plugins/views/utils";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -55,8 +56,7 @@ const PluginDetailsChannelsCardContent: React.FC<PluginDetailsChannelsCardProps>
     );
   }
 
-  const isChannelSelected = (channelId: string) =>
-    selectedChannelId === channelId;
+  const isChannelSelected = (channelId: string) => selectedChannelId === channelId;
 
   return (
     <>
@@ -69,9 +69,7 @@ const PluginDetailsChannelsCardContent: React.FC<PluginDetailsChannelsCardProps>
             key={channel.id}
             onClick={() => setSelectedChannelId(channel.id)}
           >
-            {isChannelSelected(channel.id) && (
-              <div className={classes.itemActiveIndicator}></div>
-            )}
+            {isChannelSelected(channel.id) && <div className={classes.itemActiveIndicator}></div>}
             <CardContent>
               <Typography>{channel.name}</Typography>
             </CardContent>

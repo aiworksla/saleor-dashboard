@@ -7,7 +7,6 @@ import {
   createMenu as createMenuViaApi,
   getMenu,
 } from "../../support/api/requests/Menu";
-import { deleteMenusStartsWith } from "../../support/api/utils/navigationUtils";
 import {
   createMenu,
   createNewMenuItem,
@@ -22,15 +21,15 @@ describe("Tests for menu navigation", () => {
   let menu;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteMenusStartsWith(startsWith);
-    createMenuViaApi(randomName).then(
-      ({ menu: menuResp }) => (menu = menuResp),
-    );
+    cy.loginUserViaRequest();
+    createMenuViaApi(randomName).then(({ menu: menuResp }) => {
+      menu = menuResp;
+      cy.checkIfDataAreNotNull(menu);
+    });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(

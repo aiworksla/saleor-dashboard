@@ -1,9 +1,9 @@
-import { createFilterStructure } from "@saleor/discounts/components/VoucherListPage";
-import { VoucherListUrlFilters } from "@saleor/discounts/urls";
-import { date } from "@saleor/fixtures";
-import { DiscountStatusEnum, VoucherDiscountType } from "@saleor/graphql";
-import { getFilterQueryParams } from "@saleor/utils/filters";
-import { stringifyQs } from "@saleor/utils/urls";
+import { createFilterStructure } from "@dashboard/discounts/components/VoucherListPage";
+import { VoucherListUrlFilters } from "@dashboard/discounts/urls";
+import { date } from "@dashboard/fixtures";
+import { DiscountStatusEnum, VoucherDiscountType } from "@dashboard/graphql";
+import { getFilterQueryParams } from "@dashboard/utils/filters";
+import { stringifyQs } from "@dashboard/utils/urls";
 import { getExistingKeys, setFilterOptsStatus } from "@test/filters";
 import { config } from "@test/intl";
 import { createIntl } from "react-intl";
@@ -17,7 +17,6 @@ describe("Filtering query params", () => {
 
     expect(getExistingKeys(filterVariables)).toHaveLength(0);
   });
-
   it("should not be empty object if params given", () => {
     const params: VoucherListUrlFilters = {
       startedFrom: date.from,
@@ -32,10 +31,8 @@ describe("Filtering query params", () => {
     expect(getExistingKeys(filterVariables)).toHaveLength(4);
   });
 });
-
 describe("Filtering URL params", () => {
   const intl = createIntl(config);
-
   const filters = createFilterStructure(intl, {
     channel: {
       active: false,
@@ -72,14 +69,10 @@ describe("Filtering URL params", () => {
   });
 
   it("should be empty if no active filters", () => {
-    const filterQueryParams = getFilterQueryParams(
-      filters,
-      getFilterQueryParam,
-    );
+    const filterQueryParams = getFilterQueryParams(filters, getFilterQueryParam);
 
     expect(getExistingKeys(filterQueryParams)).toHaveLength(0);
   });
-
   it("should not be empty if active filters are present", () => {
     const filterQueryParams = getFilterQueryParams(
       setFilterOptsStatus(filters, true),

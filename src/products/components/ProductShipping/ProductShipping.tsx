@@ -1,14 +1,9 @@
-import {
-  Card,
-  CardContent,
-  InputAdornment,
-  TextField,
-} from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import Grid from "@saleor/components/Grid";
-import { ProductErrorFragment } from "@saleor/graphql";
-import { getFormErrors, getProductErrorMessage } from "@saleor/utils/errors";
-import createNonNegativeValueChangeHandler from "@saleor/utils/handlers/nonNegativeValueChangeHandler";
+// @ts-strict-ignore
+import { DashboardCard } from "@dashboard/components/Card";
+import { ProductErrorFragment } from "@dashboard/graphql";
+import { getFormErrors, getProductErrorMessage } from "@dashboard/utils/errors";
+import createNonNegativeValueChangeHandler from "@dashboard/utils/handlers/nonNegativeValueChangeHandler";
+import { Box, Input, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -22,26 +17,24 @@ interface ProductShippingProps {
   onChange: (event: React.ChangeEvent<any>) => void;
 }
 
-const ProductShipping: React.FC<ProductShippingProps> = props => {
+export const ProductShipping: React.FC<ProductShippingProps> = props => {
   const { data, disabled, errors, weightUnit, onChange } = props;
-
   const intl = useIntl();
-
   const formErrors = getFormErrors(["weight"], errors);
   const handleChange = createNonNegativeValueChangeHandler(onChange);
 
   return (
-    <Card>
-      <CardTitle
-        title={intl.formatMessage({
+    <DashboardCard>
+      <DashboardCard.Title>
+        {intl.formatMessage({
           id: "3rIMq/",
           defaultMessage: "Shipping",
           description: "product shipping",
         })}
-      />
-      <CardContent>
-        <Grid variant="uniform">
-          <TextField
+      </DashboardCard.Title>
+      <DashboardCard.Content>
+        <Box __width="25%">
+          <Input
             disabled={disabled}
             label={intl.formatMessage({
               id: "SUbxSK",
@@ -51,23 +44,14 @@ const ProductShipping: React.FC<ProductShippingProps> = props => {
             error={!!formErrors.weight}
             helperText={getProductErrorMessage(formErrors.weight, intl)}
             name="weight"
+            type="number"
+            size="small"
             value={data.weight}
             onChange={handleChange}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {weightUnit || ""}
-                </InputAdornment>
-              ),
-              inputProps: {
-                min: 0,
-              },
-            }}
+            endAdornment={<Text marginRight={2}>{weightUnit || ""}</Text>}
           />
-        </Grid>
-      </CardContent>
-    </Card>
+        </Box>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-ProductShipping.displayName = "ProductShipping";
-export default ProductShipping;

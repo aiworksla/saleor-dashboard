@@ -1,11 +1,12 @@
-import AssignAttributeDialog from "@saleor/components/AssignAttributeDialog";
-import AttributeUnassignDialog from "@saleor/components/AttributeUnassignDialog";
-import BulkAttributeUnassignDialog from "@saleor/components/BulkAttributeUnassignDialog";
-import { Button } from "@saleor/components/Button";
-import NotFoundPage from "@saleor/components/NotFoundPage";
-import TypeDeleteWarningDialog from "@saleor/components/TypeDeleteWarningDialog";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import { DEFAULT_INITIAL_SEARCH_DATA } from "@saleor/config";
+// @ts-strict-ignore
+import AssignAttributeDialog from "@dashboard/components/AssignAttributeDialog";
+import AttributeUnassignDialog from "@dashboard/components/AttributeUnassignDialog";
+import BulkAttributeUnassignDialog from "@dashboard/components/BulkAttributeUnassignDialog";
+import { Button } from "@dashboard/components/Button";
+import NotFoundPage from "@dashboard/components/NotFoundPage";
+import TypeDeleteWarningDialog from "@dashboard/components/TypeDeleteWarningDialog";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { DEFAULT_INITIAL_SEARCH_DATA } from "@dashboard/config";
 import {
   useAssignPageAttributeMutation,
   usePageTypeAttributeReorderMutation,
@@ -15,23 +16,21 @@ import {
   useUnassignPageAttributeMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages } from "@saleor/intl";
-import { getStringOrPlaceholder } from "@saleor/misc";
-import { ReorderEvent } from "@saleor/types";
-import getPageErrorMessage from "@saleor/utils/errors/page";
-import createMetadataUpdateHandler from "@saleor/utils/handlers/metadataUpdateHandler";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+} from "@dashboard/graphql";
+import useBulkActions from "@dashboard/hooks/useBulkActions";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import { getStringOrPlaceholder } from "@dashboard/misc";
+import { ReorderEvent } from "@dashboard/types";
+import getPageErrorMessage from "@dashboard/utils/errors/page";
+import createMetadataUpdateHandler from "@dashboard/utils/handlers/metadataUpdateHandler";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import useAvailablePageAttributeSearch from "../../searches/useAvailablePageAttributesSearch";
-import PageTypeDetailsPage, {
-  PageTypeForm,
-} from "../components/PageTypeDetailsPage";
+import PageTypeDetailsPage, { PageTypeForm } from "../components/PageTypeDetailsPage";
 import usePageTypeDelete from "../hooks/usePageTypeDelete";
 import { pageTypeListUrl, pageTypeUrl, PageTypeUrlQueryParams } from "../urls";
 
@@ -40,27 +39,19 @@ interface PageTypeDetailsProps {
   params: PageTypeUrlQueryParams;
 }
 
-export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
-  id,
-  params,
-}) => {
+export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({ id, params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const attributeListActions = useBulkActions();
   const intl = useIntl();
-
   const notifySaved = () =>
     notify({
       status: "success",
       text: intl.formatMessage(commonMessages.savedChanges),
     });
-
   const [updatePageType, updatePageTypeOpts] = usePageTypeUpdateMutation({
     onCompleted: updateData => {
-      if (
-        !updateData.pageTypeUpdate.errors ||
-        updateData.pageTypeUpdate.errors.length === 0
-      ) {
+      if (!updateData.pageTypeUpdate.errors || updateData.pageTypeUpdate.errors.length === 0) {
         notifySaved();
       }
     },
@@ -79,20 +70,15 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
       }
     },
   });
-  const [assignAttribute, assignAttributeOpts] = useAssignPageAttributeMutation(
-    {
-      onCompleted: data => {
-        if (data.pageAttributeAssign.errors.length === 0) {
-          notifySaved();
-          closeModal();
-        }
-      },
+  const [assignAttribute, assignAttributeOpts] = useAssignPageAttributeMutation({
+    onCompleted: data => {
+      if (data.pageAttributeAssign.errors.length === 0) {
+        notifySaved();
+        closeModal();
+      }
     },
-  );
-  const [
-    unassignAttribute,
-    unassignAttributeOpts,
-  ] = useUnassignPageAttributeMutation({
+  });
+  const [unassignAttribute, unassignAttributeOpts] = useUnassignPageAttributeMutation({
     onCompleted: data => {
       if (data.pageAttributeUnassign.errors.length === 0) {
         notify({
@@ -111,15 +97,12 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
       }
     },
   });
-
   const pageTypeDeleteData = usePageTypeDelete({
     singleId: id,
     params,
   });
-
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-
   const handlePageTypeUpdate = async (formData: PageTypeForm) => {
     const result = await updatePageType({
       variables: {
@@ -164,18 +147,15 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
         pageTypeId: id,
       },
     });
-
   const { data, loading: dataLoading } = usePageTypeDetailsQuery({
     variables: { id },
   });
-
   const { loadMore, search, result } = useAvailablePageAttributeSearch({
     variables: {
       ...DEFAULT_INITIAL_SEARCH_DATA,
       id,
     },
   });
-
   const pageType = data?.pageType;
 
   if (pageType === null) {
@@ -183,14 +163,12 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
   }
 
   const closeModal = () => navigate(pageTypeUrl(id), { replace: true });
-
   const handleSubmit = createMetadataUpdateHandler(
     data?.pageType,
     handlePageTypeUpdate,
     variables => updateMetadata({ variables }),
     variables => updatePrivateMetadata({ variables }),
   );
-
   const loading = updatePageTypeOpts.loading || dataLoading;
 
   return (
@@ -264,9 +242,7 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
             deleteButtonState={deletePageTypeOpts.status}
           />
           <AssignAttributeDialog
-            attributes={mapEdgesToItems(
-              result?.data?.pageType?.availableAttributes,
-            )}
+            attributes={mapEdgesToItems(result?.data?.pageType?.availableAttributes)}
             confirmButtonState={assignAttributeOpts.status}
             errors={
               assignAttributeOpts.data?.pageAttributeAssign.errors
@@ -281,20 +257,17 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
             onFetch={search}
             onFetchMore={loadMore}
             onOpen={result.refetch}
-            hasMore={
-              !!result.data?.pageType.availableAttributes.pageInfo.hasNextPage
-            }
+            hasMore={!!result.data?.pageType.availableAttributes.pageInfo.hasNextPage}
             open={params.action === "assign-attribute"}
             selected={params.ids || []}
             onToggle={attributeId => {
               const ids = params.ids || [];
+
               navigate(
                 pageTypeUrl(id, {
                   ...params,
                   ids: ids.includes(attributeId)
-                    ? params.ids.filter(
-                        selectedId => selectedId !== attributeId,
-                      )
+                    ? params.ids.filter(selectedId => selectedId !== attributeId)
                     : [...ids, attributeId],
                 }),
               );
@@ -322,9 +295,7 @@ export const PageTypeDetails: React.FC<PageTypeDetailsProps> = ({
           description: "dialog header",
         })}
         attributeName={getStringOrPlaceholder(
-          data?.pageType.attributes.find(
-            attribute => attribute.id === params.id,
-          )?.name,
+          data?.pageType.attributes.find(attribute => attribute.id === params.id)?.name,
         )}
         confirmButtonState={unassignAttributeOpts.status}
         onClose={closeModal}

@@ -1,3 +1,19 @@
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import Checkbox from "@dashboard/components/Checkbox";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { OrderErrorFragment, SearchOrderVariantQuery } from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import useModalDialogOpen from "@dashboard/hooks/useModalDialogOpen";
+import useSearchQuery from "@dashboard/hooks/useSearchQuery";
+import { buttonMessages } from "@dashboard/intl";
+import { maybe, renderCollection } from "@dashboard/misc";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import {
   CircularProgress,
   Dialog,
@@ -10,22 +26,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import Checkbox from "@saleor/components/Checkbox";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import FormSpacer from "@saleor/components/FormSpacer";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { OrderErrorFragment, SearchOrderVariantQuery } from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import useModalDialogOpen from "@saleor/hooks/useModalDialogOpen";
-import useSearchQuery from "@saleor/hooks/useSearchQuery";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { maybe, renderCollection } from "@saleor/misc";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
+import { Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -33,12 +34,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import OrderPriceLabel from "../OrderPriceLabel/OrderPriceLabel";
 import { messages } from "./messages";
 import { useStyles } from "./styles";
-import {
-  hasAllVariantsSelected,
-  isVariantSelected,
-  onProductAdd,
-  onVariantAdd,
-} from "./utils";
+import { hasAllVariantsSelected, isVariantSelected, onProductAdd, onVariantAdd } from "./utils";
 
 export interface OrderProductAddDialogProps extends FetchMoreProps {
   confirmButtonState: ConfirmButtonTransitionState;
@@ -47,13 +43,11 @@ export interface OrderProductAddDialogProps extends FetchMoreProps {
   products: RelayToFlat<SearchOrderVariantQuery["search"]>;
   onClose: () => void;
   onFetch: (query: string) => void;
-  onSubmit: (
-    data: SearchOrderVariantQuery["search"]["edges"][0]["node"]["variants"],
-  ) => void;
+  onSubmit: (data: SearchOrderVariantQuery["search"]["edges"][0]["node"]["variants"]) => void;
+  channelName?: string;
 }
 
 const scrollableTargetId = "orderProductAddScrollableDialog";
-
 const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
   const {
     confirmButtonState,
@@ -66,8 +60,8 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
     onFetchMore,
     onClose,
     onSubmit,
+    channelName,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
   const [query, onQueryChange] = useSearchQuery(onFetch);
@@ -82,36 +76,25 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
 
   const isValidVariant = ({
     pricing,
-  }: SearchOrderVariantQuery["search"]["edges"][0]["node"]["variants"][0]) =>
-    !!pricing;
-
+  }: SearchOrderVariantQuery["search"]["edges"][0]["node"]["variants"][0]) => !!pricing;
   const getValidProductVariants = ({
     variants,
-  }: SearchOrderVariantQuery["search"]["edges"][0]["node"]) =>
-    variants.filter(isValidVariant);
-
+  }: SearchOrderVariantQuery["search"]["edges"][0]["node"]) => variants.filter(isValidVariant);
   const productChoices =
-    products?.filter(product => getValidProductVariants(product).length > 0) ||
-    [];
-
+    products?.filter(product => getValidProductVariants(product).length > 0) || [];
   const selectedVariantsToProductsMap = productChoices
     ? productChoices.map(product =>
-        getValidProductVariants(product).map(variant =>
-          isVariantSelected(variant, variants),
-        ),
+        getValidProductVariants(product).map(variant => isVariantSelected(variant, variants)),
       )
     : [];
-
   const productsWithAllVariantsSelected = productChoices
     ? productChoices.map(product =>
         hasAllVariantsSelected(getValidProductVariants(product), variants),
       )
     : [];
-
   const handleSubmit = () => onSubmit(variants);
-
-  const productChoicesWithValidVariants = productChoices.filter(
-    ({ variants }) => variants.some(isValidVariant),
+  const productChoicesWithValidVariants = productChoices.filter(({ variants }) =>
+    variants.some(isValidVariant),
   );
 
   return (
@@ -122,9 +105,19 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>
-        <FormattedMessage {...messages.title} />
+      <DialogTitle disableTypography>
+        <FormattedMessage
+          {...messages.title}
+          values={{
+            channelName,
+          }}
+        />
       </DialogTitle>
+      <DialogContent className={classes.subtitle}>
+        <Text size={2} color="default2">
+          <FormattedMessage {...messages.subtitle} />
+        </Text>
+      </DialogContent>
       <DialogContent data-test-id="search-query">
         <TextField
           name="query"
@@ -153,20 +146,15 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
           scrollableTarget={scrollableTargetId}
         >
           <ResponsiveTable key="table">
-            <TableBody>
+            <TableBody data-test-id="add-products-table">
               {renderCollection(
                 productChoicesWithValidVariants,
                 (product, productIndex) => (
                   <React.Fragment key={product ? product.id : "skeleton"}>
-                    <TableRowLink>
-                      <TableCell
-                        padding="checkbox"
-                        className={classes.productCheckboxCell}
-                      >
+                    <TableRowLink data-test-id="product">
+                      <TableCell padding="checkbox" className={classes.productCheckboxCell}>
                         <Checkbox
-                          checked={
-                            productsWithAllVariantsSelected[productIndex]
-                          }
+                          checked={productsWithAllVariantsSelected[productIndex]}
                           disabled={loading}
                           onChange={() =>
                             onProductAdd(
@@ -183,23 +171,23 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
                         className={classes.avatar}
                         thumbnail={maybe(() => product.thumbnail.url)}
                       />
-                      <TableCell className={classes.colName} colSpan={2}>
+                      <TableCell
+                        className={classes.colName}
+                        colSpan={2}
+                        data-test-id="product-name"
+                      >
                         {maybe(() => product.name)}
                       </TableCell>
                     </TableRowLink>
                     {maybe(() => product.variants, [])
                       .filter(isValidVariant)
                       .map((variant, variantIndex) => (
-                        <TableRowLink key={variant.id}>
+                        <TableRowLink key={variant.id} data-test-id="variant">
                           <TableCell />
                           <TableCell className={classes.colVariantCheckbox}>
                             <Checkbox
                               className={classes.variantCheckbox}
-                              checked={
-                                selectedVariantsToProductsMap[productIndex][
-                                  variantIndex
-                                ]
-                              }
+                              checked={selectedVariantsToProductsMap[productIndex][variantIndex]}
                               disabled={loading}
                               onChange={() =>
                                 onVariantAdd(
@@ -226,7 +214,7 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className={classes.textRight}>
+                          <TableCell className={classes.textRight} data-test-id="variant-price">
                             <OrderPriceLabel pricing={variant.pricing} />
                           </TableCell>
                         </TableRowLink>
@@ -235,7 +223,7 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
                 ),
                 () => (
                   <Typography className={classes.noContentText}>
-                    {!!query
+                    {query
                       ? intl.formatMessage(messages.noProductsInQuery)
                       : intl.formatMessage(messages.noProductsInChannel)}
                   </Typography>
@@ -256,11 +244,13 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
         )}
       </DialogContent>
       <DialogActions>
-        <BackButton onClick={onClose} />
+        <BackButton onClick={onClose} data-test-id="back-button" />
         <ConfirmButton
           transitionState={confirmButtonState}
           type="submit"
+          data-test-id="confirm-button"
           onClick={handleSubmit}
+          disabled={variants.length === 0}
         >
           <FormattedMessage {...buttonMessages.confirm} />
         </ConfirmButton>
@@ -268,5 +258,6 @@ const OrderProductAddDialog: React.FC<OrderProductAddDialogProps> = props => {
     </Dialog>
   );
 };
+
 OrderProductAddDialog.displayName = "OrderProductAddDialog";
 export default OrderProductAddDialog;

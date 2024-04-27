@@ -1,17 +1,12 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@material-ui/core";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+// @ts-strict-ignore
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { buttonMessages } from "@dashboard/intl";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import BackButton from "../BackButton";
-import ConfirmButton from "../ConfirmButton";
+import { ConfirmButton } from "../ConfirmButton";
 import Form from "../Form";
 
 export interface SaveFilterTabDialogFormData {
@@ -38,7 +33,7 @@ const SaveFilterTabDialog: React.FC<SaveFilterTabDialogProps> = ({
   const intl = useIntl();
   const [errors, setErrors] = React.useState(false);
   const handleErrors = data => {
-    if (data.name.length) {
+    if (data.name.trim().length) {
       onSubmit(data);
       setErrors(false);
     } else {
@@ -48,11 +43,11 @@ const SaveFilterTabDialog: React.FC<SaveFilterTabDialogProps> = ({
 
   return (
     <Dialog onClose={onClose} open={open} fullWidth maxWidth="sm">
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
-          id="liLrVs"
-          defaultMessage="Save Custom Search"
-          description="save filter tab, header"
+          id="P9YktI"
+          defaultMessage="Save view preset"
+          description="save preset, header"
         />
       </DialogTitle>
       <Form initial={initialForm} onSubmit={handleErrors}>
@@ -63,22 +58,26 @@ const SaveFilterTabDialog: React.FC<SaveFilterTabDialogProps> = ({
                 autoFocus
                 fullWidth
                 label={intl.formatMessage({
-                  id: "QcIFCs",
-                  defaultMessage: "Search Name",
-                  description: "save search tab",
+                  id: "zhnwl6",
+                  defaultMessage: "Preset name",
+                  description: "save preset name",
                 })}
                 name={"name" as keyof SaveFilterTabDialogFormData}
                 value={data.name}
                 onChange={change}
                 error={errors}
+                data-test-id="preset-name-text-field"
                 helperText={errors ? "This field is required" : null}
               />
             </DialogContent>
             <DialogActions>
-              <BackButton onClick={onClose} />
+              <BackButton onClick={onClose} data-test-id="cancel-preset-button">
+                <FormattedMessage {...buttonMessages.cancel} />
+              </BackButton>
               <ConfirmButton
                 transitionState={confirmButtonState}
                 onClick={submit}
+                data-test-id="save-preset-button"
               >
                 <FormattedMessage {...buttonMessages.save} />
               </ConfirmButton>
@@ -89,5 +88,6 @@ const SaveFilterTabDialog: React.FC<SaveFilterTabDialogProps> = ({
     </Dialog>
   );
 };
+
 SaveFilterTabDialog.displayName = "SaveFilterTabDialog";
 export default SaveFilterTabDialog;

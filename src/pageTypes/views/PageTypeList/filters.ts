@@ -1,9 +1,6 @@
-import { PageTypeFilterInput } from "@saleor/graphql";
+import { PageTypeFilterInput } from "@dashboard/graphql";
 
-import {
-  createFilterTabUtils,
-  createFilterUtils,
-} from "../../../utils/filters";
+import { createFilterTabUtils, createFilterUtils } from "../../../utils/filters";
 import {
   PageTypeListUrlFilters,
   PageTypeListUrlFiltersEnum,
@@ -12,24 +9,16 @@ import {
 
 export const PAGE_TYPE_FILTERS_KEY = "pageTypeFilters";
 
-export function getFilterVariables(
-  params: PageTypeListUrlFilters,
-): PageTypeFilterInput {
+export function getFilterVariables(params: PageTypeListUrlFilters): PageTypeFilterInput {
   return {
     search: params.query,
   };
 }
 
-export const {
-  deleteFilterTab,
-  getFilterTabs,
-  saveFilterTab,
-} = createFilterTabUtils<PageTypeListUrlFilters>(PAGE_TYPE_FILTERS_KEY);
+export const { deleteFilterTab, getFilterTabs, saveFilterTab } =
+  createFilterTabUtils<PageTypeListUrlFilters>(PAGE_TYPE_FILTERS_KEY);
 
-export const {
-  areFiltersApplied,
-  getActiveFilters,
-  getFiltersCurrentTab,
-} = createFilterUtils<PageTypeListUrlQueryParams, PageTypeListUrlFilters>(
-  PageTypeListUrlFiltersEnum,
-);
+export const { areFiltersApplied, getActiveFilters, getFiltersCurrentTab } = createFilterUtils<
+  PageTypeListUrlQueryParams,
+  PageTypeListUrlFilters
+>(PageTypeListUrlFiltersEnum);

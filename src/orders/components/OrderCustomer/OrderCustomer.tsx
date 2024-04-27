@@ -1,25 +1,27 @@
-import { Card, CardContent, Typography } from "@material-ui/core";
-import AddressFormatter from "@saleor/components/AddressFormatter";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import ExternalLink from "@saleor/components/ExternalLink";
-import Form from "@saleor/components/Form";
-import Hr from "@saleor/components/Hr";
-import Link from "@saleor/components/Link";
-import RequirePermissions from "@saleor/components/RequirePermissions";
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import Skeleton from "@saleor/components/Skeleton";
+// @ts-strict-ignore
+import AddressFormatter from "@dashboard/components/AddressFormatter";
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import ExternalLink from "@dashboard/components/ExternalLink";
+import Form from "@dashboard/components/Form";
+import Hr from "@dashboard/components/Hr";
+import Link from "@dashboard/components/Link";
+import RequirePermissions from "@dashboard/components/RequirePermissions";
+import SingleAutocompleteSelectField from "@dashboard/components/SingleAutocompleteSelectField";
+import Skeleton from "@dashboard/components/Skeleton";
 import {
   OrderDetailsFragment,
   OrderErrorCode,
   OrderErrorFragment,
   PermissionEnum,
   SearchCustomersQuery,
-} from "@saleor/graphql";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { buttonMessages } from "@saleor/intl";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
-import createSingleAutocompleteSelectHandler from "@saleor/utils/handlers/singleAutocompleteSelectChangeHandler";
+} from "@dashboard/graphql";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { buttonMessages } from "@dashboard/intl";
+import { orderListUrl } from "@dashboard/orders/urls";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
+import createSingleAutocompleteSelectHandler from "@dashboard/utils/handlers/singleAutocompleteSelectChangeHandler";
+import { Card, CardContent, Typography } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -67,21 +69,14 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
     onShippingAddressEdit,
   } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
-
   const user = maybe(() => order.user);
   const userEmail = maybe(() => order.userEmail);
-
-  const [userDisplayName, setUserDisplayName] = useStateFromProps(
-    maybe(() => user.email, ""),
-  );
+  const [userDisplayName, setUserDisplayName] = useStateFromProps(maybe(() => user.email, ""));
   const [isInEditMode, setEditModeStatus] = React.useState(false);
   const toggleEditMode = () => setEditModeStatus(!isInEditMode);
-
   const billingAddress = maybe(() => order.billingAddress);
   const shippingAddress = maybe(() => order.shippingAddress);
-
   const noBillingAddressError = errors.find(
     error => error.code === OrderErrorCode.BILLING_ADDRESS_NOT_SET,
   );
@@ -99,9 +94,7 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
         })}
         toolbar={
           !!canEditCustomer && (
-            <RequirePermissions
-              requiredPermissions={[PermissionEnum.MANAGE_ORDERS]}
-            >
+            <RequirePermissions requiredPermissions={[PermissionEnum.MANAGE_ORDERS]}>
               <Button
                 data-test-id="edit-customer"
                 variant="tertiary"
@@ -120,8 +113,9 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
         ) : isInEditMode && canEditCustomer ? (
           <Form confirmLeave initial={{ query: "" }}>
             {({ change, data }) => {
-              const handleChange = (event: React.ChangeEvent<any>) => {
+              const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 change(event);
+
                 const value = event.target.value;
 
                 onCustomerEdit({
@@ -140,6 +134,7 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
                 setUserDisplayName,
                 userChoices,
               );
+
               return (
                 <SingleAutocompleteSelectField
                   data-test-id="select-customer"
@@ -167,30 +162,29 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
               <FormattedMessage id="Qovenh" defaultMessage="Anonymous user" />
             </Typography>
           ) : (
-            <Typography className={classes.userEmail}>{userEmail}</Typography>
-          )
-        ) : (
-          <>
-            <Typography
-              className={classes.userEmail}
-              data-test-id="customer-email"
-            >
-              {user.email}
-            </Typography>
-            <RequirePermissions
-              requiredPermissions={[PermissionEnum.MANAGE_USERS]}
-            >
+            <>
+              <Typography className={classes.userEmail}>{userEmail}</Typography>
               <div>
                 <Link
                   underline={false}
-                  href={customerUrl(user.id)}
-                  onClick={onProfileView}
+                  href={orderListUrl({
+                    customer: userEmail,
+                  })}
                 >
-                  <FormattedMessage
-                    id="VCzrEZ"
-                    defaultMessage="View Profile"
-                    description="link"
-                  />
+                  <FormattedMessage id="J4NBVR" defaultMessage="View Orders" description="link" />
+                </Link>
+              </div>
+            </>
+          )
+        ) : (
+          <>
+            <Typography className={classes.userEmail} data-test-id="customer-email">
+              {user.email}
+            </Typography>
+            <RequirePermissions requiredPermissions={[PermissionEnum.MANAGE_USERS]}>
+              <div>
+                <Link underline={false} href={customerUrl(user.id)} onClick={onProfileView}>
+                  <FormattedMessage id="VCzrEZ" defaultMessage="View Profile" description="link" />
                 </Link>
               </div>
             </RequirePermissions>
@@ -243,13 +237,13 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
         </>
       )}
       <Hr />
-      <CardContent>
+      <CardContent data-test-id="shipping-address-section">
         <div className={classes.sectionHeader}>
           <Typography className={classes.sectionHeaderTitle}>
             <FormattedMessage id="DP5VOH" defaultMessage="Shipping Address" />
           </Typography>
           {canEditAddresses && (
-            <div className={classes.sectionHeaderToolbar}>
+            <div>
               <Button
                 data-test-id="edit-shipping-address"
                 variant="tertiary"
@@ -265,9 +259,7 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
           <Skeleton />
         ) : (
           <>
-            {noShippingAddressError && (
-              <AddressTextError orderError={noShippingAddressError} />
-            )}
+            {noShippingAddressError && <AddressTextError orderError={noShippingAddressError} />}
             {shippingAddress === null ? (
               <Typography>
                 <FormattedMessage
@@ -286,13 +278,13 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
         )}
       </CardContent>
       <Hr />
-      <CardContent>
+      <CardContent data-test-id="billing-address-section">
         <div className={classes.sectionHeader}>
           <Typography className={classes.sectionHeaderTitle}>
             <FormattedMessage id="c7/79+" defaultMessage="Billing Address" />
           </Typography>
           {canEditAddresses && (
-            <div className={classes.sectionHeaderToolbar}>
+            <div>
               <Button
                 data-test-id="edit-billing-address"
                 variant="tertiary"
@@ -308,9 +300,7 @@ const OrderCustomer: React.FC<OrderCustomerProps> = props => {
           <Skeleton />
         ) : (
           <>
-            {noBillingAddressError && (
-              <AddressTextError orderError={noBillingAddressError} />
-            )}
+            {noBillingAddressError && <AddressTextError orderError={noBillingAddressError} />}
             {billingAddress === null ? (
               <Typography>
                 <FormattedMessage

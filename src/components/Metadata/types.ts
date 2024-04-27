@@ -1,4 +1,4 @@
-import { MetadataInput } from "@saleor/graphql";
+import { MetadataInput } from "@dashboard/graphql";
 
 export enum EventDataAction {
   add = "add",
@@ -19,3 +19,11 @@ export interface MetadataFormData {
   metadata: MetadataInput[];
   privateMetadata: MetadataInput[];
 }
+
+export type MetadataIdSchema = Record<
+  string,
+  {
+    metadata: MetadataInput[];
+    privateMetadata: MetadataInput[];
+  }
+>;

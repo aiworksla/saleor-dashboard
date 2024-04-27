@@ -1,25 +1,16 @@
-import {
-  ButtonBase,
-  ClickAwayListener,
-  Grow,
-  Popper,
-  Typography,
-} from "@material-ui/core";
-import { fade } from "@material-ui/core/styles/colorManipulator";
-import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
-import React, { useState } from "react";
+// @ts-strict-ignore
+import { ClickAwayListener, Grow, Popper, Typography } from "@material-ui/core";
+import { alpha } from "@material-ui/core/styles";
+import { Button, makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
+import React, { useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 
 import { FilterContent } from ".";
-import {
-  FilterElement,
-  FilterErrorMessages,
-  IFilter,
-  InvalidFilters,
-} from "./types";
+import { FilterElement, FilterErrorMessages, IFilter, InvalidFilters } from "./types";
 import useFilter from "./useFilter";
-import { extractInvalidFilters } from "./utils";
+import { extractInvalidFilters, getSelectedFiltersAmount } from "./utils";
 
 export interface FilterProps<TFilterKeys extends string = string> {
   currencySymbol?: string;
@@ -34,7 +25,7 @@ const useStyles = makeStyles(
     addFilterButton: {
       "&$filterButton": {
         "&:hover, &:focus": {
-          backgroundColor: fade(theme.palette.primary.main, 0.1),
+          backgroundColor: alpha(theme.palette.primary.main, 0.1),
         },
         backgroundColor: theme.palette.background.paper,
         border: `1px solid ${theme.palette.primary.main}`,
@@ -47,7 +38,7 @@ const useStyles = makeStyles(
     },
     addFilterButtonActive: {
       "&$addFilterButton": {
-        backgroundColor: fade(theme.palette.primary.main, 0.1),
+        backgroundColor: alpha(theme.palette.primary.main, 0.1),
       },
     },
     addFilterIcon: {
@@ -56,20 +47,11 @@ const useStyles = makeStyles(
     addFilterText: {
       color: theme.palette.primary.main,
       fontSize: 14,
-      fontWeight: 600 as 600,
-      textTransform: "uppercase",
+      fontWeight: 600 as const,
     },
     filterButton: {
-      alignItems: "center",
-      backgroundColor: fade(theme.palette.primary.main, 0.6),
-      borderRadius: "4px",
-      display: "flex",
-      height: 40,
-      justifyContent: "space-around",
-      margin: theme.spacing(2, 1),
-      marginLeft: 0,
-      padding: theme.spacing(0, 2),
-      position: "relative",
+      padding: theme.spacing(1, 2),
+      marginRight: theme.spacing(2),
     },
     paper: {
       "& p": {
@@ -80,6 +62,10 @@ const useStyles = makeStyles(
       width: 240,
     },
     popover: {
+      backgroundColor: vars.colors.background.default1,
+      overflowY: "scroll",
+      boxShadow: `0px 6px 11px 9px ${theme.palette.divider}`,
+      height: 450,
       width: 376,
       zIndex: 3,
     },
@@ -89,7 +75,7 @@ const useStyles = makeStyles(
     separator: {
       backgroundColor: theme.palette.primary.main,
       display: "inline-block",
-      height: 28,
+      height: 14,
       margin: theme.spacing(0, 1.5, 0, 1),
       width: 1,
     },
@@ -97,27 +83,20 @@ const useStyles = makeStyles(
   { name: "Filter" },
 );
 const Filter: React.FC<FilterProps> = props => {
-  const {
-    currencySymbol,
-    menu,
-    onFilterAdd,
-    onFilterAttributeFocus,
-    errorMessages,
-  } = props;
+  const { currencySymbol, menu, onFilterAdd, onFilterAttributeFocus, errorMessages } = props;
   const classes = useStyles(props);
-
   const anchor = React.useRef<HTMLDivElement>();
   const [isFilterMenuOpened, setFilterMenuOpened] = useState(false);
   const [filterErrors, setFilterErrors] = useState<InvalidFilters<string>>({});
   const [data, dispatch, reset] = useFilter(menu);
-
   const isFilterActive = menu.some(filterElement => filterElement.active);
-
+  const selectedFilterAmount = useMemo(() => getSelectedFiltersAmount(menu, data), [data, menu]);
   const handleSubmit = () => {
     const invalidFilters = extractInvalidFilters(data, menu);
 
     if (Object.keys(invalidFilters).length > 0) {
       setFilterErrors(invalidFilters);
+
       return;
     }
 
@@ -125,7 +104,6 @@ const Filter: React.FC<FilterProps> = props => {
     onFilterAdd(data);
     setFilterMenuOpened(false);
   };
-
   const handleClear = () => {
     reset();
     setFilterErrors({});
@@ -141,40 +119,19 @@ const Filter: React.FC<FilterProps> = props => {
       mouseEvent="onMouseUp"
     >
       <div ref={anchor}>
-        <ButtonBase
-          className={classNames(classes.filterButton, classes.addFilterButton, {
-            [classes.addFilterButtonActive]:
-              isFilterMenuOpened || isFilterActive,
+        <Button
+          className={clsx(classes.filterButton, {
+            [classes.addFilterButtonActive]: isFilterMenuOpened || isFilterActive,
           })}
           onClick={() => setFilterMenuOpened(!isFilterMenuOpened)}
           data-test-id="show-filters-button"
+          variant="secondary"
         >
           <Typography className={classes.addFilterText}>
-            <FormattedMessage
-              id="FNpv6K"
-              defaultMessage="Filters"
-              description="button"
-            />
+            <FormattedMessage id="FNpv6K" defaultMessage="Filters" description="button" />
           </Typography>
-          {isFilterActive && (
-            <>
-              <span className={classes.separator} />
-              <Typography className={classes.addFilterText}>
-                {menu.reduce((acc, filterElement) => {
-                  const dataFilterElement = data.find(
-                    ({ name }) => name === filterElement.name,
-                  );
-
-                  if (!dataFilterElement) {
-                    return acc;
-                  }
-
-                  return acc + (dataFilterElement.active ? 1 : 0);
-                }, 0)}
-              </Typography>
-            </>
-          )}
-        </ButtonBase>
+          {isFilterActive && selectedFilterAmount > 0 && <>({selectedFilterAmount})</>}
+        </Button>
         <Popper
           className={classes.popover}
           open={isFilterMenuOpened}
@@ -195,14 +152,8 @@ const Filter: React.FC<FilterProps> = props => {
             },
           }}
         >
-          {({ TransitionProps, placement }) => (
-            <Grow
-              {...TransitionProps}
-              style={{
-                transformOrigin:
-                  placement === "bottom" ? "right top" : "right bottom",
-              }}
-            >
+          {() => (
+            <Grow>
               <FilterContent
                 errorMessages={errorMessages}
                 errors={filterErrors}
@@ -221,5 +172,6 @@ const Filter: React.FC<FilterProps> = props => {
     </ClickAwayListener>
   );
 };
+
 Filter.displayName = "Filter";
 export default Filter;

@@ -1,40 +1,33 @@
-import { WindowTitle } from "@saleor/components/WindowTitle";
+// @ts-strict-ignore
+import { WindowTitle } from "@dashboard/components/WindowTitle";
 import {
   ProductTypeKindEnum,
   useProductTypeCreateDataQuery,
   useProductTypeCreateMutation,
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import createMetadataCreateHandler from "@saleor/utils/handlers/metadataCreateHandler";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { useTaxClassFetchMore } from "@dashboard/taxes/utils/useTaxClassFetchMore";
+import createMetadataCreateHandler from "@dashboard/utils/handlers/metadataCreateHandler";
 import React from "react";
 import { useIntl } from "react-intl";
 
 import { getMutationErrors } from "../../misc";
-import ProductTypeCreatePage, {
-  ProductTypeForm,
-} from "../components/ProductTypeCreatePage";
-import {
-  productTypeAddUrl,
-  ProductTypeAddUrlQueryParams,
-  productTypeUrl,
-} from "../urls";
+import ProductTypeCreatePage, { ProductTypeForm } from "../components/ProductTypeCreatePage";
+import { productTypeAddUrl, ProductTypeAddUrlQueryParams, productTypeUrl } from "../urls";
 
 interface ProductTypeCreateProps {
   params: ProductTypeAddUrlQueryParams;
 }
 
-export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
-  params,
-}) => {
+export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({ params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const intl = useIntl();
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-
   const handleChangeKind = (kind: ProductTypeKindEnum) =>
     navigate(
       productTypeAddUrl({
@@ -42,15 +35,11 @@ export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
         kind,
       }),
     );
-
   const { data, loading } = useProductTypeCreateDataQuery({
     displayLoader: true,
   });
-
-  const [
-    createProductType,
-    createProductTypeOpts,
-  ] = useProductTypeCreateMutation({
+  const { taxClasses, fetchMoreTaxClasses } = useTaxClassFetchMore();
+  const [createProductType, createProductTypeOpts] = useProductTypeCreateMutation({
     onCompleted: data => {
       if (data.productTypeCreate.errors.length === 0) {
         notify({
@@ -64,7 +53,6 @@ export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
       }
     },
   });
-
   const handleCreate = async (formData: ProductTypeForm) => {
     const result = await createProductType({
       variables: {
@@ -73,7 +61,7 @@ export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
           isShippingRequired: formData.isShippingRequired,
           name: formData.name,
           kind: formData.kind,
-          taxCode: formData.taxType,
+          taxClass: formData.taxClassId,
           weight: formData.weight,
         },
       },
@@ -84,7 +72,6 @@ export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
       errors: getMutationErrors(result),
     };
   };
-
   const handleSubmit = createMetadataCreateHandler(
     handleCreate,
     updateMetadata,
@@ -110,7 +97,8 @@ export const ProductTypeCreate: React.FC<ProductTypeCreateProps> = ({
           description: "header",
         })}
         saveButtonBarState={createProductTypeOpts.status}
-        taxTypes={data?.taxTypes || []}
+        taxClasses={taxClasses ?? []}
+        onFetchMoreTaxClasses={fetchMoreTaxClasses}
         kind={params.kind}
         onChangeKind={handleChangeKind}
         onSubmit={handleSubmit}

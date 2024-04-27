@@ -1,12 +1,12 @@
-import { ChannelShippingData } from "@saleor/channels/utils";
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ChannelsAvailabilityCard from "@saleor/components/ChannelsAvailabilityCard";
-import Container from "@saleor/components/Container";
-import { WithFormId } from "@saleor/components/Form/ExitFormDialogProvider";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
+// @ts-strict-ignore
+import { ChannelShippingData } from "@dashboard/channels/utils";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import ChannelsAvailabilityCard from "@dashboard/components/ChannelsAvailabilityCard";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { WithFormId } from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
 import {
   PermissionEnum,
   PostalCodeRuleInclusionTypeEnum,
@@ -14,22 +14,25 @@ import {
   ShippingErrorFragment,
   ShippingMethodTypeEnum,
   ShippingMethodTypeFragment,
-} from "@saleor/graphql";
-import useForm, { SubmitPromise } from "@saleor/hooks/useForm";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { validatePrice } from "@saleor/products/utils/validation";
-import OrderValue from "@saleor/shipping/components/OrderValue";
-import OrderWeight from "@saleor/shipping/components/OrderWeight";
-import PricingCard from "@saleor/shipping/components/PricingCard";
-import ShippingRateInfo from "@saleor/shipping/components/ShippingRateInfo";
-import { createChannelsChangeHandler } from "@saleor/shipping/handlers";
-import { RichTextContext } from "@saleor/utils/richText/context";
-import useRichText from "@saleor/utils/richText/useRichText";
+  TaxClassBaseFragment,
+} from "@dashboard/graphql";
+import useForm, { SubmitPromise } from "@dashboard/hooks/useForm";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { validatePrice } from "@dashboard/products/utils/validation";
+import { handleTaxClassChange } from "@dashboard/productTypes/handlers";
+import OrderValue from "@dashboard/shipping/components/OrderValue";
+import OrderWeight from "@dashboard/shipping/components/OrderWeight";
+import PricingCard from "@dashboard/shipping/components/PricingCard";
+import ShippingRateInfo from "@dashboard/shipping/components/ShippingRateInfo";
+import { createChannelsChangeHandler } from "@dashboard/shipping/handlers";
+import { FetchMoreProps } from "@dashboard/types";
+import { RichTextContext } from "@dashboard/utils/richText/context";
+import useRichText from "@dashboard/utils/richText/useRichText";
 import React, { FormEventHandler } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 
+import ShippingMethodTaxes from "../ShippingMethodTaxes";
 import ShippingZonePostalCodes from "../ShippingZonePostalCodes";
 import { ShippingZoneRateCommonFormData } from "../ShippingZoneRatesPage/types";
 
@@ -44,14 +47,14 @@ export interface ShippingZoneRatesCreatePageProps extends WithFormId {
   backUrl: string;
   onDelete?: () => void;
   onSubmit: (data: ShippingZoneRateCommonFormData) => SubmitPromise;
-  onPostalCodeInclusionChange: (
-    inclusion: PostalCodeRuleInclusionTypeEnum,
-  ) => void;
+  onPostalCodeInclusionChange: (inclusion: PostalCodeRuleInclusionTypeEnum) => void;
   onPostalCodeAssign: () => void;
   onPostalCodeUnassign: (code: any) => void;
   onChannelsChange: (data: ChannelShippingData[]) => void;
   openChannelsModal: () => void;
   variant: ShippingMethodTypeEnum;
+  taxClasses: TaxClassBaseFragment[];
+  fetchMoreTaxClasses: FetchMoreProps;
 }
 
 export const ShippingZoneRatesCreatePage: React.FC<ShippingZoneRatesCreatePageProps> = ({
@@ -72,10 +75,11 @@ export const ShippingZoneRatesCreatePage: React.FC<ShippingZoneRatesCreatePagePr
   variant,
   postalCodes,
   formId,
+  taxClasses,
+  fetchMoreTaxClasses,
 }) => {
   const intl = useIntl();
   const navigate = useNavigator();
-
   const isPriceVariant = variant === ShippingMethodTypeEnum.PRICE;
   const initialForm: ShippingZoneRateCommonFormData = {
     channelListings: shippingChannels,
@@ -87,61 +91,52 @@ export const ShippingZoneRatesCreatePage: React.FC<ShippingZoneRatesCreatePagePr
     description: null,
     orderValueRestricted: true,
     type: null,
+    taxClassId: "",
   };
-
+  const [taxClassDisplayName, setTaxClassDisplayName] = React.useState("");
   const {
     change,
     data: formData,
     setIsSubmitDisabled,
     triggerChange,
   } = useForm(initialForm, undefined, { confirmLeave: true, formId });
-
   const handleFormSubmit = useHandleFormSubmit({
     formId,
     onSubmit,
   });
-
   const richText = useRichText({
     initial: null,
     triggerChange,
   });
-
   const data: ShippingZoneRateCommonFormData = {
     ...formData,
     description: null,
   };
-
   const getData = async (): Promise<ShippingZoneRateCommonFormData> => ({
     ...formData,
     description: await richText.getValue(),
   });
-
   const handleFormElementSubmit: FormEventHandler = async event => {
     event.preventDefault();
     handleFormSubmit(await getData());
   };
-
   const handleSubmit = async () => handleFormSubmit(await getData());
-
   const handleChannelsChange = createChannelsChangeHandler(
     shippingChannels,
     onChannelsChange,
     triggerChange,
   );
-  const isValid = !data.channelListings?.some(channel =>
-    validatePrice(channel.price),
-  );
+  const isValid = !data.channelListings?.some(channel => validatePrice(channel.price));
   const isSaveDisabled = disabled || !isValid;
+
   setIsSubmitDisabled(isSaveDisabled);
 
   return (
     <RichTextContext.Provider value={richText}>
       <form onSubmit={handleFormElementSubmit}>
-        <Container>
-          <Backlink href={backUrl}>
-            <FormattedMessage id="PRlD0A" defaultMessage="Shipping" />
-          </Backlink>
-          <PageHeader
+        <DetailPageLayout>
+          <TopNav
+            href={backUrl}
             title={
               isPriceVariant
                 ? intl.formatMessage({
@@ -156,59 +151,63 @@ export const ShippingZoneRatesCreatePage: React.FC<ShippingZoneRatesCreatePagePr
                   })
             }
           />
-          <Grid>
-            <div>
-              <ShippingRateInfo
-                data={data}
-                disabled={disabled}
-                errors={errors}
-                onChange={change}
-              />
-              <CardSpacer />
-              {isPriceVariant ? (
-                <OrderValue
-                  channels={data.channelListings}
-                  errors={channelErrors}
-                  orderValueRestricted={data.orderValueRestricted}
-                  disabled={disabled}
-                  onChange={change}
-                  onChannelsChange={handleChannelsChange}
-                />
-              ) : (
-                <OrderWeight
-                  orderValueRestricted={data.orderValueRestricted}
-                  disabled={disabled}
-                  minValue={data.minValue}
-                  maxValue={data.maxValue}
-                  onChange={change}
-                  errors={errors}
-                />
-              )}
-              <CardSpacer />
-              <PricingCard
+          <DetailPageLayout.Content>
+            <ShippingRateInfo data={data} disabled={disabled} errors={errors} onChange={change} />
+            <CardSpacer />
+            {isPriceVariant ? (
+              <OrderValue
                 channels={data.channelListings}
-                onChange={handleChannelsChange}
-                disabled={disabled}
                 errors={channelErrors}
-              />
-              <CardSpacer />
-              <ShippingZonePostalCodes
+                orderValueRestricted={data.orderValueRestricted}
                 disabled={disabled}
-                onPostalCodeDelete={onPostalCodeUnassign}
-                onPostalCodeInclusionChange={onPostalCodeInclusionChange}
-                onPostalCodeRangeAdd={onPostalCodeAssign}
-                postalCodes={postalCodes}
+                onChange={change}
+                onChannelsChange={handleChannelsChange}
               />
-            </div>
-            <div>
-              <ChannelsAvailabilityCard
-                managePermissions={[PermissionEnum.MANAGE_SHIPPING]}
-                allChannelsCount={allChannelsCount}
-                channelsList={data.channelListings}
-                openModal={openChannelsModal}
+            ) : (
+              <OrderWeight
+                orderValueRestricted={data.orderValueRestricted}
+                disabled={disabled}
+                minValue={data.minValue}
+                maxValue={data.maxValue}
+                onChange={change}
+                errors={errors}
               />
-            </div>
-          </Grid>
+            )}
+            <CardSpacer />
+            <PricingCard
+              channels={data.channelListings}
+              onChange={handleChannelsChange}
+              disabled={disabled}
+              errors={channelErrors}
+            />
+            <CardSpacer />
+            <ShippingZonePostalCodes
+              disabled={disabled}
+              onPostalCodeDelete={onPostalCodeUnassign}
+              onPostalCodeInclusionChange={onPostalCodeInclusionChange}
+              onPostalCodeRangeAdd={onPostalCodeAssign}
+              postalCodes={postalCodes}
+            />
+          </DetailPageLayout.Content>
+          <DetailPageLayout.RightSidebar>
+            <ChannelsAvailabilityCard
+              managePermissions={[PermissionEnum.MANAGE_SHIPPING]}
+              allChannelsCount={allChannelsCount}
+              channelsList={data.channelListings}
+              openModal={openChannelsModal}
+            />
+            <CardSpacer />
+            <ShippingMethodTaxes
+              value={formData.taxClassId}
+              taxClassDisplayName={taxClassDisplayName}
+              taxClasses={taxClasses}
+              disabled={false}
+              onChange={event =>
+                handleTaxClassChange(event, taxClasses, change, setTaxClassDisplayName)
+              }
+              onFetchMore={fetchMoreTaxClasses}
+            />
+          </DetailPageLayout.RightSidebar>
           <Savebar
             disabled={isSaveDisabled}
             onCancel={() => navigate(backUrl)}
@@ -216,7 +215,7 @@ export const ShippingZoneRatesCreatePage: React.FC<ShippingZoneRatesCreatePagePr
             onSubmit={handleSubmit}
             state={saveButtonBarState}
           />
-        </Container>
+        </DetailPageLayout>
       </form>
     </RichTextContext.Provider>
   );

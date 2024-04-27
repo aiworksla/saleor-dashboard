@@ -1,13 +1,10 @@
-import { ActionDialogProps } from "@saleor/components/ActionDialog";
-import { useGiftCardListDialogs } from "@saleor/giftCards/GiftCardsList/providers/GiftCardListDialogsProvider";
-import { useGiftCardList } from "@saleor/giftCards/GiftCardsList/providers/GiftCardListProvider";
-import { GIFT_CARD_LIST_QUERY } from "@saleor/giftCards/GiftCardsList/queries";
-import { DialogProps } from "@saleor/types";
+import { ActionDialogProps } from "@dashboard/components/ActionDialog";
+import { useGiftCardList } from "@dashboard/giftCards/GiftCardsList/providers/GiftCardListProvider";
+import { GIFT_CARD_LIST_QUERY } from "@dashboard/giftCards/GiftCardsList/queries";
+import { DialogProps } from "@dashboard/types";
 import React from "react";
 
-import GiftCardDeleteDialogContent, {
-  SINGLE,
-} from "./GiftCardDeleteDialogContent";
+import GiftCardDeleteDialogContent, { SINGLE } from "./GiftCardDeleteDialogContent";
 import useGiftCardBulkDelete from "./useGiftCardBulkDelete";
 import useGiftCardSingleDelete from "./useGiftCardSingleDelete";
 
@@ -21,36 +18,30 @@ const GiftCardDeleteDialog: React.FC<GiftCardDeleteDialogProps> = ({
   refetchQueries = [],
 }) => {
   const listProps = useGiftCardList();
-  const { giftCards, loading, selectedItemsCount } = listProps;
-
-  const { id } = useGiftCardListDialogs();
-
-  const singleDeletion = !!id || selectedItemsCount === SINGLE;
-
+  const { giftCards, loading, selectedRowIds, clearRowSelection } = listProps;
+  const singleDeletion = selectedRowIds.length === SINGLE;
   const { onDeleteGiftCard, deleteGiftCardOpts } = useGiftCardSingleDelete({
-    id,
+    id: selectedRowIds[0],
     onClose,
     refetchQueries: [GIFT_CARD_LIST_QUERY, ...refetchQueries],
   });
-
-  const {
-    onBulkDeleteGiftCards,
-    bulkDeleteGiftCardOpts,
-  } = useGiftCardBulkDelete({
+  const { onBulkDeleteGiftCards, bulkDeleteGiftCardOpts } = useGiftCardBulkDelete({
     onClose,
     refetchQueries: [GIFT_CARD_LIST_QUERY, ...refetchQueries],
   });
-
-  const dialogProps: Pick<
-    ActionDialogProps,
-    "onConfirm" | "confirmButtonState"
-  > = !!id
+  const dialogProps: Pick<ActionDialogProps, "onConfirm" | "confirmButtonState"> = singleDeletion
     ? {
-        onConfirm: onDeleteGiftCard,
+        onConfirm: () => {
+          onDeleteGiftCard();
+          clearRowSelection();
+        },
         confirmButtonState: deleteGiftCardOpts?.status,
       }
     : {
-        onConfirm: onBulkDeleteGiftCards,
+        onConfirm: () => {
+          onBulkDeleteGiftCards();
+          clearRowSelection();
+        },
         confirmButtonState: bulkDeleteGiftCardOpts?.status,
       };
 
@@ -58,7 +49,7 @@ const GiftCardDeleteDialog: React.FC<GiftCardDeleteDialogProps> = ({
     <GiftCardDeleteDialogContent
       {...listProps}
       {...dialogProps}
-      id={id}
+      ids={selectedRowIds}
       open={open}
       onClose={onClose}
       singleDeletion={singleDeletion}

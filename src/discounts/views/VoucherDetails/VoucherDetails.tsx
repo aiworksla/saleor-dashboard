@@ -1,29 +1,34 @@
-import { DialogContentText } from "@material-ui/core";
+// @ts-strict-ignore
 import {
   ChannelVoucherData,
   createChannelsDataWithDiscountPrice,
   createSortedChannelsDataFromVoucher,
-} from "@saleor/channels/utils";
-import ActionDialog from "@saleor/components/ActionDialog";
-import useAppChannel from "@saleor/components/AppLayout/AppChannelContext";
-import AssignCategoriesDialog from "@saleor/components/AssignCategoryDialog";
-import AssignCollectionDialog from "@saleor/components/AssignCollectionDialog";
-import AssignProductDialog from "@saleor/components/AssignProductDialog";
-import { Button } from "@saleor/components/Button";
-import ChannelsAvailabilityDialog from "@saleor/components/ChannelsAvailabilityDialog";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import { DEFAULT_INITIAL_SEARCH_DATA, PAGINATE_BY } from "@saleor/config";
-import DiscountCountrySelectDialog from "@saleor/discounts/components/DiscountCountrySelectDialog";
+} from "@dashboard/channels/utils";
+import ActionDialog from "@dashboard/components/ActionDialog";
+import useAppChannel from "@dashboard/components/AppLayout/AppChannelContext";
+import AssignCategoriesDialog from "@dashboard/components/AssignCategoryDialog";
+import AssignCollectionDialog from "@dashboard/components/AssignCollectionDialog";
+import AssignProductDialog from "@dashboard/components/AssignProductDialog";
+import { Button } from "@dashboard/components/Button";
+import ChannelsAvailabilityDialog from "@dashboard/components/ChannelsAvailabilityDialog";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { DEFAULT_INITIAL_SEARCH_DATA, PAGINATE_BY } from "@dashboard/config";
+import DiscountCountrySelectDialog from "@dashboard/discounts/components/DiscountCountrySelectDialog";
 import VoucherDetailsPage, {
   VoucherDetailsPageTab,
   VoucherTabItemsCount,
-} from "@saleor/discounts/components/VoucherDetailsPage";
+} from "@dashboard/discounts/components/VoucherDetailsPage";
 import {
   voucherListUrl,
   voucherUrl,
   VoucherUrlDialog,
   VoucherUrlQueryParams,
-} from "@saleor/discounts/urls";
+} from "@dashboard/discounts/urls";
+import {
+  getFilteredCategories,
+  getFilteredCollections,
+  getFilteredProducts,
+} from "@dashboard/discounts/utils";
 import {
   useUpdateMetadataMutation,
   useUpdatePrivateMetadataMutation,
@@ -34,28 +39,29 @@ import {
   useVoucherDetailsQuery,
   useVoucherUpdateMutation,
   VoucherDetailsQueryVariables,
-} from "@saleor/graphql";
-import useBulkActions from "@saleor/hooks/useBulkActions";
-import useChannels from "@saleor/hooks/useChannels";
+} from "@dashboard/graphql";
+import useBulkActions from "@dashboard/hooks/useBulkActions";
+import useChannels from "@dashboard/hooks/useChannels";
 import useLocalPaginator, {
   useSectionLocalPaginationState,
-} from "@saleor/hooks/useLocalPaginator";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { PaginatorContext } from "@saleor/hooks/usePaginator";
-import useShop from "@saleor/hooks/useShop";
-import { commonMessages, sectionNames } from "@saleor/intl";
-import useCategorySearch from "@saleor/searches/useCategorySearch";
-import useCollectionSearch from "@saleor/searches/useCollectionSearch";
-import useProductSearch from "@saleor/searches/useProductSearch";
-import createDialogActionHandlers from "@saleor/utils/handlers/dialogActionHandlers";
-import createMetadataUpdateHandler from "@saleor/utils/handlers/metadataUpdateHandler";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+} from "@dashboard/hooks/useLocalPaginator";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { PaginatorContext } from "@dashboard/hooks/usePaginator";
+import useShop from "@dashboard/hooks/useShop";
+import { commonMessages, sectionNames } from "@dashboard/intl";
+import useCategorySearch from "@dashboard/searches/useCategorySearch";
+import useCollectionSearch from "@dashboard/searches/useCollectionSearch";
+import useProductSearch from "@dashboard/searches/useProductSearch";
+import createDialogActionHandlers from "@dashboard/utils/handlers/dialogActionHandlers";
+import createMetadataUpdateHandler from "@dashboard/utils/handlers/metadataUpdateHandler";
+import { DialogContentText } from "@material-ui/core";
 import React, { useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { maybe } from "../../../misc";
 import { createUpdateHandler } from "./handlers";
+import { useVoucherCodes } from "./hooks/useVoucherCodes";
 import { VOUCHER_UPDATE_FORM_ID } from "./types";
 
 interface VoucherDetailsProps {
@@ -63,16 +69,11 @@ interface VoucherDetailsProps {
   params: VoucherUrlQueryParams;
 }
 
-export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
-  id,
-  params,
-}) => {
+export const VoucherDetails: React.FC<VoucherDetailsProps> = ({ id, params }) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const shop = useShop();
-  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(
-    params.ids,
-  );
+  const { isSelected, listElements, reset, toggle, toggleAll } = useBulkActions(params.ids);
   const intl = useIntl();
   const {
     loadMore: loadMoreCategories,
@@ -97,7 +98,6 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
   });
   const [updateMetadata] = useUpdateMetadataMutation({});
   const [updatePrivateMetadata] = useUpdatePrivateMetadataMutation({});
-
   const [activeTab, setActiveTab] = useState<VoucherDetailsPageTab>(
     VoucherDetailsPageTab.categories,
   );
@@ -110,7 +110,6 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
     reset();
     setActiveTab(tab);
   };
-
   const detailsQueryInclude: Pick<
     VoucherDetailsQueryVariables,
     "includeCategories" | "includeCollections" | "includeProducts"
@@ -119,8 +118,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
     includeCollections: activeTab === VoucherDetailsPageTab.collections,
     includeProducts: activeTab === VoucherDetailsPageTab.products,
   };
-
-  const { data, loading } = useVoucherDetailsQuery({
+  const { data, loading, refetch } = useVoucherDetailsQuery({
     displayLoader: true,
     variables: {
       id,
@@ -128,14 +126,26 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
       ...detailsQueryInclude,
     },
   });
-
+  const {
+    voucherCodes,
+    voucherCodesLoading,
+    voucherCodesPagination,
+    voucherCodesSettings,
+    selectedVoucherCodesIds,
+    addedVoucherCodes,
+    voucherCodesRefetch,
+    handleSetSelectedVoucherCodesIds,
+    updateVoucherCodesListSettings,
+    handleAddVoucherCode,
+    handleGenerateMultipleCodes,
+    handleDeleteVoucherCodes,
+    handleClearAddedVoucherCodes,
+  } = useVoucherCodes({ id });
   const [openModal, closeModal] = createDialogActionHandlers<
     VoucherUrlDialog,
     VoucherUrlQueryParams
   >(navigate, params => voucherUrl(id, params), params);
-
   const { channel, availableChannels } = useAppChannel(false);
-
   const allChannels: ChannelVoucherData[] = createChannelsDataWithDiscountPrice(
     data?.voucher,
     availableChannels,
@@ -144,7 +154,6 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
     () => createSortedChannelsDataFromVoucher(data?.voucher),
     [data?.voucher],
   );
-
   const {
     channelListElements,
     channelsToggle,
@@ -165,27 +174,22 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
     },
     { formId: VOUCHER_UPDATE_FORM_ID },
   );
-
-  const [
-    updateChannels,
-    updateChannelsOpts,
-  ] = useVoucherChannelListingUpdateMutation({});
-
+  const [updateChannels, updateChannelsOpts] = useVoucherChannelListingUpdateMutation({});
   const notifySaved = () =>
     notify({
       status: "success",
       text: intl.formatMessage(commonMessages.savedChanges),
     });
-
   const [voucherUpdate, voucherUpdateOpts] = useVoucherUpdateMutation({
     onCompleted: data => {
       if (data.voucherUpdate.errors.length === 0) {
         closeModal();
         notifySaved();
+        handleClearAddedVoucherCodes();
+        voucherCodesRefetch();
       }
     },
   });
-
   const [voucherDelete, voucherDeleteOpts] = useVoucherDeleteMutation({
     onCompleted: data => {
       if (data.voucherDelete.errors.length === 0) {
@@ -194,55 +198,47 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
       }
     },
   });
-
-  const [
-    voucherCataloguesRemove,
-    voucherCataloguesRemoveOpts,
-  ] = useVoucherCataloguesRemoveMutation({
-    onCompleted: data => {
-      if (data.voucherCataloguesRemove.errors.length === 0) {
-        notifySaved();
-        closeModal();
-        reset();
-      }
+  const [voucherCataloguesRemove, voucherCataloguesRemoveOpts] = useVoucherCataloguesRemoveMutation(
+    {
+      onCompleted: data => {
+        if (data.voucherCataloguesRemove.errors.length === 0) {
+          notifySaved();
+          closeModal();
+          reset();
+          refetch();
+        }
+      },
     },
-  });
-
-  const [
-    voucherCataloguesAdd,
-    voucherCataloguesAddOpts,
-  ] = useVoucherCataloguesAddMutation({
+  );
+  const [voucherCataloguesAdd, voucherCataloguesAddOpts] = useVoucherCataloguesAddMutation({
     onCompleted: data => {
       if (data.voucherCataloguesAdd.errors.length === 0) {
         notifySaved();
         closeModal();
+        reset();
+        refetch();
       }
     },
   });
-
   const canOpenBulkActionDialog = maybe(() => params.ids.length > 0);
-
   const handleUpdate = createUpdateHandler(
     data?.voucher,
     voucherChannelsChoices,
     variables => voucherUpdate({ variables }),
     updateChannels,
   );
-
   const handleSubmit = createMetadataUpdateHandler(
     data?.voucher,
     handleUpdate,
     variables => updateMetadata({ variables }),
     variables => updatePrivateMetadata({ variables }),
   );
-
   const tabPageInfo =
     activeTab === VoucherDetailsPageTab.categories
       ? maybe(() => data.voucher.categories.pageInfo)
       : activeTab === VoucherDetailsPageTab.collections
-      ? maybe(() => data.voucher.collections.pageInfo)
-      : maybe(() => data.voucher.products.pageInfo);
-
+        ? maybe(() => data.voucher.collections.pageInfo)
+        : maybe(() => data.voucher.products.pageInfo);
   const handleCategoriesUnassign = (ids: string[]) =>
     voucherCataloguesRemove({
       variables: {
@@ -254,7 +250,6 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
         },
       },
     });
-
   const handleCollectionsUnassign = (ids: string[]) =>
     voucherCataloguesRemove({
       variables: {
@@ -266,7 +261,6 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
         },
       },
     });
-
   const handleProductsUnassign = (ids: string[]) =>
     voucherCataloguesRemove({
       variables: {
@@ -278,12 +272,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
         },
       },
     });
-
-  const { pageInfo, ...paginationValues } = paginate(
-    tabPageInfo,
-    paginationState,
-  );
-
+  const { pageInfo, ...paginationValues } = paginate(tabPageInfo, paginationState);
   const tabItemsCount: VoucherTabItemsCount = {
     categories: data?.voucher?.categoriesCount?.totalCount,
     collections: data?.voucher?.collectionsCount?.totalCount,
@@ -313,17 +302,23 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
       )}
       <VoucherDetailsPage
         voucher={data?.voucher}
+        voucherCodes={voucherCodes}
+        addedVoucherCodes={addedVoucherCodes}
+        voucherCodesPagination={voucherCodesPagination}
+        voucherCodesLoading={voucherCodesLoading}
+        voucherCodesSettings={voucherCodesSettings}
+        onDeleteVoucherCodes={handleDeleteVoucherCodes}
+        onMultipleVoucheCodesGenerate={handleGenerateMultipleCodes}
+        onCustomVoucherCodeGenerate={handleAddVoucherCode}
+        onVoucherCodesSettingsChange={updateVoucherCodesListSettings}
+        onSelectVoucherCodesIds={handleSetSelectedVoucherCodesIds}
+        selectedVoucherCodesIds={selectedVoucherCodesIds}
         allChannelsCount={allChannels?.length}
         channelListings={currentChannels}
-        disabled={
-          loading ||
-          voucherCataloguesRemoveOpts.loading ||
-          updateChannelsOpts.loading
-        }
+        disabled={loading || voucherCataloguesRemoveOpts.loading || updateChannelsOpts.loading}
         errors={[
           ...(voucherUpdateOpts.data?.voucherUpdate.errors || []),
-          ...(updateChannelsOpts.data?.voucherChannelListingUpdate.errors ||
-            []),
+          ...(updateChannelsOpts.data?.voucherChannelListingUpdate.errors || []),
         ]}
         selectedChannelId={channel?.id}
         onCategoryAssign={() => openModal("assign-category")}
@@ -374,11 +369,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               })
             }
           >
-            <FormattedMessage
-              id="Gkip05"
-              defaultMessage="Unassign"
-              description="button"
-            />
+            <FormattedMessage id="Gkip05" defaultMessage="Unassign" description="button" />
           </Button>
         }
         collectionListToolbar={
@@ -389,11 +380,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               })
             }
           >
-            <FormattedMessage
-              id="Gkip05"
-              defaultMessage="Unassign"
-              description="button"
-            />
+            <FormattedMessage id="Gkip05" defaultMessage="Unassign" description="button" />
           </Button>
         }
         productListToolbar={
@@ -404,11 +391,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               })
             }
           >
-            <FormattedMessage
-              id="Gkip05"
-              defaultMessage="Unassign"
-              description="button"
-            />
+            <FormattedMessage id="Gkip05" defaultMessage="Unassign" description="button" />
           </Button>
         }
         isChecked={isSelected}
@@ -417,9 +400,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
         toggleAll={toggleAll}
       />
       <AssignCategoriesDialog
-        categories={mapEdgesToItems(searchCategoriesOpts?.data?.search)?.filter(
-          suggestedCategory => suggestedCategory.id,
-        )}
+        categories={getFilteredCategories(data, searchCategoriesOpts)}
         confirmButtonState={voucherCataloguesAddOpts.status}
         hasMore={searchCategoriesOpts.data?.search.pageInfo.hasNextPage}
         open={params.action === "assign-category"}
@@ -434,16 +415,14 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               ...detailsQueryInclude,
               id,
               input: {
-                categories,
+                categories: categories.map(category => category.id),
               },
             },
           })
         }
       />
       <AssignCollectionDialog
-        collections={mapEdgesToItems(
-          searchCollectionsOpts?.data?.search,
-        )?.filter(suggestedCategory => suggestedCategory.id)}
+        collections={getFilteredCollections(data, searchCollectionsOpts)}
         confirmButtonState={voucherCataloguesAddOpts.status}
         hasMore={searchCollectionsOpts.data?.search.pageInfo.hasNextPage}
         open={params.action === "assign-collection"}
@@ -458,7 +437,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               ...detailsQueryInclude,
               id,
               input: {
-                collections,
+                collections: collections.map(collection => collection.id),
               },
             },
           })
@@ -479,10 +458,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
           })
         }
         open={params.action === "assign-country"}
-        initial={maybe(
-          () => data.voucher.countries.map(country => country.code),
-          [],
-        )}
+        initial={maybe(() => data.voucher.countries.map(country => country.code), [])}
       />
       <AssignProductDialog
         confirmButtonState={voucherCataloguesAddOpts.status}
@@ -499,14 +475,12 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
               ...detailsQueryInclude,
               id,
               input: {
-                products,
+                products: products.map(product => product.id),
               },
             },
           })
         }
-        products={mapEdgesToItems(searchProductsOpts?.data?.search)?.filter(
-          suggestedProduct => suggestedProduct.id,
-        )}
+        products={getFilteredProducts(data, searchProductsOpts)}
       />
       <ActionDialog
         open={params.action === "unassign-category" && canOpenBulkActionDialog}
@@ -539,9 +513,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
         )}
       </ActionDialog>
       <ActionDialog
-        open={
-          params.action === "unassign-collection" && canOpenBulkActionDialog
-        }
+        open={params.action === "unassign-collection" && canOpenBulkActionDialog}
         title={intl.formatMessage({
           id: "MmGlkp",
           defaultMessage: "Unassign Collections From Voucher",
@@ -622,9 +594,7 @@ export const VoucherDetails: React.FC<VoucherDetailsProps> = ({
             defaultMessage="Are you sure you want to delete {voucherCode}?"
             description="dialog content"
             values={{
-              voucherCode: (
-                <strong>{maybe(() => data.voucher.code, "...")}</strong>
-              ),
+              voucherCode: <strong>{maybe(() => data.voucher.name, "...")}</strong>,
             }}
           />
         </DialogContentText>

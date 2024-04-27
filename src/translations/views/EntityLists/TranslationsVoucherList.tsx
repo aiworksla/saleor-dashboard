@@ -1,25 +1,19 @@
-import { useVoucherTranslationsQuery } from "@saleor/graphql";
-import usePaginator, { PaginatorContext } from "@saleor/hooks/usePaginator";
-import TranslationsEntitiesList from "@saleor/translations/components/TranslationsEntitiesList";
-import {
-  languageEntityUrl,
-  TranslatableEntities,
-} from "@saleor/translations/urls";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+// @ts-strict-ignore
+import { useVoucherTranslationsQuery } from "@dashboard/graphql";
+import usePaginator, { PaginatorContext } from "@dashboard/hooks/usePaginator";
+import TranslationsEntitiesList from "@dashboard/translations/components/TranslationsEntitiesList";
+import { languageEntityUrl, TranslatableEntities } from "@dashboard/translations/urls";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import React from "react";
 
 import { TranslationsEntityListProps } from "./types";
 import { sumCompleted } from "./utils";
 
-const TranslationsVoucherList: React.FC<TranslationsEntityListProps> = ({
-  params,
-  variables,
-}) => {
+const TranslationsVoucherList: React.FC<TranslationsEntityListProps> = ({ params, variables }) => {
   const { data, loading } = useVoucherTranslationsQuery({
     displayLoader: true,
     variables,
   });
-
   const paginationValues = usePaginator({
     pageInfo: data?.translations?.pageInfo,
     paginationState: variables,
@@ -41,13 +35,7 @@ const TranslationsVoucherList: React.FC<TranslationsEntityListProps> = ({
               name: node.voucher?.name || "-",
             },
         )}
-        getRowHref={id =>
-          languageEntityUrl(
-            variables.language,
-            TranslatableEntities.vouchers,
-            id,
-          )
-        }
+        getRowHref={id => languageEntityUrl(variables.language, TranslatableEntities.vouchers, id)}
       />
     </PaginatorContext.Provider>
   );

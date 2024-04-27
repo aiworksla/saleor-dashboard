@@ -1,25 +1,16 @@
-import {
-  Card,
-  CardContent,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-} from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import RadioGroupField from "@saleor/components/RadioGroupField";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableRowLink from "@saleor/components/TableRowLink";
-import {
-  PostalCodeRuleInclusionTypeEnum,
-  ShippingMethodTypeFragment,
-} from "@saleor/graphql";
-import ArrowDropdown from "@saleor/icons/ArrowDropdown";
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { PostalCodeRuleInclusionTypeEnum, ShippingMethodTypeFragment } from "@dashboard/graphql";
+import ArrowDropdown from "@dashboard/icons/ArrowDropdown";
+import { renderCollection } from "@dashboard/misc";
+import { Card, CardContent, TableBody, TableCell, TableHead, Typography } from "@material-ui/core";
 import { DeleteIcon, IconButton, makeStyles } from "@saleor/macaw-ui";
-import { renderCollection } from "@saleor/misc";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -27,12 +18,8 @@ export interface ShippingZonePostalCodesProps {
   disabled: boolean;
   initialExpanded?: boolean;
   postalCodes: ShippingMethodTypeFragment["postalCodeRules"] | undefined;
-  onPostalCodeInclusionChange: (
-    inclusion: PostalCodeRuleInclusionTypeEnum,
-  ) => void;
-  onPostalCodeDelete: (
-    code: ShippingMethodTypeFragment["postalCodeRules"][0],
-  ) => void;
+  onPostalCodeInclusionChange: (inclusion: PostalCodeRuleInclusionTypeEnum) => void;
+  onPostalCodeDelete: (code: ShippingMethodTypeFragment["postalCodeRules"][0]) => void;
   onPostalCodeRangeAdd: () => void;
 }
 
@@ -63,7 +50,6 @@ const useStyles = makeStyles(
     name: "ShippingZonePostalCodes",
   },
 );
-
 const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
   disabled,
   initialExpanded = true,
@@ -76,31 +62,34 @@ const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
   const [inclusionType, setInclusionType] = React.useState(null);
   const intl = useIntl();
   const classes = useStyles({});
-
   const getInclusionType = () => {
     if (inclusionType) {
       return inclusionType;
     }
-    return (
-      postalCodes[0]?.inclusionType || PostalCodeRuleInclusionTypeEnum.EXCLUDE
-    );
-  };
 
-  const onInclusionRadioChange = (event: React.ChangeEvent<any>) => {
+    return postalCodes[0]?.inclusionType || PostalCodeRuleInclusionTypeEnum.EXCLUDE;
+  };
+  const onInclusionRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    setInclusionType(value);
-    onPostalCodeInclusionChange(value);
-  };
+    const postalType =
+      value === "EXCLUDE"
+        ? PostalCodeRuleInclusionTypeEnum.EXCLUDE
+        : PostalCodeRuleInclusionTypeEnum.INCLUDE;
 
+    setInclusionType(value);
+    onPostalCodeInclusionChange(postalType);
+  };
   const getPostalCodeRangeLabel = (
     postalCodeRange: ShippingMethodTypeFragment["postalCodeRules"][0],
   ) => {
     if (!postalCodeRange?.start) {
       return <Skeleton />;
     }
+
     if (postalCodeRange?.end) {
       return `${postalCodeRange.start} - ${postalCodeRange.end}`;
     }
+
     return postalCodeRange.start;
   };
 
@@ -113,10 +102,7 @@ const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
           description: "postal codes, header",
         })}
         toolbar={
-          <Button
-            onClick={onPostalCodeRangeAdd}
-            data-test-id="add-postal-code-range"
-          >
+          <Button onClick={onPostalCodeRangeAdd} data-test-id="add-postal-code-range">
             <FormattedMessage
               id="1lk/oS"
               defaultMessage="Add postal code range"
@@ -125,7 +111,7 @@ const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
           </Button>
         }
       />
-      <CardContent className={classNames(classes.radioContainer)}>
+      <CardContent className={clsx(classes.radioContainer)}>
         <RadioGroupField
           alignTop
           choices={[
@@ -199,12 +185,9 @@ const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
               )}
             </TableCell>
             <TableCell>
-              <IconButton
-                variant="secondary"
-                onClick={() => setExpanded(!expanded)}
-              >
+              <IconButton variant="secondary" onClick={() => setExpanded(!expanded)}>
                 <ArrowDropdown
-                  className={classNames(classes.arrow, {
+                  className={clsx(classes.arrow, {
                     [classes.arrowRotate]: expanded,
                   })}
                 />
@@ -217,14 +200,13 @@ const ShippingZonePostalCodes: React.FC<ShippingZonePostalCodesProps> = ({
             {renderCollection(
               postalCodes,
               postalCodeRange => (
-                <TableRowLink key={postalCodeRange?.id}>
-                  <TableCell>
-                    {getPostalCodeRangeLabel(postalCodeRange)}
-                  </TableCell>
+                <TableRowLink key={postalCodeRange?.id} data-test-id="assigned-postal-codes-rows">
+                  <TableCell>{getPostalCodeRangeLabel(postalCodeRange)}</TableCell>
                   <TableCell>
                     <IconButton
                       disabled={disabled}
                       color="primary"
+                      variant="secondary"
                       onClick={() => onPostalCodeDelete(postalCodeRange)}
                       data-test-id={"delete-postal-code-" + postalCodeRange?.id}
                     >

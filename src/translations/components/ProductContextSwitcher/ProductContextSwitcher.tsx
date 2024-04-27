@@ -1,3 +1,11 @@
+// @ts-strict-ignore
+import { useProductVariantListQuery } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import {
+  languageEntityUrl,
+  productVariantUrl,
+  TranslatableEntities,
+} from "@dashboard/translations/urls";
 import {
   Card,
   ClickAwayListener,
@@ -9,15 +17,8 @@ import {
   Typography,
 } from "@material-ui/core";
 import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
-import { useProductVariantListQuery } from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
 import { makeStyles } from "@saleor/macaw-ui";
-import {
-  languageEntityUrl,
-  productVariantUrl,
-  TranslatableEntities,
-} from "@saleor/translations/urls";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -77,10 +78,8 @@ const ProductContextSwitcher: React.FC<ProductContextSwitcherProps> = ({
   const { data } = useProductVariantListQuery({
     variables: { id: productId },
   });
-
   const [isExpanded, setExpandedState] = React.useState(false);
   const anchor = React.useRef();
-
   const items = [
     {
       label: intl.formatMessage({
@@ -89,13 +88,7 @@ const ProductContextSwitcher: React.FC<ProductContextSwitcherProps> = ({
       }),
       value: productId,
       onClick: () =>
-        navigate(
-          languageEntityUrl(
-            languageCode,
-            TranslatableEntities.products,
-            productId,
-          ),
-        ),
+        navigate(languageEntityUrl(languageCode, TranslatableEntities.products, productId)),
     },
     ...(data?.product?.variants?.map(({ name, sku, id }) => ({
       label: name || sku,
@@ -110,15 +103,10 @@ const ProductContextSwitcher: React.FC<ProductContextSwitcherProps> = ({
         <FormattedMessage id="tUlsq+" defaultMessage="Translating" />:
       </Typography>
       <div ref={anchor}>
-        <Card
-          className={classes.menuContainer}
-          onClick={() => setExpandedState(!isExpanded)}
-        >
-          <Typography>
-            {items.find(({ value }) => value === selectedId)?.label || "-"}
-          </Typography>
+        <Card className={classes.menuContainer} onClick={() => setExpandedState(!isExpanded)}>
+          <Typography>{items.find(({ value }) => value === selectedId)?.label || "-"}</Typography>
           <ArrowDropDown
-            className={classNames(classes.arrow, {
+            className={clsx(classes.arrow, {
               [classes.rotate]: isExpanded,
             })}
           />
@@ -135,15 +123,11 @@ const ProductContextSwitcher: React.FC<ProductContextSwitcherProps> = ({
             <Grow
               {...TransitionProps}
               style={{
-                transformOrigin:
-                  placement === "bottom" ? "right top" : "right bottom",
+                transformOrigin: placement === "bottom" ? "right top" : "right bottom",
               }}
             >
               <Paper className={classes.menuPaper}>
-                <ClickAwayListener
-                  onClickAway={() => setExpandedState(false)}
-                  mouseEvent="onClick"
-                >
+                <ClickAwayListener onClickAway={() => setExpandedState(false)} mouseEvent="onClick">
                   <Menu>
                     {items.map(({ label, value, onClick }) => (
                       <MenuItem
@@ -167,5 +151,6 @@ const ProductContextSwitcher: React.FC<ProductContextSwitcherProps> = ({
     </div>
   );
 };
+
 ProductContextSwitcher.displayName = "ProductContextSwitcher";
 export default ProductContextSwitcher;

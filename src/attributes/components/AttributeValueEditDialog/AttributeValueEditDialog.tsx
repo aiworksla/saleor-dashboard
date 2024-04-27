@@ -1,27 +1,18 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@material-ui/core";
-import { getAttributeValueErrorMessage } from "@saleor/attributes/errors";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import {
-  AttributeErrorFragment,
-  AttributeInputTypeEnum,
-} from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
+import { getAttributeValueErrorMessage } from "@dashboard/attributes/errors";
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import { AttributeErrorFragment, AttributeInputTypeEnum } from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import { buttonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { AttributeValueEditDialogFormData } from "../../utils/data";
 import AttributeSwatchField from "../AttributeSwatchField";
+import { getAttributeValueFields } from "./utils";
 
 export interface AttributeValueEditDialogProps {
   attributeValue: AttributeValueEditDialogFormData | null;
@@ -45,24 +36,24 @@ const AttributeValueEditDialog: React.FC<AttributeValueEditDialogProps> = ({
   inputType,
 }) => {
   const intl = useIntl();
-  const attributeValueFields = attributeValue?.fileUrl
-    ? {
-        fileUrl: attributeValue?.fileUrl,
-        contentType: attributeValue?.contentType,
-      }
-    : { value: attributeValue?.value ?? "" };
-
+  const isSwatch = inputType === AttributeInputTypeEnum.SWATCH;
+  const attributeValueFields = getAttributeValueFields(attributeValue, isSwatch);
   const initialForm: AttributeValueEditDialogFormData = {
     name: attributeValue?.name ?? "",
     ...attributeValueFields,
   };
   const errors = useModalDialogErrors(apiErrors, open);
   const formErrors = getFormErrors(["name"], errors);
-  const isSwatch = inputType === AttributeInputTypeEnum.SWATCH;
 
   return (
-    <Dialog onClose={onClose} open={open} fullWidth maxWidth="sm">
-      <DialogTitle>
+    <Dialog
+      onClose={onClose}
+      open={open}
+      fullWidth
+      maxWidth="sm"
+      data-test-id="edit-attribute-value-dialog"
+    >
+      <DialogTitle disableTypography>
         {attributeValue === null ? (
           <FormattedMessage
             id="PqMbma"
@@ -87,10 +78,7 @@ const AttributeValueEditDialog: React.FC<AttributeValueEditDialogProps> = ({
                 disabled={disabled}
                 error={!!formErrors.name}
                 fullWidth
-                helperText={getAttributeValueErrorMessage(
-                  formErrors.name,
-                  intl,
-                )}
+                helperText={getAttributeValueErrorMessage(formErrors.name, intl)}
                 name={"name" as keyof AttributeValueEditDialogFormData}
                 label={intl.formatMessage({
                   id: "UhcALJ",
@@ -115,6 +103,7 @@ const AttributeValueEditDialog: React.FC<AttributeValueEditDialogProps> = ({
               <ConfirmButton
                 data-test-id="submit"
                 transitionState={confirmButtonState}
+                disabled={data.name === ""}
                 onClick={submit}
               >
                 <FormattedMessage {...buttonMessages.save} />
@@ -126,5 +115,6 @@ const AttributeValueEditDialog: React.FC<AttributeValueEditDialogProps> = ({
     </Dialog>
   );
 };
+
 AttributeValueEditDialog.displayName = "AttributeValueEditDialog";
 export default AttributeValueEditDialog;

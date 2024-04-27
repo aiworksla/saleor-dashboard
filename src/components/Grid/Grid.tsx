@@ -1,5 +1,5 @@
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 export type GridVariant = "default" | "inverted" | "uniform";
@@ -41,12 +41,11 @@ const useStyles = makeStyles(
 
 export const Grid: React.FC<GridProps> = props => {
   const { className, children, variant, richText } = props;
-
   const classes = useStyles(props);
 
   return (
     <div
-      className={classNames(className, classes.root, {
+      className={clsx(className, classes.root, {
         [classes.default]: variant === "default",
         [classes.inverted]: variant === "inverted",
         [classes.uniform]: variant === "uniform",

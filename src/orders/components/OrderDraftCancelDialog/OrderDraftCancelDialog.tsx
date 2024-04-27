@@ -1,10 +1,10 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import { DialogContentText } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -63,5 +63,6 @@ const OrderDraftCancelDialog: React.FC<OrderDraftCancelDialogProps> = ({
     </ActionDialog>
   );
 };
+
 OrderDraftCancelDialog.displayName = "OrderDraftCancelDialog";
 export default OrderDraftCancelDialog;

@@ -1,7 +1,7 @@
-import { Typography } from "@material-ui/core";
-import Link from "@saleor/components/Link";
+import Link from "@dashboard/components/Link";
+import { orderGiftCardBoughtPath } from "@dashboard/orders/urls";
 import { Alert } from "@saleor/macaw-ui";
-import { orderGiftCardBoughtPath } from "@saleor/orders/urls";
+import { Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -9,16 +9,14 @@ import { giftCardListOrderCardMessages as messages } from "./messages";
 
 const GiftCardsListOrderInfoCard: React.FC = () => (
   <Alert variant="info" close={false}>
-    <Typography>
+    <Text size={3}>
       <FormattedMessage
         {...messages.giftCardOrderInfoMessage}
         values={{
-          link: content => (
-            <Link href={orderGiftCardBoughtPath()}>{content}</Link>
-          ),
+          link: content => <Link href={orderGiftCardBoughtPath()}>{content}</Link>,
         }}
       />
-    </Typography>
+    </Text>
   </Alert>
 );
 

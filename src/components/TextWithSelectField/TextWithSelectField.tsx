@@ -1,9 +1,7 @@
+import SingleSelectField, { Choices } from "@dashboard/components/SingleSelectField";
+import { ChangeEvent, FormChange } from "@dashboard/hooks/useForm";
 import { TextField } from "@material-ui/core";
-import SingleSelectField, {
-  Choices,
-} from "@saleor/components/SingleSelectField";
-import { ChangeEvent, FormChange } from "@saleor/hooks/useForm";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 import { useStyles } from "./styles";
@@ -38,7 +36,6 @@ const TextWithSelectField: React.FC<TextWithSelectFieldProps> = ({
   isError,
 }) => {
   const classes = useStyles();
-
   const {
     name: textFieldName,
     value: textFieldValue,
@@ -46,13 +43,11 @@ const TextWithSelectField: React.FC<TextWithSelectFieldProps> = ({
     type: textFieldType,
     minValue: textFieldMinValue,
   } = textFieldProps;
-
   const {
     name: selectFieldName,
     value: selectFieldValue,
     className: selectFieldClassName,
   } = selectFieldProps;
-
   const handleSelectChange = (event: ChangeEvent) => {
     // in case one of the fields in the form is empty
     // we need to save the other part of the field as well
@@ -64,20 +59,15 @@ const TextWithSelectField: React.FC<TextWithSelectFieldProps> = ({
     change(event);
     change({ target: inputTarget });
   };
-
   const handleTextChange = (event: ChangeEvent) => {
     const { value } = event.target;
-
     const otherTarget = {
       value: selectFieldValue,
       name: selectFieldName,
     };
-
     // handle parsing in case of text field of type number
     const parsedValue =
-      textFieldType === "number" && typeof value === "string"
-        ? parseInt(value, 10)
-        : value;
+      textFieldType === "number" && typeof value === "string" ? parseInt(value, 10) : value;
 
     change({
       ...event,
@@ -99,7 +89,7 @@ const TextWithSelectField: React.FC<TextWithSelectFieldProps> = ({
           min: textFieldMinValue,
         }}
         InputProps={{
-          className: classNames(classes.textField, {
+          className: clsx(classes.textField, {
             [classes.textFieldCentered]: !textFieldLabel,
           }),
           endAdornment: (

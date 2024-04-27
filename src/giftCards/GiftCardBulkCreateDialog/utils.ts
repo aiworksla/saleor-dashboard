@@ -1,10 +1,8 @@
-import { GiftCardErrorCode, GiftCardErrorFragment } from "@saleor/graphql";
+// @ts-strict-ignore
+import { GiftCardErrorCode, GiftCardErrorFragment } from "@dashboard/graphql";
 import reduce from "lodash/reduce";
 
-import {
-  GiftCardBulkCreateFormData,
-  GiftCardBulkCreateFormErrors,
-} from "./types";
+import { GiftCardBulkCreateFormData, GiftCardBulkCreateFormErrors } from "./types";
 
 export const validateField = (
   {
@@ -38,9 +36,7 @@ export const validateField = (
   }
 };
 
-export const validateForm = (
-  formData: GiftCardBulkCreateFormData,
-): GiftCardBulkCreateFormErrors =>
+export const validateForm = (formData: GiftCardBulkCreateFormData): GiftCardBulkCreateFormErrors =>
   reduce(
     formData,
     (resultErrors, value, key: keyof GiftCardBulkCreateFormData) => {
@@ -50,7 +46,6 @@ export const validateForm = (
         balanceAmount: "balance",
         expiryPeriodAmount: "expiryDate",
       };
-
       const formError = validateField(formData, value, key);
 
       if (!formError) {

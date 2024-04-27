@@ -1,3 +1,13 @@
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import { buttonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import {
   Dialog,
   DialogActions,
@@ -6,16 +16,6 @@ import {
   DialogTitle,
   TextField,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -28,8 +28,8 @@ export interface OrderFulfillmentTrackingDialogProps {
   errors: OrderErrorFragment[];
   open: boolean;
   trackingNumber: string;
-  onClose();
-  onConfirm(data: FormData);
+  onClose: () => any;
+  onConfirm: (data: FormData) => any;
 }
 
 const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogProps> = ({
@@ -42,10 +42,8 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
 }) => {
   const intl = useIntl();
   const errors = useModalDialogErrors(apiErrors, open);
-
   const formFields = ["trackingNumber"];
   const formErrors = getFormErrors(formFields, errors);
-
   const initialData: FormData = {
     trackingNumber: trackingNumber || "",
   };
@@ -55,7 +53,7 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
       <Form initial={initialData} onSubmit={onConfirm}>
         {({ change, data, submit }) => (
           <>
-            <DialogTitle>
+            <DialogTitle disableTypography>
               <FormattedMessage
                 id="/BJQIq"
                 defaultMessage="Add Tracking Code"
@@ -65,10 +63,7 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
             <DialogContent>
               <TextField
                 error={!!formErrors.trackingNumber}
-                helperText={getOrderErrorMessage(
-                  formErrors.trackingNumber,
-                  intl,
-                )}
+                helperText={getOrderErrorMessage(formErrors.trackingNumber, intl)}
                 label={intl.formatMessage({
                   id: "yT/GAp",
                   defaultMessage: "Tracking number",
@@ -77,6 +72,7 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
                 onChange={change}
                 value={data.trackingNumber}
                 fullWidth
+                data-test-id="tracking-number-input"
               />
               {errors.length > 0 && (
                 <>
@@ -94,6 +90,7 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
             <DialogActions>
               <BackButton onClick={onClose} />
               <ConfirmButton
+                data-test-id="confirm-tracking-number-button"
                 transitionState={confirmButtonState}
                 onClick={submit}
               >
@@ -106,5 +103,6 @@ const OrderFulfillmentTrackingDialog: React.FC<OrderFulfillmentTrackingDialogPro
     </Dialog>
   );
 };
+
 OrderFulfillmentTrackingDialog.displayName = "OrderFulfillmentTrackingDialog";
 export default OrderFulfillmentTrackingDialog;

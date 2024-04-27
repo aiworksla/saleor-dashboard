@@ -1,13 +1,12 @@
-import { ChannelShippingData } from "@saleor/channels/utils";
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ChannelsAvailabilityCard from "@saleor/components/ChannelsAvailabilityCard";
-import Container from "@saleor/components/Container";
-import { WithFormId } from "@saleor/components/Form/ExitFormDialogProvider";
-import Grid from "@saleor/components/Grid";
-import Metadata from "@saleor/components/Metadata/Metadata";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
+import { ChannelShippingData } from "@dashboard/channels/utils";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import ChannelsAvailabilityCard from "@dashboard/components/ChannelsAvailabilityCard";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { WithFormId } from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata/Metadata";
+import Savebar from "@dashboard/components/Savebar";
 import {
   PermissionEnum,
   PostalCodeRuleInclusionTypeEnum,
@@ -16,26 +15,28 @@ import {
   ShippingMethodTypeEnum,
   ShippingMethodTypeFragment,
   ShippingZoneQuery,
-} from "@saleor/graphql";
-import useForm, { SubmitPromise } from "@saleor/hooks/useForm";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { validatePrice } from "@saleor/products/utils/validation";
-import OrderValue from "@saleor/shipping/components/OrderValue";
-import OrderWeight from "@saleor/shipping/components/OrderWeight";
-import PricingCard from "@saleor/shipping/components/PricingCard";
-import ShippingMethodProducts from "@saleor/shipping/components/ShippingMethodProducts";
-import ShippingRateInfo from "@saleor/shipping/components/ShippingRateInfo";
-import { createChannelsChangeHandler } from "@saleor/shipping/handlers";
-import { ListActions, ListProps } from "@saleor/types";
-import { mapEdgesToItems, mapMetadataItemToInput } from "@saleor/utils/maps";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
-import { RichTextContext } from "@saleor/utils/richText/context";
-import useRichText from "@saleor/utils/richText/useRichText";
+  TaxClassBaseFragment,
+} from "@dashboard/graphql";
+import useForm, { SubmitPromise } from "@dashboard/hooks/useForm";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { useStateUpdate } from "@dashboard/hooks/useStateUpdate";
+import { validatePrice } from "@dashboard/products/utils/validation";
+import { handleTaxClassChange } from "@dashboard/productTypes/handlers";
+import OrderValue from "@dashboard/shipping/components/OrderValue";
+import OrderWeight from "@dashboard/shipping/components/OrderWeight";
+import PricingCard from "@dashboard/shipping/components/PricingCard";
+import ShippingMethodProducts from "@dashboard/shipping/components/ShippingMethodProducts";
+import ShippingRateInfo from "@dashboard/shipping/components/ShippingRateInfo";
+import { createChannelsChangeHandler } from "@dashboard/shipping/handlers";
+import { FetchMoreProps, ListActions, ListProps } from "@dashboard/types";
+import { mapEdgesToItems, mapMetadataItemToInput } from "@dashboard/utils/maps";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
+import { RichTextContext } from "@dashboard/utils/richText/context";
+import useRichText from "@dashboard/utils/richText/useRichText";
 import React, { FormEventHandler } from "react";
-import { FormattedMessage } from "react-intl";
 
+import ShippingMethodTaxes from "../ShippingMethodTaxes";
 import ShippingZonePostalCodes from "../ShippingZonePostalCodes";
 import { ShippingZoneRateUpdateFormData } from "./types";
 
@@ -46,26 +47,28 @@ export interface ShippingZoneRatesPageProps
   allChannelsCount?: number;
   shippingChannels: ChannelShippingData[];
   disabled: boolean;
-  rate: ShippingZoneQuery["shippingZone"]["shippingMethods"][0];
+  rate: NonNullable<NonNullable<ShippingZoneQuery["shippingZone"]>["shippingMethods"]>[number];
   channelErrors: ShippingChannelsErrorFragment[];
   errors: ShippingErrorFragment[];
   saveButtonBarState: ConfirmButtonTransitionState;
-  postalCodeRules: ShippingZoneQuery["shippingZone"]["shippingMethods"][0]["postalCodeRules"];
+  postalCodeRules: NonNullable<
+    NonNullable<ShippingZoneQuery["shippingZone"]>["shippingMethods"]
+  >[number]["postalCodeRules"];
   backHref: string;
   onDelete?: () => void;
   onSubmit: (data: ShippingZoneRateUpdateFormData) => SubmitPromise;
-  onPostalCodeInclusionChange: (
-    inclusion: PostalCodeRuleInclusionTypeEnum,
-  ) => void;
+  onPostalCodeInclusionChange: (inclusion: PostalCodeRuleInclusionTypeEnum) => void;
   onPostalCodeAssign: () => void;
   onPostalCodeUnassign: (
-    code: ShippingMethodTypeFragment["postalCodeRules"][0],
+    code: NonNullable<ShippingMethodTypeFragment["postalCodeRules"]>[number],
   ) => void;
   onChannelsChange: (data: ChannelShippingData[]) => void;
   openChannelsModal: () => void;
   onProductAssign: () => void;
   onProductUnassign: (ids: string[]) => void;
   variant: ShippingMethodTypeEnum;
+  taxClasses: TaxClassBaseFragment[];
+  fetchMoreTaxClasses: FetchMoreProps;
 }
 
 export const ShippingZoneRatesPage: React.FC<ShippingZoneRatesPageProps> = ({
@@ -89,16 +92,13 @@ export const ShippingZoneRatesPage: React.FC<ShippingZoneRatesPageProps> = ({
   postalCodeRules,
   variant,
   formId,
+  taxClasses,
+  fetchMoreTaxClasses,
   ...listProps
 }) => {
   const navigate = useNavigator();
-
   const isPriceVariant = variant === ShippingMethodTypeEnum.PRICE;
-
-  const initialForm: Omit<
-    ShippingZoneRateUpdateFormData,
-    "description"
-  > = React.useMemo(
+  const initialForm: Omit<ShippingZoneRateUpdateFormData, "description"> = React.useMemo(
     () => ({
       channelListings: shippingChannels,
       maxDays: rate?.maximumDeliveryDays?.toString() || "",
@@ -107,140 +107,130 @@ export const ShippingZoneRatesPage: React.FC<ShippingZoneRatesPageProps> = ({
       minDays: rate?.minimumDeliveryDays?.toString() || "",
       minValue: rate?.minimumOrderWeight?.value.toString() || "",
       name: rate?.name || "",
-      orderValueRestricted: !!rate?.channelListings.length,
+      orderValueRestricted: !!rate?.channelListings?.length,
       privateMetadata: rate?.privateMetadata.map(mapMetadataItemToInput),
       type: rate?.type || null,
+      taxClassId: rate?.taxClass?.id || "",
     }),
     [shippingChannels, rate],
   );
-
   const {
     change,
     data: formData,
     setIsSubmitDisabled,
     triggerChange,
   } = useForm(initialForm, undefined, { confirmLeave: true, formId });
-
+  const [taxClassDisplayName, setTaxClassDisplayName] = useStateUpdate(rate?.taxClass?.name ?? "");
   const handleFormSubmit = useHandleFormSubmit({
     formId,
     onSubmit,
   });
-
   const richText = useRichText({
     initial: rate?.description,
     loading: !rate,
     triggerChange,
   });
-
-  const {
-    makeChangeHandler: makeMetadataChangeHandler,
-  } = useMetadataChangeTrigger();
-
+  const { makeChangeHandler: makeMetadataChangeHandler } = useMetadataChangeTrigger();
   const data: ShippingZoneRateUpdateFormData = {
     ...formData,
     description: null,
   };
-
   // Prevents closing ref in submit functions
   const getData = async (): Promise<ShippingZoneRateUpdateFormData> => ({
     ...data,
     description: await richText.getValue(),
   });
-
   const handleFormElementSubmit: FormEventHandler = async event => {
     event.preventDefault();
     handleFormSubmit(await getData());
   };
   const handleSubmit = async () => handleFormSubmit(await getData());
-
   const handleChannelsChange = createChannelsChangeHandler(
     shippingChannels,
     onChannelsChange,
     triggerChange,
   );
-  const isValid = !formData.channelListings?.some(channel =>
-    validatePrice(channel.price),
-  );
-
+  const isValid = !formData.channelListings?.some(channel => validatePrice(channel.price));
   const changeMetadata = makeMetadataChangeHandler(change);
-
   const isSaveDisabled = disabled || !isValid;
+
   setIsSubmitDisabled(isSaveDisabled);
 
   return (
     <RichTextContext.Provider value={richText}>
       <form onSubmit={handleFormElementSubmit}>
-        <Container>
-          <Backlink href={backHref}>
-            <FormattedMessage id="PRlD0A" defaultMessage="Shipping" />
-          </Backlink>
-          <PageHeader title={rate?.name} />
-          <Grid>
-            <div>
-              <ShippingRateInfo
-                data={data}
-                disabled={disabled}
-                errors={errors}
-                onChange={change}
-              />
-              <CardSpacer />
-              {isPriceVariant ? (
-                <OrderValue
-                  channels={data.channelListings}
-                  errors={channelErrors}
-                  orderValueRestricted={data.orderValueRestricted}
-                  disabled={disabled}
-                  onChange={change}
-                  onChannelsChange={handleChannelsChange}
-                />
-              ) : (
-                <OrderWeight
-                  orderValueRestricted={data.orderValueRestricted}
-                  disabled={disabled}
-                  minValue={data.minValue}
-                  maxValue={data.maxValue}
-                  onChange={change}
-                  errors={errors}
-                />
-              )}
-              <CardSpacer />
-              <PricingCard
+        <DetailPageLayout>
+          <TopNav href={backHref} title={rate?.name} />
+          <DetailPageLayout.Content>
+            <ShippingRateInfo data={data} disabled={disabled} errors={errors} onChange={change} />
+            <CardSpacer />
+            {isPriceVariant ? (
+              <OrderValue
                 channels={data.channelListings}
-                onChange={handleChannelsChange}
-                disabled={disabled}
                 errors={channelErrors}
-              />
-              <CardSpacer />
-              <ShippingZonePostalCodes
+                orderValueRestricted={data.orderValueRestricted}
                 disabled={disabled}
-                onPostalCodeDelete={onPostalCodeUnassign}
-                onPostalCodeInclusionChange={onPostalCodeInclusionChange}
-                onPostalCodeRangeAdd={onPostalCodeAssign}
-                postalCodes={postalCodeRules}
+                onChange={change}
+                onChannelsChange={handleChannelsChange}
               />
-              <CardSpacer />
-              <ShippingMethodProducts
-                products={mapEdgesToItems(rate?.excludedProducts)}
-                onProductAssign={onProductAssign}
-                onProductUnassign={onProductUnassign}
+            ) : (
+              <OrderWeight
+                orderValueRestricted={data.orderValueRestricted}
                 disabled={disabled}
-                {...listProps}
+                minValue={data.minValue}
+                maxValue={data.maxValue}
+                onChange={change}
+                errors={errors}
               />
-              <CardSpacer />
-              <Metadata data={data} onChange={changeMetadata} />
-            </div>
-            <div>
-              <ChannelsAvailabilityCard
-                managePermissions={[PermissionEnum.MANAGE_SHIPPING]}
-                allChannelsCount={allChannelsCount}
-                channelsList={data.channelListings.map(channel => ({
-                  id: channel.id,
-                  name: channel.name,
-                }))}
-                openModal={openChannelsModal}
-              />
-            </div>
-          </Grid>
+            )}
+            <CardSpacer />
+            <PricingCard
+              channels={data.channelListings}
+              onChange={handleChannelsChange}
+              disabled={disabled}
+              errors={channelErrors}
+            />
+            <CardSpacer />
+            <ShippingZonePostalCodes
+              disabled={disabled}
+              onPostalCodeDelete={onPostalCodeUnassign}
+              onPostalCodeInclusionChange={onPostalCodeInclusionChange}
+              onPostalCodeRangeAdd={onPostalCodeAssign}
+              postalCodes={postalCodeRules}
+            />
+            <CardSpacer />
+            <ShippingMethodProducts
+              products={mapEdgesToItems(rate?.excludedProducts)!}
+              onProductAssign={onProductAssign}
+              onProductUnassign={onProductUnassign}
+              disabled={disabled}
+              {...listProps}
+            />
+            <CardSpacer />
+            <Metadata data={data} onChange={changeMetadata} />
+          </DetailPageLayout.Content>
+          <DetailPageLayout.RightSidebar>
+            <ChannelsAvailabilityCard
+              managePermissions={[PermissionEnum.MANAGE_SHIPPING]}
+              allChannelsCount={allChannelsCount!}
+              channelsList={data.channelListings.map(channel => ({
+                id: channel.id,
+                name: channel.name,
+              }))}
+              openModal={openChannelsModal}
+            />
+            <CardSpacer />
+            <ShippingMethodTaxes
+              value={formData.taxClassId}
+              taxClassDisplayName={taxClassDisplayName}
+              taxClasses={taxClasses}
+              disabled={false}
+              onChange={event =>
+                handleTaxClassChange(event, taxClasses, change, setTaxClassDisplayName)
+              }
+              onFetchMore={fetchMoreTaxClasses}
+            />
+          </DetailPageLayout.RightSidebar>
           <Savebar
             disabled={isSaveDisabled}
             onCancel={() => navigate(backHref)}
@@ -248,7 +238,7 @@ export const ShippingZoneRatesPage: React.FC<ShippingZoneRatesPageProps> = ({
             onSubmit={handleSubmit}
             state={saveButtonBarState}
           />
-        </Container>
+        </DetailPageLayout>
       </form>
     </RichTextContext.Provider>
   );

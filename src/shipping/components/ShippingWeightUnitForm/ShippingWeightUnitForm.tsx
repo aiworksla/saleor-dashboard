@@ -1,22 +1,19 @@
-import { Card, CardActions, CardContent } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Form from "@saleor/components/Form";
-import SingleSelectField from "@saleor/components/SingleSelectField";
-import { WeightUnitsEnum } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { buttonMessages, sectionNames } from "@saleor/intl";
+import Form from "@dashboard/components/Form";
+import { WeightUnitsEnum } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { buttonMessages } from "@dashboard/intl";
+import { Box, Button, Option, Select } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 export interface FormData {
-  unit: WeightUnitsEnum;
+  unit: Option | null;
 }
 
 export interface ShippingWeightUnitFormProps {
-  defaultWeightUnit: WeightUnitsEnum;
+  defaultWeightUnit: WeightUnitsEnum | null;
   disabled: boolean;
-  onSubmit: (unit: WeightUnitsEnum) => SubmitPromise;
+  onSubmit: (unit: WeightUnitsEnum | null) => SubmitPromise;
 }
 
 const ShippingWeightUnitForm: React.FC<ShippingWeightUnitFormProps> = ({
@@ -26,47 +23,65 @@ const ShippingWeightUnitForm: React.FC<ShippingWeightUnitFormProps> = ({
 }) => {
   const intl = useIntl();
   const initialForm: FormData = {
-    unit: defaultWeightUnit,
+    unit: defaultWeightUnit
+      ? {
+          label: defaultWeightUnit,
+          value: defaultWeightUnit,
+        }
+      : null,
   };
+  const unitOptions: Option[] = React.useMemo(
+    () =>
+      Object.values(WeightUnitsEnum).map(unit => ({
+        label: unit,
+        value: unit,
+      })),
+    [WeightUnitsEnum],
+  );
+
   return (
     <Form
       confirmLeave
       initial={initialForm}
-      onSubmit={formData => onSubmit(formData.unit)}
+      onSubmit={formData => {
+        return formData.unit ? onSubmit(formData.unit.value as WeightUnitsEnum) : undefined;
+      }}
     >
-      {({ change, data, submit }) => (
-        <Card>
-          <CardTitle title={intl.formatMessage(sectionNames.configuration)} />
-          <CardContent>
-            <SingleSelectField
-              disabled={disabled}
-              choices={Object.keys(WeightUnitsEnum).map(unit => ({
-                label: WeightUnitsEnum[unit],
-                value: WeightUnitsEnum[unit],
-              }))}
-              label={intl.formatMessage({
-                id: "Rp/Okl",
-                defaultMessage: "Shipping Weight Unit",
-              })}
-              hint={intl.formatMessage({
-                id: "4Kq3O6",
-                defaultMessage:
-                  "This unit will be used as default shipping weight",
-              })}
-              name={"unit" as keyof FormData}
-              value={data.unit}
-              onChange={change}
-            />
-          </CardContent>
-          <CardActions>
-            <Button onClick={submit} data-test-id="save-unit">
+      {({ change, data, submit }) => {
+        return (
+          <Box display="flex" gap={4} flexDirection="column" marginTop={4}>
+            <Box>
+              <Select
+                disabled={disabled}
+                options={unitOptions}
+                label={intl.formatMessage({
+                  id: "Rp/Okl",
+                  defaultMessage: "Shipping Weight Unit",
+                })}
+                name={"unit" satisfies keyof FormData}
+                value={data.unit}
+                onChange={value => change({ target: { name: "unit", value } })}
+                helperText={intl.formatMessage({
+                  id: "4Kq3O6",
+                  defaultMessage: "This unit will be used as default shipping weight",
+                })}
+              />
+            </Box>
+            <Button
+              variant="primary"
+              onClick={submit}
+              disabled={disabled || !data.unit}
+              data-test-id="save-unit"
+              alignSelf="end"
+            >
               <FormattedMessage {...buttonMessages.save} />
             </Button>
-          </CardActions>
-        </Card>
-      )}
+          </Box>
+        );
+      }}
     </Form>
   );
 };
+
 ShippingWeightUnitForm.displayName = "ShippingWeightUnitForm";
 export default ShippingWeightUnitForm;

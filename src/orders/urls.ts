@@ -1,4 +1,5 @@
-import { stringifyQs } from "@saleor/utils/urls";
+import { TransactionActionEnum } from "@dashboard/graphql";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import {
@@ -61,6 +62,7 @@ export type OrderListUrlQueryParams = BulkAction &
   ActiveTab;
 export const orderListUrl = (params?: OrderListUrlQueryParams): string => {
   const orderList = orderListPath;
+
   if (params === undefined) {
     return orderList;
   } else {
@@ -76,10 +78,7 @@ export enum OrderDraftListUrlFiltersEnum {
   query = "query",
 }
 export type OrderDraftListUrlFilters = Filters<OrderDraftListUrlFiltersEnum>;
-export type OrderDraftListUrlDialog =
-  | "remove"
-  | CreateOrderDialog
-  | TabActionDialog;
+export type OrderDraftListUrlDialog = "remove" | CreateOrderDialog | TabActionDialog;
 export enum OrderDraftListUrlSortField {
   number = "number",
   customer = "customer",
@@ -93,10 +92,9 @@ export type OrderDraftListUrlQueryParams = ActiveTab &
   OrderDraftListUrlFilters &
   OrderDraftListUrlSort &
   Pagination;
-export const orderDraftListUrl = (
-  params?: OrderDraftListUrlQueryParams,
-): string => {
+export const orderDraftListUrl = (params?: OrderDraftListUrlQueryParams): string => {
   const orderDraftList = orderDraftListPath;
+
   if (params === undefined) {
     return orderDraftList;
   } else {
@@ -108,6 +106,7 @@ export const orderPath = (id: string) => urlJoin(orderSectionUrl, id);
 
 export type OrderUrlDialog =
   | "add-order-line"
+  | "add-refund"
   | "approve-fulfillment"
   | "cancel"
   | "cancel-fulfillment"
@@ -122,40 +121,75 @@ export type OrderUrlDialog =
   | "finalize"
   | "mark-paid"
   | "void"
-  | "invoice-send";
+  | "transaction-action"
+  | "invoice-send"
+  | "add-manual-transaction"
+  | "view-metadata";
 
-export type OrderUrlQueryParams = Dialog<OrderUrlDialog> & SingleAction;
+export interface TransactionAction {
+  action: "transaction-action";
+  id: string;
+  type: TransactionActionEnum;
+}
+
+export type OrderUrlQueryParams =
+  | (Dialog<OrderUrlDialog> & SingleAction & { type?: never })
+  | TransactionAction;
 
 export type OrderFulfillUrlFiltersType = "warehouseId" | "lineId";
 export type OrderFulfillUrlFilters = Filters<OrderFulfillUrlFiltersType>;
 export type OrderFulfillUrlDialog = "change-warehouse";
-export type OrderFulfillUrlQueryParams = Dialog<OrderFulfillUrlDialog> &
-  OrderFulfillUrlFilters;
+export type OrderFulfillUrlQueryParams = Dialog<OrderFulfillUrlDialog> & OrderFulfillUrlFilters;
 
 export const orderUrl = (id: string, params?: OrderUrlQueryParams) =>
   orderPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
 
-export const orderFulfillPath = (id: string) =>
-  urlJoin(orderPath(id), "fulfill");
+export const orderFulfillPath = (id: string) => urlJoin(orderPath(id), "fulfill");
 
 export const orderReturnPath = (id: string) => urlJoin(orderPath(id), "return");
 
-export const orderFulfillUrl = (
-  id: string,
-  params?: OrderFulfillUrlQueryParams,
-) => orderFulfillPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
+export const orderFulfillUrl = (id: string, params?: OrderFulfillUrlQueryParams) =>
+  orderFulfillPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
 
 export const orderSettingsPath = urlJoin(orderSectionUrl, "settings");
 
-export const orderRefundPath = (id: string) => urlJoin(orderPath(id), "refund");
+export const orderPaymentRefundPath = (id: string) => urlJoin(orderPath(id), "payment-refund");
 
-export const orderRefundUrl = (id: string) =>
-  orderRefundPath(encodeURIComponent(id));
+export const orderSendRefundPath = (id: string) => urlJoin(orderPath(id), "send-refund");
 
-export const orderReturnUrl = (id: string) =>
-  orderReturnPath(encodeURIComponent(id));
+export const orderPaymentRefundUrl = (id: string) => orderPaymentRefundPath(encodeURIComponent(id));
+
+export const orderSendRefundUrl = (id: string) => orderSendRefundPath(encodeURIComponent(id));
+
+export const orderGrantRefundPath = (id: string) => urlJoin(orderPath(id), "grant-refund");
+
+export const orderGrantRefundUrl = (id: string) => orderGrantRefundPath(encodeURIComponent(id));
+
+export const orderGrantRefundEditPath = (orderId: string, refundId: string) =>
+  urlJoin(orderGrantRefundPath(orderId), refundId);
+
+export const orderGrantRefundEditUrl = (orderId: string, refundId: string) =>
+  orderGrantRefundEditPath(encodeURIComponent(orderId), encodeURIComponent(refundId));
+
+export const orderReturnUrl = (id: string) => orderReturnPath(encodeURIComponent(id));
 
 export const orderGiftCardBoughtPath = () =>
   orderListUrl({
     giftCard: [OrderFilterGiftCard.paid],
   });
+
+export const orderTransactionRefundPath = (id: string) => urlJoin(orderPath(id), "refund");
+
+export const orderTransactionRefundUrl = (id: string) =>
+  orderTransactionRefundPath(encodeURIComponent(id));
+
+export const orderTransactionRefundEditPath = (orderId: string, refundId: string) =>
+  urlJoin(orderTransactionRefundPath(orderId), refundId);
+
+export const orderTransactionRefundEditUrl = (orderId: string, refundId: string) =>
+  orderTransactionRefundEditPath(encodeURIComponent(orderId), encodeURIComponent(refundId));
+export const orderManualTransationRefundPath = (id: string) =>
+  urlJoin(orderPath(id), "manual-refund");
+
+export const orderManualTransationRefundUrl = (id: string) =>
+  orderManualTransationRefundPath(encodeURIComponent(id));

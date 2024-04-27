@@ -1,29 +1,27 @@
-import { OutputData } from "@editorjs/editorjs";
+// @ts-strict-ignore
 import {
   getAttributesDisplayData,
   getRichTextAttributesFromMap,
   getRichTextDataFromAttributes,
   mergeAttributes,
   RichTextProps,
-} from "@saleor/attributes/utils/data";
+} from "@dashboard/attributes/utils/data";
 import {
   createAttributeChangeHandler,
   createAttributeFileChangeHandler,
   createAttributeMultiChangeHandler,
   createAttributeReferenceChangeHandler,
+  createAttributeReferenceMetadataHandler,
   createAttributeValueReorderHandler,
   createFetchMoreReferencesHandler,
   createFetchReferencesHandler,
-} from "@saleor/attributes/utils/handlers";
-import { ChannelData, ChannelPriceArgs } from "@saleor/channels/utils";
-import {
-  AttributeInput,
-  AttributeInputData,
-} from "@saleor/components/Attributes";
-import { useExitFormDialog } from "@saleor/components/Form/useExitFormDialog";
-import { MetadataFormData } from "@saleor/components/Metadata";
-import { MultiAutocompleteChoiceType } from "@saleor/components/MultiAutocompleteSelectField";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
+} from "@dashboard/attributes/utils/handlers";
+import { ChannelData, ChannelPriceArgs } from "@dashboard/channels/utils";
+import { AttributeInput, AttributeInputData } from "@dashboard/components/Attributes";
+import { useExitFormDialog } from "@dashboard/components/Form/useExitFormDialog";
+import { MetadataFormData } from "@dashboard/components/Metadata";
+import { MultiAutocompleteChoiceType } from "@dashboard/components/MultiAutocompleteSelectField";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
 import {
   ProductErrorWithAttributesFragment,
   ProductTypeQuery,
@@ -31,41 +29,45 @@ import {
   SearchProductsQuery,
   SearchProductTypesQuery,
   SearchWarehousesQuery,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
 import useForm, {
   CommonUseFormResultWithHandlers,
   FormChange,
   FormErrors,
   SubmitPromise,
-} from "@saleor/hooks/useForm";
+} from "@dashboard/hooks/useForm";
 import useFormset, {
   FormsetChange,
   FormsetData,
-} from "@saleor/hooks/useFormset";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
-import { errorMessages } from "@saleor/intl";
+  FormsetMetadataChange,
+} from "@dashboard/hooks/useFormset";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
+import { errorMessages } from "@dashboard/intl";
 import {
+  AttributeValuesMetadata,
   getAttributeInputFromProductType,
   ProductType,
-} from "@saleor/products/utils/data";
+} from "@dashboard/products/utils/data";
 import {
   createChannelsChangeHandler,
   createChannelsPriceChangeHandler,
   createProductTypeSelectHandler,
-} from "@saleor/products/utils/handlers";
+} from "@dashboard/products/utils/handlers";
 import {
   validateCostPrice,
   validatePrice,
   validateProductCreateData,
-} from "@saleor/products/utils/validation";
-import { PRODUCT_CREATE_FORM_ID } from "@saleor/products/views/ProductCreate/consts";
-import { FetchMoreProps, RelayToFlat, ReorderEvent } from "@saleor/types";
-import createMultiAutocompleteSelectHandler from "@saleor/utils/handlers/multiAutocompleteSelectChangeHandler";
-import createSingleAutocompleteSelectHandler from "@saleor/utils/handlers/singleAutocompleteSelectChangeHandler";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
-import { RichTextContext } from "@saleor/utils/richText/context";
-import { useMultipleRichText } from "@saleor/utils/richText/useMultipleRichText";
-import useRichText from "@saleor/utils/richText/useRichText";
+} from "@dashboard/products/utils/validation";
+import { PRODUCT_CREATE_FORM_ID } from "@dashboard/products/views/ProductCreate/consts";
+import { FetchMoreProps, RelayToFlat, ReorderEvent } from "@dashboard/types";
+import createMultiselectChangeHandler from "@dashboard/utils/handlers/multiselectChangeHandler";
+import createSingleAutocompleteSelectHandler from "@dashboard/utils/handlers/singleAutocompleteSelectChangeHandler";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
+import { RichTextContext } from "@dashboard/utils/richText/context";
+import { useMultipleRichText } from "@dashboard/utils/richText/useMultipleRichText";
+import useRichText from "@dashboard/utils/richText/useRichText";
+import { OutputData } from "@editorjs/editorjs";
+import { Option } from "@saleor/macaw-ui-next";
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 
@@ -74,10 +76,8 @@ import { ProductStockFormsetData, ProductStockInput } from "../ProductStocks";
 
 export interface ProductCreateFormData extends MetadataFormData {
   category: string;
-  changeTaxCode: boolean;
   channelListings: ChannelData[];
-  chargeTaxes: boolean;
-  collections: string[];
+  collections: Option[];
   description: OutputData;
   isAvailable: boolean;
   name: string;
@@ -88,7 +88,6 @@ export interface ProductCreateFormData extends MetadataFormData {
   sku: string;
   slug: string;
   stockQuantity: number;
-  taxCode: string;
   trackInventory: boolean;
   isPreorder: boolean;
   globalThreshold: string;
@@ -96,6 +95,7 @@ export interface ProductCreateFormData extends MetadataFormData {
   hasPreorderEndDate: boolean;
   preorderEndDateTime: string;
   weight: string;
+  taxClassId: string;
 }
 export interface ProductCreateData extends ProductCreateFormData {
   attributes: AttributeInput[];
@@ -109,20 +109,14 @@ export interface ProductCreateHandlers
       | "selectCategory"
       | "selectCollection"
       | "selectProductType"
-      | "selectTaxRate",
+      | "selectTaxClass",
       FormChange
     >,
-    Record<
-      "changeStock" | "selectAttribute" | "selectAttributeMultiple",
-      FormsetChange<string>
-    >,
+    Record<"changeStock" | "selectAttribute" | "selectAttributeMultiple", FormsetChange<string>>,
     Record<"changeChannelPrice", (id: string, data: ChannelPriceArgs) => void>,
     Record<
       "changeChannels",
-      (
-        id: string,
-        data: Omit<ChannelData, "name" | "price" | "currency" | "id">,
-      ) => void
+      (id: string, data: Omit<ChannelData, "name" | "price" | "currency" | "id">) => void
     >,
     Record<"selectAttributeReference", FormsetChange<string[]>>,
     Record<"selectAttributeFile", FormsetChange<File>>,
@@ -131,33 +125,23 @@ export interface ProductCreateHandlers
   changePreorderEndDate: FormChange;
   fetchReferences: (value: string) => void;
   fetchMoreReferences: FetchMoreProps;
+  selectAttributeReferenceMetadata: FormsetMetadataChange<AttributeValuesMetadata[]>;
 }
 export interface UseProductCreateFormOutput
-  extends CommonUseFormResultWithHandlers<
-      ProductCreateData,
-      ProductCreateHandlers
-    >,
+  extends CommonUseFormResultWithHandlers<ProductCreateData, ProductCreateHandlers>,
     RichTextProps {
   disabled: boolean;
   formErrors: FormErrors<ProductCreateData>;
   validationErrors: ProductErrorWithAttributesFragment[];
 }
 
-export type UseProductCreateFormRenderProps = Omit<
-  UseProductCreateFormOutput,
-  "richText"
->;
+export type UseProductCreateFormRenderProps = Omit<UseProductCreateFormOutput, "richText">;
 
 export interface UseProductCreateFormOpts
-  extends Record<
-    "categories" | "collections" | "taxTypes",
-    SingleAutocompleteChoiceType[]
-  > {
+  extends Record<"categories" | "collections" | "taxClasses", SingleAutocompleteChoiceType[]> {
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedCollections: React.Dispatch<
-    React.SetStateAction<MultiAutocompleteChoiceType[]>
-  >;
-  setSelectedTaxType: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedCollections: React.Dispatch<React.SetStateAction<MultiAutocompleteChoiceType[]>>;
+  setSelectedTaxClass: React.Dispatch<React.SetStateAction<string>>;
   setChannels: (channels: ChannelData[]) => void;
   selectedCollections: MultiAutocompleteChoiceType[];
   productTypes: RelayToFlat<SearchProductTypesQuery["search"]>;
@@ -188,15 +172,12 @@ function useProductCreateForm(
   opts: UseProductCreateFormOpts,
 ): UseProductCreateFormOutput {
   const intl = useIntl();
-  const [validationErrors, setValidationErrors] = useState<
-    ProductErrorWithAttributesFragment[]
-  >([]);
-  const defaultInitialFormData: ProductCreateFormData &
-    Record<"productType", string> = {
+  const [validationErrors, setValidationErrors] = useState<ProductErrorWithAttributesFragment[]>(
+    [],
+  );
+  const defaultInitialFormData: ProductCreateFormData & Record<"productType", string> = {
     category: "",
-    changeTaxCode: false,
     channelListings: opts.currentChannels,
-    chargeTaxes: false,
     collections: [],
     description: null,
     isAvailable: false,
@@ -210,7 +191,7 @@ function useProductCreateForm(
     sku: "",
     slug: "",
     stockQuantity: null,
-    taxCode: null,
+    taxClassId: "",
     trackInventory: false,
     weight: "",
     globalSoldUnits: 0,
@@ -219,7 +200,6 @@ function useProductCreateForm(
     hasPreorderEndDate: false,
     preorderEndDateTime: "",
   };
-
   const form = useForm(
     {
       ...initial,
@@ -228,53 +208,32 @@ function useProductCreateForm(
     undefined,
     { confirmLeave: true, formId: PRODUCT_CREATE_FORM_ID },
   );
-
-  const {
-    triggerChange,
-    toggleValue,
-    handleChange,
-    data: formData,
-    formId,
-  } = form;
-
+  const { triggerChange, toggleValues, handleChange, data: formData, formId } = form;
   const attributes = useFormset<AttributeInputData>(
-    opts.selectedProductType
-      ? getAttributeInputFromProductType(opts.selectedProductType)
-      : [],
+    opts.selectedProductType ? getAttributeInputFromProductType(opts.selectedProductType) : [],
   );
-  const {
-    getters: attributeRichTextGetters,
-    getValues: getAttributeRichTextValues,
-  } = useMultipleRichText({
-    initial: getRichTextDataFromAttributes(attributes.data),
-    triggerChange,
-  });
+  const { getters: attributeRichTextGetters, getValues: getAttributeRichTextValues } =
+    useMultipleRichText({
+      initial: getRichTextDataFromAttributes(attributes.data),
+      triggerChange,
+    });
   const attributesWithNewFileValue = useFormset<null, File>([]);
   const stocks = useFormset<ProductStockFormsetData>([]);
   const richText = useRichText({
     initial: null,
     triggerChange,
   });
-
-  const {
-    makeChangeHandler: makeMetadataChangeHandler,
-  } = useMetadataChangeTrigger();
-
-  const handleCollectionSelect = createMultiAutocompleteSelectHandler(
-    toggleValue,
+  const { makeChangeHandler: makeMetadataChangeHandler } = useMetadataChangeTrigger();
+  const handleCollectionSelect = createMultiselectChangeHandler(
+    toggleValues,
     opts.setSelectedCollections,
-    opts.selectedCollections,
-    opts.collections,
   );
   const handleCategorySelect = createSingleAutocompleteSelectHandler(
     handleChange,
     opts.setSelectedCategory,
     opts.categories,
   );
-  const handleAttributeChange = createAttributeChangeHandler(
-    attributes.change,
-    triggerChange,
-  );
+  const handleAttributeChange = createAttributeChangeHandler(attributes.change, triggerChange);
   const handleAttributeMultiChange = createAttributeMultiChangeHandler(
     attributes.change,
     attributes.data,
@@ -282,6 +241,10 @@ function useProductCreateForm(
   );
   const handleAttributeReferenceChange = createAttributeReferenceChangeHandler(
     attributes.change,
+    triggerChange,
+  );
+  const handleAttributeMetadataChange = createAttributeReferenceMetadataHandler(
+    attributes.setMetadata,
     triggerChange,
   );
   const handleFetchReferences = createFetchReferencesHandler(
@@ -331,10 +294,10 @@ function useProductCreateForm(
     triggerChange();
     stocks.remove(id);
   };
-  const handleTaxTypeSelect = createSingleAutocompleteSelectHandler(
+  const handleTaxClassSelect = createSingleAutocompleteSelectHandler(
     handleChange,
-    opts.setSelectedTaxType,
-    opts.taxTypes,
+    opts.setSelectedTaxClass,
+    opts.taxClasses,
   );
   const changeMetadata = makeMetadataChangeHandler(handleChange);
   const handleChannelsChange = createChannelsChangeHandler(
@@ -347,13 +310,11 @@ function useProductCreateForm(
     opts.setChannels,
     triggerChange,
   );
-
   const handlePreorderEndDateChange = createPreorderEndDateChangeHandler(
     form,
     triggerChange,
     intl.formatMessage(errorMessages.preorderEndDateInFutureErrorText),
   );
-
   const data: ProductCreateData = {
     ...formData,
     attributes: getAttributesDisplayData(
@@ -367,19 +328,14 @@ function useProductCreateForm(
     productType: opts.selectedProductType,
     stocks: stocks.data,
   };
-
   const getData = async (): Promise<ProductCreateData> => ({
     ...data,
     description: await richText.getValue(),
     attributes: mergeAttributes(
       attributes.data,
-      getRichTextAttributesFromMap(
-        attributes.data,
-        await getAttributeRichTextValues(),
-      ),
+      getRichTextAttributesFromMap(attributes.data, await getAttributeRichTextValues()),
     ),
   });
-
   const handleSubmit = async (data: ProductCreateData) => {
     const errors = validateProductCreateData(data);
 
@@ -391,12 +347,10 @@ function useProductCreateForm(
 
     return onSubmit(data);
   };
-
   const handleFormSubmit = useHandleFormSubmit({
     formId,
     onSubmit: handleSubmit,
   });
-
   const submit = async () => {
     const errors = await handleFormSubmit(await getData());
 
@@ -407,12 +361,7 @@ function useProductCreateForm(
 
     return errors;
   };
-
-  const {
-    setExitDialogSubmitRef,
-    setIsSubmitDisabled,
-    setIsDirty,
-  } = useExitFormDialog({
+  const { setExitDialogSubmitRef, setIsSubmitDisabled, setIsDirty } = useExitFormDialog({
     formId: PRODUCT_CREATE_FORM_ID,
   });
 
@@ -423,11 +372,7 @@ function useProductCreateForm(
       return false;
     }
 
-    if (
-      data.isPreorder &&
-      data.hasPreorderEndDate &&
-      !!form.errors.preorderEndDateTime
-    ) {
+    if (data.isPreorder && data.hasPreorderEndDate && !!form.errors.preorderEndDateTime) {
       return false;
     }
 
@@ -436,16 +381,15 @@ function useProductCreateForm(
     }
 
     const hasInvalidChannelListingPrices = data.channelListings.some(
-      channel =>
-        validatePrice(channel.price) || validateCostPrice(channel.costPrice),
+      channel => validatePrice(channel.price) || validateCostPrice(channel.costPrice),
     );
 
     if (hasInvalidChannelListingPrices) {
       return false;
     }
+
     return true;
   };
-
   const isSaveDisabled = loading || !onSubmit;
   const isSubmitDisabled = isSaveDisabled || !isValid();
 
@@ -475,10 +419,11 @@ function useProductCreateForm(
       selectAttributeFile: handleAttributeFileChange,
       selectAttributeMultiple: handleAttributeMultiChange,
       selectAttributeReference: handleAttributeReferenceChange,
+      selectAttributeReferenceMetadata: handleAttributeMetadataChange,
       selectCategory: handleCategorySelect,
       selectCollection: handleCollectionSelect,
       selectProductType: handleProductTypeSelect,
-      selectTaxRate: handleTaxTypeSelect,
+      selectTaxClass: handleTaxClassSelect,
     },
     submit,
     isSaveDisabled,
@@ -494,18 +439,11 @@ const ProductCreateForm: React.FC<ProductCreateFormProps> = ({
   loading,
   ...rest
 }) => {
-  const { richText, ...props } = useProductCreateForm(
-    initial || {},
-    onSubmit,
-    loading,
-    rest,
-  );
+  const { richText, ...props } = useProductCreateForm(initial || {}, onSubmit, loading, rest);
 
   return (
     <form onSubmit={props.submit}>
-      <RichTextContext.Provider value={richText}>
-        {children(props)}
-      </RichTextContext.Provider>
+      <RichTextContext.Provider value={richText}>{children(props)}</RichTextContext.Provider>
     </form>
   );
 };

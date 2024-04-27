@@ -1,11 +1,9 @@
-import { IFilter } from "@saleor/components/Filter";
-import { hasPermissions } from "@saleor/components/RequirePermissions";
-import { PermissionEnum, UserFragment } from "@saleor/graphql";
-import { FilterOpts, MinMax } from "@saleor/types";
-import {
-  createDateField,
-  createNumberField,
-} from "@saleor/utils/filters/fields";
+// @ts-strict-ignore
+import { IFilter } from "@dashboard/components/Filter";
+import { hasPermissions } from "@dashboard/components/RequirePermissions";
+import { PermissionEnum, UserFragment } from "@dashboard/graphql";
+import { FilterOpts, MinMax } from "@dashboard/types";
+import { createDateField, createNumberField } from "@dashboard/utils/filters/fields";
 import { defineMessages, IntlShape } from "react-intl";
 
 export enum CustomerFilterKeys {
@@ -53,5 +51,5 @@ export function createFilterStructure(
       active: opts.numberOfOrders.active,
       permissions: [PermissionEnum.MANAGE_ORDERS],
     },
-  ].filter(filter => hasPermissions(userPermissions, filter.permissions ?? []));
+  ].filter(filter => hasPermissions(userPermissions ?? [], filter.permissions ?? []));
 }

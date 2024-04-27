@@ -1,9 +1,8 @@
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import Grid from "@saleor/components/Grid";
-import Metadata from "@saleor/components/Metadata";
-import Savebar from "@saleor/components/Savebar";
-import useNavigator from "@saleor/hooks/useNavigator";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata";
+import Savebar from "@dashboard/components/Savebar";
+import useNavigator from "@dashboard/hooks/useNavigator";
 import React from "react";
 
 import { giftCardsListPath } from "../urls";
@@ -18,31 +17,28 @@ import useGiftCardUpdateForm from "./providers/GiftCardUpdateFormProvider/hooks/
 const GiftCardUpdatePage: React.FC = () => {
   const { openDeleteDialog } = useGiftCardUpdateDialogs();
   const navigate = useNavigator();
-
   const {
     submit,
     data,
     handlers: { changeMetadata },
   } = useGiftCardUpdateForm();
-
   const {
     opts: { loading: loadingUpdate, status },
   } = useGiftCardUpdate();
 
   return (
-    <Container>
+    <DetailPageLayout>
       <GiftCardUpdatePageHeader />
-      <Grid>
-        <div>
-          <GiftCardUpdateDetailsCard />
-          <CardSpacer />
-          <Metadata data={data} onChange={changeMetadata} />
-        </div>
-        <div>
-          <GiftCardUpdateInfoCard />
-        </div>
+      <DetailPageLayout.Content>
+        <GiftCardUpdateDetailsCard />
+        <CardSpacer />
+        <Metadata data={data} onChange={changeMetadata} />
         <GiftCardHistory />
-      </Grid>
+      </DetailPageLayout.Content>
+      <DetailPageLayout.RightSidebar>
+        <GiftCardUpdateInfoCard />
+      </DetailPageLayout.RightSidebar>
+
       <Savebar
         state={status}
         onCancel={() => navigate(giftCardsListPath)}
@@ -50,7 +46,7 @@ const GiftCardUpdatePage: React.FC = () => {
         onSubmit={submit}
         onDelete={openDeleteDialog}
       />
-    </Container>
+    </DetailPageLayout>
   );
 };
 

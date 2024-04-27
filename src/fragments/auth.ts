@@ -7,6 +7,15 @@ export const userUserPermissionFragment = gql`
   }
 `;
 
+export const userUserPermissionWithSourcePermissionGroupsFragment = gql`
+  fragment UserUserPermissionWithSourcePermissionGroups on UserPermission {
+    ...UserPermission
+    sourcePermissionGroups(userId: $userId) {
+      id
+    }
+  }
+`;
+
 export const fragmentUser = gql`
   fragment User on User {
     id
@@ -14,12 +23,21 @@ export const fragmentUser = gql`
     firstName
     lastName
     isStaff
+    metadata {
+      key
+      value
+    }
+
     userPermissions {
       ...UserPermission
     }
-    avatar {
+    avatar(size: 128) {
       url
     }
+    accessibleChannels {
+      ...Channel
+    }
+    restrictedAccessToChannels
   }
 `;
 
@@ -28,5 +46,18 @@ export const fragmentUserBase = gql`
     id
     firstName
     lastName
+  }
+`;
+
+export const fragmentUserBaseAvatar = gql`
+  fragment UserBaseAvatar on User {
+    id
+    firstName
+    lastName
+    email
+    avatar {
+      url
+      alt
+    }
   }
 `;

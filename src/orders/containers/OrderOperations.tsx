@@ -1,4 +1,6 @@
 import {
+  CreateManualTransactionCaptureMutation,
+  CreateManualTransactionCaptureMutationVariables,
   InvoiceEmailSendMutation,
   InvoiceEmailSendMutationVariables,
   InvoiceRequestMutation,
@@ -31,10 +33,13 @@ import {
   OrderMarkAsPaidMutationVariables,
   OrderShippingMethodUpdateMutation,
   OrderShippingMethodUpdateMutationVariables,
+  OrderTransactionRequestActionMutation,
+  OrderTransactionRequestActionMutationVariables,
   OrderUpdateMutation,
   OrderUpdateMutationVariables,
   OrderVoidMutation,
   OrderVoidMutationVariables,
+  useCreateManualTransactionCaptureMutation,
   useInvoiceEmailSendMutation,
   useInvoiceRequestMutation,
   useOrderAddNoteMutation,
@@ -51,9 +56,10 @@ import {
   useOrderLineUpdateMutation,
   useOrderMarkAsPaidMutation,
   useOrderShippingMethodUpdateMutation,
+  useOrderTransactionRequestActionMutation,
   useOrderUpdateMutation,
   useOrderVoidMutation,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
 import React from "react";
 
 import { getMutationProviderData } from "../../misc";
@@ -66,10 +72,7 @@ interface OrderOperationsProps {
       OrderAddNoteMutation,
       OrderAddNoteMutationVariables
     >;
-    orderCancel: PartialMutationProviderOutput<
-      OrderCancelMutation,
-      OrderCancelMutationVariables
-    >;
+    orderCancel: PartialMutationProviderOutput<OrderCancelMutation, OrderCancelMutationVariables>;
     orderFulfillmentApprove: PartialMutationProviderOutput<
       OrderFulfillmentApproveMutation,
       OrderFulfillmentApproveMutationVariables
@@ -90,14 +93,8 @@ interface OrderOperationsProps {
       OrderMarkAsPaidMutation,
       OrderMarkAsPaidMutationVariables
     >;
-    orderVoid: PartialMutationProviderOutput<
-      OrderVoidMutation,
-      OrderVoidMutationVariables
-    >;
-    orderUpdate: PartialMutationProviderOutput<
-      OrderUpdateMutation,
-      OrderUpdateMutationVariables
-    >;
+    orderVoid: PartialMutationProviderOutput<OrderVoidMutation, OrderVoidMutationVariables>;
+    orderUpdate: PartialMutationProviderOutput<OrderUpdateMutation, OrderUpdateMutationVariables>;
     orderDraftCancel: PartialMutationProviderOutput<
       OrderDraftCancelMutation,
       OrderDraftCancelMutationVariables
@@ -134,12 +131,18 @@ interface OrderOperationsProps {
       InvoiceEmailSendMutation,
       InvoiceEmailSendMutationVariables
     >;
+    orderTransactionAction: PartialMutationProviderOutput<
+      OrderTransactionRequestActionMutation,
+      OrderTransactionRequestActionMutationVariables
+    >;
+    orderAddManualTransaction: PartialMutationProviderOutput<
+      CreateManualTransactionCaptureMutation,
+      CreateManualTransactionCaptureMutationVariables
+    >;
   }) => React.ReactNode;
   onOrderFulfillmentApprove: (data: OrderFulfillmentApproveMutation) => void;
   onOrderFulfillmentCancel: (data: OrderFulfillmentCancelMutation) => void;
-  onOrderFulfillmentUpdate: (
-    data: OrderFulfillmentUpdateTrackingMutation,
-  ) => void;
+  onOrderFulfillmentUpdate: (data: OrderFulfillmentUpdateTrackingMutation) => void;
   onOrderCancel: (data: OrderCancelMutation) => void;
   onOrderVoid: (data: OrderVoidMutation) => void;
   onOrderMarkAsPaid: (data: OrderMarkAsPaidMutation) => void;
@@ -155,6 +158,8 @@ interface OrderOperationsProps {
   onOrderLineUpdate: (data: OrderLineUpdateMutation) => void;
   onInvoiceRequest: (data: InvoiceRequestMutation) => void;
   onInvoiceSend: (data: InvoiceEmailSendMutation) => void;
+  onTransactionActionSend: (data: OrderTransactionRequestActionMutation) => void;
+  onManualTransactionAdded: (data: CreateManualTransactionCaptureMutation) => void;
 }
 
 const OrderOperations: React.FC<OrderOperationsProps> = ({
@@ -177,6 +182,8 @@ const OrderOperations: React.FC<OrderOperationsProps> = ({
   onOrderMarkAsPaid,
   onInvoiceRequest,
   onInvoiceSend,
+  onTransactionActionSend,
+  onManualTransactionAdded,
 }) => {
   const orderVoid = useOrderVoidMutation({
     onCompleted: onOrderVoid,
@@ -233,6 +240,12 @@ const OrderOperations: React.FC<OrderOperationsProps> = ({
   const invoiceEmailSend = useInvoiceEmailSendMutation({
     onCompleted: onInvoiceSend,
   });
+  const transactionActionSend = useOrderTransactionRequestActionMutation({
+    onCompleted: onTransactionActionSend,
+  });
+  const addManualTransaction = useCreateManualTransactionCaptureMutation({
+    onCompleted: onManualTransactionAdded,
+  });
 
   return (
     <>
@@ -244,9 +257,7 @@ const OrderOperations: React.FC<OrderOperationsProps> = ({
         orderDraftUpdate: getMutationProviderData(...updateDraft),
         orderFulfillmentApprove: getMutationProviderData(...approveFulfillment),
         orderFulfillmentCancel: getMutationProviderData(...cancelFulfillment),
-        orderFulfillmentUpdateTracking: getMutationProviderData(
-          ...updateTrackingNumber,
-        ),
+        orderFulfillmentUpdateTracking: getMutationProviderData(...updateTrackingNumber),
         orderInvoiceRequest: getMutationProviderData(...invoiceRequest),
         orderInvoiceSend: getMutationProviderData(...invoiceEmailSend),
         orderLineDelete: getMutationProviderData(...deleteOrderLine),
@@ -254,13 +265,14 @@ const OrderOperations: React.FC<OrderOperationsProps> = ({
         orderLinesAdd: getMutationProviderData(...addOrderLine),
         orderPaymentCapture: getMutationProviderData(...paymentCapture),
         orderPaymentMarkAsPaid: getMutationProviderData(...markAsPaid),
-        orderShippingMethodUpdate: getMutationProviderData(
-          ...updateShippingMethod,
-        ),
+        orderShippingMethodUpdate: getMutationProviderData(...updateShippingMethod),
         orderUpdate: getMutationProviderData(...update),
         orderVoid: getMutationProviderData(...orderVoid),
+        orderTransactionAction: getMutationProviderData(...transactionActionSend),
+        orderAddManualTransaction: getMutationProviderData(...addManualTransaction),
       })}
     </>
   );
 };
+
 export default OrderOperations;

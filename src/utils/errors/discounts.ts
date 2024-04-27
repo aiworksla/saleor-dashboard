@@ -1,4 +1,4 @@
-import { DiscountErrorCode, DiscountErrorFragment } from "@saleor/graphql";
+import { DiscountErrorCode, DiscountErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -14,7 +14,7 @@ const messages = defineMessages({
 function getDiscountErrorMessage(
   err: Omit<DiscountErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case DiscountErrorCode.ALREADY_EXISTS:

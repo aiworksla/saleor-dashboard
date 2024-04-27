@@ -1,5 +1,5 @@
-import { Pagination } from "@saleor/types";
-import { stringifyQs } from "@saleor/utils/urls";
+import { Pagination } from "@dashboard/types";
+import { stringifyQs } from "@dashboard/utils/urls";
 import urlJoin from "url-join";
 
 import { TranslationsEntitiesListFilterTab } from "./components/TranslationsEntitiesListPage";
@@ -22,17 +22,14 @@ const translationsSection = "/translations/";
 export const languageListPath = translationsSection;
 export const languageListUrl = translationsSection;
 
-export const languageEntitiesPath = (code: string) =>
-  urlJoin(translationsSection, code);
+export const languageEntitiesPath = (code: string) => urlJoin(translationsSection, code);
 export type LanguageEntitiesUrlQueryParams = Pagination &
   Partial<{
     query: string;
     tab: TranslationsEntitiesListFilterTab;
   }>;
-export const languageEntitiesUrl = (
-  code: string,
-  params: LanguageEntitiesUrlQueryParams,
-) => languageEntitiesPath(code) + "?" + stringifyQs(params);
+export const languageEntitiesUrl = (code: string, params: LanguageEntitiesUrlQueryParams) =>
+  languageEntitiesPath(code) + "?" + stringifyQs(params);
 
 export const languageEntityPath = (
   code: string,
@@ -47,11 +44,7 @@ export const languageEntityUrl = (
   ...args: string[]
 ) => languageEntityPath(code, entity, encodeURIComponent(id), ...args);
 
-export const productVariantUrl = (
-  code: string,
-  productId: string,
-  variantId: string,
-) =>
+export const productVariantUrl = (code: string, productId: string, variantId: string) =>
   languageEntityUrl(
     code,
     TranslatableEntities.products,

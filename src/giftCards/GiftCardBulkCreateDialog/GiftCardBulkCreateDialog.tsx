@@ -1,14 +1,15 @@
-import { Dialog, DialogTitle } from "@material-ui/core";
-import { IMessage } from "@saleor/components/messages";
+// @ts-strict-ignore
+import { IMessage } from "@dashboard/components/messages";
 import {
   GiftCardBulkCreateInput,
   useChannelCurrenciesQuery,
   useGiftCardBulkCreateMutation,
-} from "@saleor/graphql";
-import useCurrentDate from "@saleor/hooks/useCurrentDate";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { DialogProps } from "@saleor/types";
-import { getFormErrors } from "@saleor/utils/errors";
+} from "@dashboard/graphql";
+import useCurrentDate from "@dashboard/hooks/useCurrentDate";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { DialogProps } from "@dashboard/types";
+import { getFormErrors } from "@dashboard/utils/errors";
+import { Dialog, DialogTitle } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 
@@ -31,30 +32,16 @@ import { validateForm } from "./utils";
 const GiftCardBulkCreateDialog: React.FC<DialogProps> = ({ onClose, open }) => {
   const intl = useIntl();
   const notify = useNotifier();
-  const [formErrors, setFormErrors] = useState<GiftCardBulkCreateFormErrors>(
-    null,
-  );
+  const [formErrors, setFormErrors] = useState<GiftCardBulkCreateFormErrors>(null);
   const [issuedIds, setIssuedIds] = useState<string[] | null>(null);
-  const [openIssueSuccessDialog, setOpenIssueSuccessDialog] = useState<boolean>(
-    false,
-  );
-
+  const [openIssueSuccessDialog, setOpenIssueSuccessDialog] = useState<boolean>(false);
   const onIssueSuccessDialogClose = () => setOpenIssueSuccessDialog(false);
-
   const { loading: loadingChannelCurrencies } = useChannelCurrenciesQuery({});
-
   const currentDate = useCurrentDate();
-
   const getParsedSubmitInputData = (
     formData: GiftCardBulkCreateFormData,
   ): GiftCardBulkCreateInput => {
-    const {
-      balanceAmount,
-      balanceCurrency,
-      tags = [],
-      requiresActivation,
-      cardsAmount,
-    } = formData;
+    const { balanceAmount, balanceCurrency, tags = [], requiresActivation, cardsAmount } = formData;
 
     return {
       count: cardsAmount,
@@ -67,15 +54,10 @@ const GiftCardBulkCreateDialog: React.FC<DialogProps> = ({ onClose, open }) => {
       isActive: !requiresActivation,
     };
   };
-
-  const [
-    bulkCreateGiftCard,
-    bulkCreateGiftCardOpts,
-  ] = useGiftCardBulkCreateMutation({
+  const [bulkCreateGiftCard, bulkCreateGiftCardOpts] = useGiftCardBulkCreateMutation({
     onCompleted: data => {
       const errors = data?.giftCardBulkCreate?.errors;
       const cardsAmount = data?.giftCardBulkCreate?.giftCards?.length || 0;
-
       const giftCardsBulkIssueSuccessMessage: IMessage = {
         status: "success",
         title: intl.formatMessage(messages.createdSuccessAlertTitle),
@@ -84,31 +66,21 @@ const GiftCardBulkCreateDialog: React.FC<DialogProps> = ({ onClose, open }) => {
         }),
       };
 
-      notify(
-        getGiftCardCreateOnCompletedMessage(
-          errors,
-          intl,
-          giftCardsBulkIssueSuccessMessage,
-        ),
-      );
-
+      notify(getGiftCardCreateOnCompletedMessage(errors, intl, giftCardsBulkIssueSuccessMessage));
       setFormErrors(getFormErrors(giftCardBulkCreateErrorKeys, errors));
 
       if (!errors.length) {
-        setIssuedIds(
-          data?.giftCardBulkCreate?.giftCards?.map(giftCard => giftCard.id),
-        );
+        setIssuedIds(data?.giftCardBulkCreate?.giftCards?.map(giftCard => giftCard.id));
         setOpenIssueSuccessDialog(true);
         onClose();
       }
     },
     refetchQueries: [GIFT_CARD_LIST_QUERY],
   });
-
   const handleSubmit = (data: GiftCardBulkCreateFormData) => {
     const formErrors = validateForm(data);
 
-    if (!!Object.keys(formErrors).length) {
+    if (Object.keys(formErrors).length) {
       setFormErrors(formErrors);
     } else {
       bulkCreateGiftCard({
@@ -118,15 +90,10 @@ const GiftCardBulkCreateDialog: React.FC<DialogProps> = ({ onClose, open }) => {
       });
     }
   };
-
   const apiErrors = bulkCreateGiftCardOpts?.data?.giftCardBulkCreate?.errors;
-
   const handleSetSchemaErrors = () => {
     if (apiErrors?.length) {
-      const formErrorsFromApi = getFormErrors(
-        giftCardBulkCreateErrorKeys,
-        apiErrors,
-      );
+      const formErrorsFromApi = getFormErrors(giftCardBulkCreateErrorKeys, apiErrors);
 
       setFormErrors(formErrorsFromApi);
     }
@@ -137,7 +104,7 @@ const GiftCardBulkCreateDialog: React.FC<DialogProps> = ({ onClose, open }) => {
   return (
     <>
       <Dialog open={open} maxWidth="sm" onClose={onClose}>
-        <DialogTitle>{intl.formatMessage(messages.title)}</DialogTitle>
+        <DialogTitle disableTypography>{intl.formatMessage(messages.title)}</DialogTitle>
         <ContentWithProgress>
           {!loadingChannelCurrencies && (
             <GiftCardBulkCreateDialogForm

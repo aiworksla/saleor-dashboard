@@ -1,4 +1,4 @@
-import { ShopErrorCode, ShopErrorFragment } from "@saleor/graphql";
+import { ShopErrorCode, ShopErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -14,7 +14,7 @@ const messages = defineMessages({
 function getShopErrorMessage(
   err: Omit<ShopErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case ShopErrorCode.ALREADY_EXISTS:

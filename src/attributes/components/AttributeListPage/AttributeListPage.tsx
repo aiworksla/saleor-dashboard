@@ -1,40 +1,29 @@
+import { attributeAddUrl, AttributeListUrlSortField } from "@dashboard/attributes/urls";
+import { ListFilters } from "@dashboard/components/AppLayout/ListFilters";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { BulkDeleteButton } from "@dashboard/components/BulkDeleteButton";
+import { FilterPresetsSelect } from "@dashboard/components/FilterPresetsSelect";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { AttributeFragment } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { sectionNames } from "@dashboard/intl";
 import { Card } from "@material-ui/core";
-import {
-  attributeAddUrl,
-  AttributeListUrlSortField,
-} from "@saleor/attributes/urls";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import FilterBar from "@saleor/components/FilterBar";
-import { configurationMenuUrl } from "@saleor/configuration";
-import { AttributeFragment } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import React from "react";
+import { Box, Button, ChevronRightIcon } from "@saleor/macaw-ui-next";
+import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import Container from "../../../components/Container";
-import PageHeader from "../../../components/PageHeader";
-import {
-  FilterPageProps,
-  ListActions,
-  PageListProps,
-  SortPage,
-  TabPageProps,
-} from "../../../types";
-import AttributeList from "../AttributeList/AttributeList";
-import {
-  AttributeFilterKeys,
-  AttributeListFilterOpts,
-  createFilterStructure,
-} from "./filters";
+import { FilterPagePropsWithPresets, PageListProps, SortPage } from "../../../types";
+import { AttributeListDatagrid } from "../AttributeListDatagrid";
+import { AttributeFilterKeys, AttributeListFilterOpts, createFilterStructure } from "./filters";
 
 export interface AttributeListPageProps
   extends PageListProps,
-    ListActions,
-    FilterPageProps<AttributeFilterKeys, AttributeListFilterOpts>,
-    SortPage<AttributeListUrlSortField>,
-    TabPageProps {
+    FilterPagePropsWithPresets<AttributeFilterKeys, AttributeListFilterOpts>,
+    SortPage<AttributeListUrlSortField> {
   attributes: AttributeFragment[];
+  selectedAttributesIds: string[];
+  onAttributesDelete: () => void;
+  onSelectAttributesIds: (rows: number[], clearSelection: () => void) => void;
 }
 
 const AttributeListPage: React.FC<AttributeListPageProps> = ({
@@ -42,62 +31,98 @@ const AttributeListPage: React.FC<AttributeListPageProps> = ({
   initialSearch,
   onFilterChange,
   onSearchChange,
-  currentTab,
-  onAll,
-  onTabChange,
-  onTabDelete,
-  onTabSave,
-  tabs,
+  hasPresetsChanged,
+  onFilterPresetChange,
+  onFilterPresetDelete,
+  onFilterPresetPresetSave,
+  onFilterPresetUpdate,
+  onFilterPresetsAll,
+  filterPresets,
+  selectedFilterPreset,
+  onAttributesDelete,
+  selectedAttributesIds,
+  currencySymbol,
   ...listProps
 }) => {
   const intl = useIntl();
-
+  const navigate = useNavigator();
   const structure = createFilterStructure(intl, filterOpts);
+  const [isFilterPresetOpen, setFilterPresetOpen] = useState(false);
 
   return (
-    <Container>
-      <Backlink href={configurationMenuUrl}>
-        <FormattedMessage {...sectionNames.configuration} />
-      </Backlink>
-      <PageHeader title={intl.formatMessage(sectionNames.attributes)}>
-        <Button
-          href={attributeAddUrl()}
-          variant="primary"
-          data-test-id="create-attribute-button"
-        >
-          <FormattedMessage
-            id="IGvQ8k"
-            defaultMessage="Create attribute"
-            description="button"
-          />
-        </Button>
-      </PageHeader>
+    <>
+      <TopNav
+        href={configurationMenuUrl}
+        title={intl.formatMessage(sectionNames.attributes)}
+        withoutBorder
+        isAlignToRight={false}
+      >
+        <Box __flex={1} display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex">
+            <Box marginX={3} display="flex" alignItems="center">
+              <ChevronRightIcon />
+            </Box>
+
+            <FilterPresetsSelect
+              presetsChanged={hasPresetsChanged()}
+              onSelect={onFilterPresetChange}
+              onRemove={onFilterPresetDelete}
+              onUpdate={onFilterPresetUpdate}
+              savedPresets={filterPresets}
+              activePreset={selectedFilterPreset}
+              onSelectAll={onFilterPresetsAll}
+              onSave={onFilterPresetPresetSave}
+              isOpen={isFilterPresetOpen}
+              onOpenChange={setFilterPresetOpen}
+              selectAllLabel={intl.formatMessage({
+                id: "I+1KzL",
+                defaultMessage: "All attributes",
+                description: "tab name",
+              })}
+            />
+          </Box>
+          <Box>
+            <Button
+              onClick={() => navigate(attributeAddUrl())}
+              variant="primary"
+              data-test-id="create-attribute-button"
+            >
+              <FormattedMessage
+                id="IGvQ8k"
+                defaultMessage="Create attribute"
+                description="button"
+              />
+            </Button>
+          </Box>
+        </Box>
+      </TopNav>
       <Card>
-        <FilterBar
-          allTabLabel={intl.formatMessage({
-            id: "dKPMyh",
-            defaultMessage: "All Attributes",
-            description: "tab name",
-          })}
-          currentTab={currentTab}
-          filterStructure={structure}
+        <ListFilters<AttributeFilterKeys>
+          currencySymbol={currencySymbol}
           initialSearch={initialSearch}
-          searchPlaceholder={intl.formatMessage({
-            id: "1div9r",
-            defaultMessage: "Search Attribute",
-          })}
-          tabs={tabs}
-          onAll={onAll}
           onFilterChange={onFilterChange}
           onSearchChange={onSearchChange}
-          onTabChange={onTabChange}
-          onTabDelete={onTabDelete}
-          onTabSave={onTabSave}
+          filterStructure={structure}
+          searchPlaceholder={intl.formatMessage({
+            id: "9ScmSs",
+            defaultMessage: "Search attributes...",
+          })}
+          actions={
+            <Box display="flex" gap={4}>
+              {selectedAttributesIds.length > 0 && (
+                <BulkDeleteButton onClick={onAttributesDelete}>
+                  <FormattedMessage defaultMessage="Delete attributes" id="g0GAdN" />
+                </BulkDeleteButton>
+              )}
+            </Box>
+          }
         />
-        <AttributeList {...listProps} />
+
+        <AttributeListDatagrid {...listProps} />
       </Card>
-    </Container>
+    </>
   );
 };
+
 AttributeListPage.displayName = "AttributeListPage";
 export default AttributeListPage;

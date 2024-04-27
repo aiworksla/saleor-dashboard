@@ -1,24 +1,17 @@
-import { stringifyQs } from "@saleor/utils/urls";
+import { getApiUrl } from "@dashboard/config";
+import { FlagList } from "@dashboard/featureFlags";
+import { stringifyQs } from "@dashboard/utils/urls";
+import { ThemeType } from "@saleor/app-sdk/app-bridge";
 import urlJoin from "url-join";
 
-import { ActiveTab, Dialog, Pagination, SingleAction } from "../types";
+import { Dialog, SingleAction } from "../types";
 
 export const MANIFEST_ATTR = "manifestUrl";
 
-export type AppListUrlDialog =
-  | "remove"
-  | "remove-app"
-  | "remove-custom-app"
-  | "app-activate"
-  | "app-deactivate";
+export type AppListUrlDialog = "app-installation-remove";
+export type AppListUrlQueryParams = Dialog<AppListUrlDialog> & SingleAction;
 
-export type AppDetailsUrlDialog = "app-activate" | "app-deactivate";
-
-export type AppListUrlQueryParams = ActiveTab &
-  Dialog<AppListUrlDialog> &
-  SingleAction &
-  Pagination;
-
+export type AppDetailsUrlDialog = "app-activate" | "app-deactivate" | "app-delete";
 export interface AppDetailsUrlMountQueryParams {
   productId?: string;
   productIds?: string[];
@@ -27,105 +20,132 @@ export interface AppDetailsUrlMountQueryParams {
   customerIds?: string[];
 }
 
+interface FeatureFlagsQueryParams {
+  featureFlags?: FlagList;
+}
+export interface AppDetailsCommonParams {
+  theme: ThemeType;
+}
 export type AppDetailsUrlQueryParams = Dialog<AppDetailsUrlDialog> &
   SingleAction &
-  AppDetailsUrlMountQueryParams;
+  AppDetailsUrlMountQueryParams &
+  FeatureFlagsQueryParams;
 
 export type AppInstallUrlQueryParams = Partial<{ [MANIFEST_ATTR]: string }>;
 
-export enum AppListUrlSortField {
-  name = "name",
-  active = "active",
-}
-
-export type CustomAppUrlDialog =
-  | "create-token"
-  | "remove-webhook"
-  | "remove-token"
-  | "app-activate"
-  | "app-deactivate";
-export type CustomAppUrlQueryParams = Dialog<CustomAppUrlDialog> & SingleAction;
-
-export const appsSection = "/apps/";
-export const appsListPath = appsSection;
-
-export const customAppListPath = "/apps/custom/";
-
-export const appDetailsPath = (id: string) => urlJoin(appsSection, id);
-export const appPath = (id: string) => urlJoin(appsSection, id, "app");
-export const appDeepPath = (id: string, subPath: string) =>
-  urlJoin(appPath(id), subPath);
-export const customAppPath = (id: string) => urlJoin(customAppListPath, id);
-export const appInstallPath = urlJoin(appsSection, "install");
-export const createAppInstallUrl = (manifestUrl: string) =>
-  `${appInstallPath}?manifestUrl=${manifestUrl}`;
-
-export const appDetailsUrl = (id: string, params?: AppDetailsUrlQueryParams) =>
-  appDetailsPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
-
-export const appUrl = (id: string, params?: AppDetailsUrlQueryParams) =>
-  appPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
-export const appDeepUrl = (
-  id: string,
-  subPath: string,
-  params?: AppDetailsUrlQueryParams,
-) => appDeepPath(encodeURIComponent(id), subPath) + "?" + stringifyQs(params);
-
-export const getAppDeepPathFromDashboardUrl = (
-  dashboardUrl: string,
-  appId: string,
-) => {
-  const deepSubPath = dashboardUrl.replace(
-    appPath(encodeURIComponent(appId)),
-    "",
-  );
-  return deepSubPath || "/";
-};
-export const getAppCompleteUrlFromDashboardUrl = (
-  dashboardUrl: string,
-  appUrl?: string,
-  appId?: string,
-) => {
-  if (!appUrl || !appId) {
-    return appUrl;
-  }
-  const deepSubPath = dashboardUrl.replace(
-    appPath(encodeURIComponent(appId)),
-    "",
-  );
-  const appCompleteUrl = urlJoin(appUrl, deepSubPath);
-  return appCompleteUrl;
-};
-export const getDashboardUrFromAppCompleteUrl = (
-  appCompleteUrl: string,
-  appUrl?: string,
-  appId?: string,
-) => {
-  if (!appUrl || !appId) {
-    return appUrl;
-  }
-  const deepSubPath = appCompleteUrl.replace(appUrl, "");
-  const dashboardUrl = urlJoin(appPath(encodeURIComponent(appId)), deepSubPath);
-  return dashboardUrl;
+export const AppSections = {
+  appsSection: "/apps/",
 };
 
-export const customAppUrl = (id: string, params?: CustomAppUrlQueryParams) =>
-  customAppPath(encodeURIComponent(id)) + "?" + stringifyQs(params);
-export const customAppAddPath = urlJoin(customAppListPath, "add");
-export const customAppAddUrl = customAppAddPath;
+export const AppPaths = {
+  appListPath: AppSections.appsSection,
+  resolveAppPath: (id: string) => urlJoin(AppSections.appsSection, id, "app"),
+  resolveAppDetailsPath: (id: string) => urlJoin(AppSections.appsSection, id),
+  resolveAppDeepPath: (id: string, subPath: string) =>
+    urlJoin(AppPaths.resolveAppPath(id), subPath),
+  appInstallPath: urlJoin(AppSections.appsSection, "install"),
+  resolveRequestPermissionsPath: (id: string) =>
+    urlJoin(AppSections.appsSection, id, "permissions"),
+};
 
-export const appsListUrl = (params?: AppListUrlQueryParams) =>
-  appsListPath + "?" + stringifyQs(params);
+export const AppUrls = {
+  resolveAppListUrl: (params?: AppListUrlQueryParams) =>
+    AppPaths.appListPath + "?" + stringifyQs(params),
+  resolveAppUrl: (id: string, params?: AppDetailsUrlQueryParams) =>
+    AppPaths.resolveAppPath(encodeURIComponent(id)) + "?" + stringifyQs(params),
+  resolveAppDetailsUrl: (id: string, params?: AppDetailsUrlQueryParams) =>
+    AppPaths.resolveAppDetailsPath(encodeURIComponent(id)) + "?" + stringifyQs(params),
+  resolveAppInstallUrl: (manifestUrl: string) =>
+    `${AppPaths.appInstallPath}?manifestUrl=${manifestUrl}`,
+  resolveAppDeepUrl: (id: string, subPath: string, params?: AppDetailsUrlQueryParams) =>
+    AppPaths.resolveAppDeepPath(encodeURIComponent(id), subPath) + "?" + stringifyQs(params),
+  isAppDeepUrlChange: (appId: string, from: string, to: string) => {
+    const appCompletePath = AppPaths.resolveAppPath(encodeURIComponent(appId));
 
-export const appIframeUrl = (
-  appId: string,
-  appUrl: string,
-  shopDomainHost: string,
-  params: AppDetailsUrlQueryParams,
-) => {
-  const iframeContextQueryString = `?${stringifyQs(
-    { domain: shopDomainHost, id: appId, ...params },
-    "comma",
-  )}`;
-  return urlJoin(appUrl, window.location.search, iframeContextQueryString);
+    return to.startsWith(appCompletePath) && from.startsWith(appCompletePath);
+  },
+  resolveAppDeepPathFromDashboardUrl: (dashboardUrl: string, appId: string) => {
+    const deepSubPath = dashboardUrl.replace(
+      AppPaths.resolveAppPath(encodeURIComponent(appId)),
+      "",
+    );
+
+    return deepSubPath || "/";
+  },
+  resolveAppCompleteUrlFromDashboardUrl: (
+    dashboardUrl: string,
+    appUrl?: string,
+    appId?: string,
+  ) => {
+    if (!appUrl || !appId) {
+      return appUrl;
+    }
+
+    const deepSubPath = dashboardUrl.replace(
+      AppPaths.resolveAppPath(encodeURIComponent(appId)),
+      "",
+    );
+    const appCompleteUrl = urlJoin(appUrl, deepSubPath);
+
+    return appCompleteUrl;
+  },
+  resolveDashboardUrlFromAppCompleteUrl: (
+    appCompleteUrl: string,
+    appUrl?: string,
+    appId?: string,
+  ) => {
+    if (!appUrl || !appId) {
+      return appUrl;
+    }
+
+    const deepSubPath = appCompleteUrl.replace(appUrl, "");
+    const dashboardUrl = urlJoin(AppPaths.resolveAppPath(encodeURIComponent(appId)), deepSubPath);
+
+    return dashboardUrl;
+  },
+  resolveAppIframeUrl: (
+    appId: string,
+    appUrl: string,
+    params: AppDetailsUrlQueryParams & AppDetailsCommonParams,
+  ) => {
+    const apiUrl = new URL(getApiUrl(), window.location.origin).href;
+    /**
+     * Use host to preserve port, in case of multiple Saleors running on localhost
+     */
+    const apiUrlHost = new URL(apiUrl).host;
+    const iframeContextQueryString = `?${stringifyQs(
+      {
+        /**
+         * @deprecated - domain will be removed in favor of saleorApiUrl.
+         * Current hostname (used as domain) can be extracted from full URL
+         *
+         * Difference will be:
+         * shop.saleor.cloud -> https://shop.saleor.cloud/graphql/
+         */
+        domain: apiUrlHost,
+        saleorApiUrl: apiUrl,
+        id: appId,
+        ...params,
+      },
+      "comma",
+    )}`;
+
+    return urlJoin(appUrl, window.location.search, iframeContextQueryString);
+  },
+  resolveRequestPermissionsUrl: (
+    id: string,
+    params: {
+      requestedPermissions: string[];
+      redirectPath: string;
+    },
+  ) =>
+    urlJoin(
+      AppSections.appsSection,
+      id,
+      "permissions",
+      `?${stringifyQs({
+        redirectPath: params.redirectPath,
+        requestedPermissions: params.requestedPermissions.join(","),
+      })}`,
+    ),
 };

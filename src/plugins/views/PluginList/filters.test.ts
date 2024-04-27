@@ -1,12 +1,12 @@
-import { FieldType } from "@saleor/components/Filter";
-import { PluginConfigurationType } from "@saleor/graphql";
+import { FieldType } from "@dashboard/components/Filter";
+import { PluginConfigurationType } from "@dashboard/graphql";
 import {
   createFilterStructure,
   PluginFilterKeys,
-} from "@saleor/plugins/components/PluginsListPage";
-import { PluginListUrlFilters } from "@saleor/plugins/urls";
-import { getFilterQueryParams } from "@saleor/utils/filters";
-import { stringifyQs } from "@saleor/utils/urls";
+} from "@dashboard/plugins/components/PluginsListPage";
+import { PluginListUrlFilters } from "@dashboard/plugins/urls";
+import { getFilterQueryParams } from "@dashboard/utils/filters";
+import { stringifyQs } from "@dashboard/utils/urls";
 import { getExistingKeys } from "@test/filters";
 import { config } from "@test/intl";
 import { createIntl } from "react-intl";
@@ -20,7 +20,6 @@ describe("Filtering query params", () => {
 
     expect(getExistingKeys(filterVariables)).toHaveLength(0);
   });
-
   it("should not be empty object if params given", () => {
     const params: PluginListUrlFilters = {
       type: PluginConfigurationType.GLOBAL,
@@ -30,10 +29,8 @@ describe("Filtering query params", () => {
     expect(getExistingKeys(filterVariables)).toHaveLength(1);
   });
 });
-
 describe("Filtering URL params", () => {
   const intl = createIntl(config);
-
   const filters = createFilterStructure(intl, {
     isActive: {
       active: false,
@@ -61,14 +58,10 @@ describe("Filtering URL params", () => {
   });
 
   it("should be empty if no active filters", () => {
-    const filterQueryParams = getFilterQueryParams(
-      filters,
-      getFilterQueryParam,
-    );
+    const filterQueryParams = getFilterQueryParams(filters, getFilterQueryParam);
 
     expect(getExistingKeys(filterQueryParams)).toHaveLength(0);
   });
-
   it("should not be empty if active filters are present", () => {
     const filterQueryParams = getFilterQueryParams(
       [

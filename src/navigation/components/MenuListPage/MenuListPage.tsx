@@ -1,12 +1,11 @@
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import PageHeader from "@saleor/components/PageHeader";
-import { configurationMenuUrl } from "@saleor/configuration";
-import { MenuFragment } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import { menuListUrl, MenuListUrlSortField } from "@saleor/navigation/urls";
-import { ListActions, PageListProps, SortPage } from "@saleor/types";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Button } from "@dashboard/components/Button";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { MenuFragment } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { menuListUrl, MenuListUrlSortField } from "@dashboard/navigation/urls";
+import { ListActions, PageListProps, SortPage } from "@dashboard/types";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -27,22 +26,16 @@ const MenuListPage: React.FC<MenuListPageProps> = ({ ...listProps }) => {
   });
 
   return (
-    <Container>
-      <Backlink href={configurationMenuUrl}>
-        {intl.formatMessage(sectionNames.configuration)}
-      </Backlink>
-      <PageHeader title={intl.formatMessage(sectionNames.navigation)}>
+    <ListPageLayout>
+      <TopNav href={configurationMenuUrl} title={intl.formatMessage(sectionNames.navigation)}>
         <Button variant="primary" href={addUrl} data-test-id="add-menu">
-          <FormattedMessage
-            id="JXRYQg"
-            defaultMessage="Create Menu"
-            description="button"
-          />
+          <FormattedMessage id="JXRYQg" defaultMessage="Create Menu" description="button" />
         </Button>
-      </PageHeader>
+      </TopNav>
       <MenuList {...listProps} />
-    </Container>
+    </ListPageLayout>
   );
 };
+
 MenuListPage.displayName = "MenuListPage";
 export default MenuListPage;

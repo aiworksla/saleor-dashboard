@@ -1,17 +1,13 @@
+// @ts-strict-ignore
 import { ApolloClient, useApolloClient } from "@apollo/client";
-import { IMessageContext } from "@saleor/components/messages";
-import useNotifier from "@saleor/hooks/useNotifier";
+import { IMessageContext } from "@dashboard/components/messages";
+import useNotifier from "@dashboard/hooks/useNotifier";
 import React from "react";
 import { IntlShape, useIntl } from "react-intl";
 
 import BackgroundTasksContext from "./context";
 import { checkExportFileStatus, checkOrderInvoicesStatus } from "./queries";
-import {
-  handleTask,
-  queueCustom,
-  queueExport,
-  queueInvoiceGenerate,
-} from "./tasks";
+import { handleTask, queueCustom, queueExport, queueInvoiceGenerate } from "./tasks";
 import { QueuedTask, Task, TaskData, TaskStatus } from "./types";
 
 export const backgroundTasksRefreshTime = 15 * 1000;
@@ -27,29 +23,19 @@ export function useBackgroundTasks(
   React.useEffect(() => {
     const intervalId = setInterval(() => {
       const queue = async () => {
-        try {
-          await Promise.all(
-            tasks.current.map(async task => {
-              if (task.status === TaskStatus.PENDING) {
-                let status: TaskStatus;
+        await Promise.all(
+          tasks.current.map(async task => {
+            if (task.status === TaskStatus.PENDING) {
+              const status = await handleTask(task);
 
-                try {
-                  status = await handleTask(task);
-                } catch (error) {
-                  throw error;
-                }
-                if (status !== TaskStatus.PENDING) {
-                  const taskIndex = tasks.current.findIndex(
-                    t => t.id === task.id,
-                  );
-                  tasks.current[taskIndex].status = status;
-                }
+              if (status !== TaskStatus.PENDING) {
+                const taskIndex = tasks.current.findIndex(t => t.id === task.id);
+
+                tasks.current[taskIndex].status = status;
               }
-            }),
-          );
-        } catch (error) {
-          throw error;
-        }
+            }
+          }),
+        );
       };
 
       queue();
@@ -64,6 +50,7 @@ export function useBackgroundTasks(
 
   function queue(type: Task, data?: TaskData) {
     idCounter.current += 1;
+
     switch (type) {
       case Task.CUSTOM:
         queueCustom(idCounter.current, tasks, data);

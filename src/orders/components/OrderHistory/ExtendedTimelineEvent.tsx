@@ -1,7 +1,8 @@
+// @ts-strict-ignore
+import Money from "@dashboard/components/Money";
+import { TimelineEvent } from "@dashboard/components/Timeline";
+import { OrderEventFragment, OrderEventsEnum } from "@dashboard/graphql";
 import { Typography } from "@material-ui/core";
-import Money from "@saleor/components/Money";
-import { TimelineEvent } from "@saleor/components/Timeline";
-import { OrderEventFragment, OrderEventsEnum } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import camelCase from "lodash/camelCase";
 import React from "react";
@@ -142,26 +143,18 @@ export const messages = defineMessages({
 interface ExtendedTimelineEventProps {
   event: OrderEventFragment;
   orderCurrency: string;
+  hasPlainDate?: boolean;
 }
 
 const ExtendedTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
   event,
   orderCurrency,
+  hasPlainDate,
 }) => {
-  const {
-    id,
-    date,
-    type,
-    lines,
-    amount,
-    transactionReference,
-    shippingCostsIncluded,
-  } = event;
+  const { id, date, type, lines, amount, transactionReference, shippingCostsIncluded } = event;
   const classes = useStyles({});
   const intl = useIntl();
-
   const eventTypeInCamelCase = camelCase(type);
-
   const getEventTitleMessageInCamelCase = () => {
     if (hasOrderLineDiscountWithNoPreviousValue(event)) {
       return titles.orderLineDiscountAdded;
@@ -169,7 +162,6 @@ const ExtendedTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
 
     return titles[eventTypeInCamelCase];
   };
-
   const getTitleProps = () => {
     if (type === OrderEventsEnum.ORDER_LINE_DISCOUNT_UPDATED) {
       return { productName: lines[0]?.itemName };
@@ -177,19 +169,14 @@ const ExtendedTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
 
     return {};
   };
-
   const titleElements = {
     by: { text: intl.formatMessage(messages.by) },
     employeeName: getEmployeeNameLink(event),
     orderNumber: getOrderNumberLink(event),
     title: {
-      text: intl.formatMessage(
-        getEventTitleMessageInCamelCase(),
-        getTitleProps(),
-      ),
+      text: intl.formatMessage(getEventTitleMessageInCamelCase(), getTitleProps()),
     },
   };
-
   const selectTitleElements = () => {
     const { title, by, employeeName, orderNumber } = titleElements;
 
@@ -207,28 +194,24 @@ const ExtendedTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
   };
 
   if (isTimelineEventOfDiscountType(type)) {
-    return (
-      <ExtendedDiscountTimelineEvent
-        event={event}
-        titleElements={selectTitleElements()}
-      />
-    );
+    return <ExtendedDiscountTimelineEvent event={event} titleElements={selectTitleElements()} />;
   }
 
   return (
-    <TimelineEvent date={date} titleElements={selectTitleElements()} key={id}>
+    <TimelineEvent
+      date={date}
+      titleElements={selectTitleElements()}
+      key={id}
+      hasPlainDate={hasPlainDate}
+    >
       {lines && (
         <>
-          <Label
-            text={intl.formatMessage(productTitles[eventTypeInCamelCase])}
-          />
+          <Label text={intl.formatMessage(productTitles[eventTypeInCamelCase])} />
           <table>
             <tbody>
               {lines.map(({ orderLine, quantity, itemName }, i) => (
                 <tr key={`${itemName}-${i}`}>
-                  <td className={classes.linesTableCell}>
-                    {orderLine?.productName || itemName}
-                  </td>
+                  <td className={classes.linesTableCell}>{orderLine?.productName || itemName}</td>
                   <td className={classes.linesTableCell}>
                     <Label text={orderLine?.variantName} />
                   </td>
@@ -251,9 +234,7 @@ const ExtendedTimelineEvent: React.FC<ExtendedTimelineEventProps> = ({
             </>
           )}
           {shippingCostsIncluded && (
-            <Typography>
-              {intl.formatMessage(messages.refundedShipment)}
-            </Typography>
+            <Typography>{intl.formatMessage(messages.refundedShipment)}</Typography>
           )}
         </>
       )}

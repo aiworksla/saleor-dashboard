@@ -34,8 +34,9 @@ export function createProductInChannel({
   description = null,
   trackInventory = true,
   weight = 1,
-  preorder,
   sku = name,
+  taxClassId,
+  slug,
 }) {
   let product;
   let variantsList;
@@ -50,6 +51,8 @@ export function createProductInChannel({
     visibleInListings,
     collectionId,
     description,
+    taxClassId,
+    slug,
   })
     .then(productResp => {
       product = productResp;
@@ -63,7 +66,6 @@ export function createProductInChannel({
         price,
         trackInventory,
         weight,
-        preorder,
       });
     })
     .then(variantsResp => {
@@ -76,6 +78,7 @@ export function createTypeAttributeAndCategoryForProduct({
   name,
   attributeValues,
   kind = "NORMAL",
+  slug,
 }) {
   let attribute;
   let productType;
@@ -84,7 +87,7 @@ export function createTypeAttributeAndCategoryForProduct({
     .createAttribute({ name, attributeValues })
     .then(attributeResp => {
       attribute = attributeResp;
-      createTypeProduct({ name, attributeId: attributeResp.id, kind });
+      createTypeProduct({ name, attributeId: attributeResp.id, kind, slug });
     })
     .then(productTypeResp => {
       productType = productTypeResp;
@@ -93,7 +96,7 @@ export function createTypeAttributeAndCategoryForProduct({
         attributeId: attribute.id,
         variantSelection: true,
       });
-      categoryRequest.createCategory({ name });
+      categoryRequest.createCategory({ name, slug });
     })
     .then(categoryResp => {
       category = categoryResp;
@@ -120,7 +123,6 @@ export function createNewProductWithNewDataAndDefaultChannel({
   name,
   description = name,
   warehouseId,
-  preorder,
   attributeValues = ["value"],
   sku = name,
   productPrice = 10,
@@ -130,7 +132,6 @@ export function createNewProductWithNewDataAndDefaultChannel({
       name,
       description,
       warehouseId,
-      preorder,
       attributeValues,
       sku,
       productPrice,
@@ -143,7 +144,6 @@ export function createNewProductWithNewDataAndChannel({
   name,
   description = name,
   warehouseId,
-  preorder,
   attributeValues = ["value"],
   sku = name,
   productPrice = 10,
@@ -178,7 +178,6 @@ export function createNewProductWithNewDataAndChannel({
           description,
           warehouseId,
           price: productPrice,
-          preorder,
           sku,
         });
       },
@@ -198,7 +197,6 @@ export function createProductWithShipping({
   sku = name,
   productPrice = 10,
   shippingPrice = 10,
-  preorder,
   newChannel = false,
 }) {
   let address;
@@ -239,7 +237,6 @@ export function createProductWithShipping({
           name,
           warehouseId: warehouse.id,
           productPrice,
-          preorder,
           attributeValues,
           sku,
           defaultChannel,
@@ -271,6 +268,8 @@ export function createProductInChannelWithoutVariants({
   visibleInListings = true,
   collectionId = null,
   description = null,
+  taxClassId,
+  slug,
 }) {
   let product;
   return productRequest
@@ -281,6 +280,8 @@ export function createProductInChannelWithoutVariants({
       categoryId,
       collectionId,
       description,
+      taxClassId,
+      slug,
     })
     .then(productResp => {
       product = productResp;
@@ -452,20 +453,29 @@ export function createShippingProductTypeAttributeAndCategory(
 ) {
   let warehouse;
   let defaultChannel;
+  let shippingMethod;
 
   return createShippingWithDefaultChannelAndAddress(name)
-    .then(({ warehouse: warehouseResp, defaultChannel: channel }) => {
-      warehouse = warehouseResp;
-      defaultChannel = channel;
+    .then(
+      ({
+        warehouse: warehouseResp,
+        defaultChannel: channel,
+        shippingMethod: shippingMethodResp,
+      }) => {
+        warehouse = warehouseResp;
+        defaultChannel = channel;
+        shippingMethod = shippingMethodResp;
 
-      createTypeAttributeAndCategoryForProduct({ name, attributeValues });
-    })
+        createTypeAttributeAndCategoryForProduct({ name, attributeValues });
+      },
+    )
     .then(({ attribute, productType, category }) => ({
       attribute,
       productType,
       category,
       warehouse,
       defaultChannel,
+      shippingMethod,
     }));
 }
 

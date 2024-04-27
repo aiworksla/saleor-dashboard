@@ -1,20 +1,15 @@
-import { Typography } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import Container from "@saleor/components/Container";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import {
-  OrderSettingsFragment,
-  ShopOrderSettingsFragment,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { orderListUrl } from "@saleor/orders/urls";
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
+import { OrderSettingsFragment, ShopOrderSettingsFragment } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { orderListUrl } from "@dashboard/orders/urls";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 
 import OrderFulfillmentSettings from "../OrderFulfillmentSettings";
 import OrderSettings from "../OrderSettings/OrderSettings";
@@ -42,45 +37,32 @@ const OrderSettingsPage: React.FC<OrderSettingsPageProps> = props => {
       disabled={disabled}
     >
       {({ data, submit, change, isSaveDisabled }) => (
-        <Container>
-          <Backlink href={orderListUrl()}>
-            {intl.formatMessage(sectionNames.orders)}
-          </Backlink>
-          <PageHeader
+        <DetailPageLayout gridTemplateColumns={1}>
+          <TopNav
+            href={orderListUrl()}
             title={intl.formatMessage({
               id: "Vu9nol",
               defaultMessage: "Order settings",
               description: "header",
             })}
-            underline={true}
           />
-          <Grid variant="inverted">
-            <div>
-              <Typography>
-                <FormattedMessage
-                  id="yuiyES"
-                  defaultMessage="General Settings"
-                />
-              </Typography>
-            </div>
-            <OrderSettings data={data} disabled={disabled} onChange={change} />
-            <div />
-            <OrderFulfillmentSettings
-              data={data}
-              disabled={disabled}
-              onChange={change}
-            />
-          </Grid>
+          <DetailPageLayout.Content>
+            <Box margin="auto" height="100vh">
+              <OrderSettings data={data} disabled={disabled} onChange={change} />
+              <OrderFulfillmentSettings data={data} disabled={disabled} onChange={change} />
+            </Box>
+          </DetailPageLayout.Content>
           <Savebar
             onCancel={() => navigate(orderListUrl())}
             onSubmit={submit}
             disabled={isSaveDisabled}
             state={saveButtonBarState}
           />
-        </Container>
+        </DetailPageLayout>
       )}
     </OrderSettingsForm>
   );
 };
+
 OrderSettingsPage.displayName = "OrderSettingsPage";
 export default OrderSettingsPage;

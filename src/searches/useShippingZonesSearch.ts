@@ -1,10 +1,11 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import {
   SearchShippingZonesDocument,
   SearchShippingZonesQuery,
   SearchShippingZonesQueryVariables,
-} from "@saleor/graphql";
-import makeTopLevelSearch from "@saleor/hooks/makeTopLevelSearch";
+} from "@dashboard/graphql";
+import makeTopLevelSearch from "@dashboard/hooks/makeTopLevelSearch";
 
 export const searchShippingZones = gql`
   query SearchShippingZones(
@@ -35,7 +36,6 @@ export const searchShippingZones = gql`
   }
 `;
 
-export default makeTopLevelSearch<
-  SearchShippingZonesQuery,
-  SearchShippingZonesQueryVariables
->(SearchShippingZonesDocument);
+export default makeTopLevelSearch<SearchShippingZonesQuery, SearchShippingZonesQueryVariables>(
+  SearchShippingZonesDocument,
+);

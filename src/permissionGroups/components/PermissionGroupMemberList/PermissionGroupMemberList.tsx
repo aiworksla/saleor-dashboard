@@ -1,31 +1,24 @@
-import {
-  Card,
-  CardContent,
-  TableBody,
-  TableCell,
-  Typography,
-} from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Checkbox from "@saleor/components/Checkbox";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableCellHeader from "@saleor/components/TableCellHeader";
-import TableHead from "@saleor/components/TableHead";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { PermissionGroupMemberFragment } from "@saleor/graphql";
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Checkbox from "@dashboard/components/Checkbox";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableCellHeader from "@dashboard/components/TableCellHeader";
+import TableHead from "@dashboard/components/TableHead";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { UserAvatar } from "@dashboard/components/UserAvatar";
+import { PermissionGroupMemberFragment } from "@dashboard/graphql";
+import { commonStatusMessages } from "@dashboard/intl";
+import { getUserInitials, getUserName, renderCollection, stopPropagation } from "@dashboard/misc";
+import { sortMembers } from "@dashboard/permissionGroups/sort";
+import { MembersListUrlSortField } from "@dashboard/permissionGroups/urls";
+import { ListActions, SortPage } from "@dashboard/types";
+import { getArrowDirection } from "@dashboard/utils/sort";
+import { Card, CardContent, TableBody, TableCell, Typography } from "@material-ui/core";
 import { DeleteIcon, IconButton, makeStyles } from "@saleor/macaw-ui";
-import {
-  getUserInitials,
-  getUserName,
-  renderCollection,
-  stopPropagation,
-} from "@saleor/misc";
-import { sortMembers } from "@saleor/permissionGroups/sort";
-import { MembersListUrlSortField } from "@saleor/permissionGroups/urls";
-import { ListActions, SortPage } from "@saleor/types";
-import { getArrowDirection } from "@saleor/utils/sort";
-import classNames from "classnames";
+import { Box, Text, vars } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -38,20 +31,11 @@ const useStyles = makeStyles(
       colEmail: {
         width: 300,
       },
-      colName: {
-        width: "auto",
-      },
     },
-    avatar: {
+    colName: {
+      display: "flex",
       alignItems: "center",
-      borderRadius: "100%",
-      display: "grid",
-      float: "left",
-      height: 47,
-      justifyContent: "center",
-      marginRight: theme.spacing(1),
-      overflow: "hidden",
-      width: 47,
+      gap: vars.spacing[2],
     },
     avatarDefault: {
       "& div": {
@@ -68,14 +52,10 @@ const useStyles = makeStyles(
       width: "100%",
     },
     colActions: {
-      paddingRight: theme.spacing(),
       textAlign: "right",
     },
     helperText: {
       textAlign: "center",
-    },
-    statusText: {
-      color: "#9E9D9D",
     },
     tableRow: {},
   }),
@@ -83,9 +63,7 @@ const useStyles = makeStyles(
 );
 const numberOfColumns = 4;
 
-interface PermissionGroupProps
-  extends ListActions,
-    SortPage<MembersListUrlSortField> {
+interface PermissionGroupProps extends ListActions, SortPage<MembersListUrlSortField> {
   users: PermissionGroupMemberFragment[];
   disabled: boolean;
   onUnassign: (ida: string[]) => void;
@@ -106,14 +84,12 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
     toggleAll,
     sort,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
-
   const members = [...users].sort(sortMembers(sort?.sort, sort?.asc));
 
   return (
-    <Card>
+    <Card data-test-id="permission-group-members-section">
       <CardTitle
         title={intl.formatMessage({
           id: "lGlDEH",
@@ -127,16 +103,12 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
             onClick={onAssign}
             disabled={disabled}
           >
-            <FormattedMessage
-              id="OhFGpX"
-              defaultMessage="Assign members"
-              description="button"
-            />
+            <FormattedMessage id="OhFGpX" defaultMessage="Assign members" description="button" />
           </Button>
         }
       />
       {members?.length === 0 ? (
-        <CardContent className={classes.helperText}>
+        <CardContent className={classes.helperText} data-test-id="no-members-text">
           <Typography color="textSecondary">
             <FormattedMessage
               id="gVD1os"
@@ -194,7 +166,7 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
               <FormattedMessage id="wL7VAE" defaultMessage="Actions" />
             </TableCellHeader>
           </TableHead>
-          <TableBody>
+          <TableBody data-test-id="assigned-members-table">
             {renderCollection(
               members,
               user => {
@@ -202,7 +174,8 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
 
                 return (
                   <TableRowLink
-                    className={classNames({
+                    data-test-id="assigned-member-row"
+                    className={clsx({
                       [classes.tableRow]: !!user,
                     })}
                     hover={!!user}
@@ -218,41 +191,19 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
                       />
                     </TableCell>
                     <TableCell className={classes.colName}>
-                      <div className={classes.avatar}>
-                        {user?.avatar?.url ? (
-                          <img
-                            className={classes.avatarImage}
-                            src={user?.avatar?.url}
-                          />
-                        ) : (
-                          <div className={classes.avatarDefault}>
-                            <Typography>{getUserInitials(user)}</Typography>
-                          </div>
-                        )}
-                      </div>
-                      <Typography>
-                        {getUserName(user) || <Skeleton />}
-                      </Typography>
-                      <Typography
-                        variant={"caption"}
-                        className={classes.statusText}
-                      >
-                        {!user ? (
-                          <Skeleton />
-                        ) : user.isActive ? (
-                          intl.formatMessage({
-                            id: "9Zlogd",
-                            defaultMessage: "Active",
-                            description: "staff member status",
-                          })
-                        ) : (
-                          intl.formatMessage({
-                            id: "7WzUxn",
-                            defaultMessage: "Inactive",
-                            description: "staff member status",
-                          })
-                        )}
-                      </Typography>
+                      <UserAvatar initials={getUserInitials(user)} url={user?.avatar?.url} />
+                      <Box display="flex" flexDirection="column">
+                        <Text data-test-id="member-name">{getUserName(user) || <Skeleton />}</Text>
+                        <Text size={2} color="default2">
+                          {!user ? (
+                            <Skeleton />
+                          ) : user.isActive ? (
+                            intl.formatMessage(commonStatusMessages.active)
+                          ) : (
+                            intl.formatMessage(commonStatusMessages.notActive)
+                          )}
+                        </Text>
+                      </Box>
                     </TableCell>
                     <TableCell className={classes.colEmail}>
                       {user?.email || <Skeleton />}
@@ -265,9 +216,7 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
                             data-test-id="remove-user"
                             disabled={disabled}
                             color="primary"
-                            onClick={stopPropagation(() =>
-                              onUnassign([user.id]),
-                            )}
+                            onClick={stopPropagation(() => onUnassign([user.id]))}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -282,10 +231,7 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
               () => (
                 <TableRowLink>
                   <TableCell colSpan={numberOfColumns}>
-                    <FormattedMessage
-                      id="qrWOxx"
-                      defaultMessage="No members found"
-                    />
+                    <FormattedMessage id="qrWOxx" defaultMessage="No members found" />
                   </TableCell>
                 </TableRowLink>
               ),
@@ -296,5 +242,6 @@ const PermissionGroupMemberList: React.FC<PermissionGroupProps> = props => {
     </Card>
   );
 };
+
 PermissionGroupMemberList.displayName = "PermissionGroupMemberList";
 export default PermissionGroupMemberList;

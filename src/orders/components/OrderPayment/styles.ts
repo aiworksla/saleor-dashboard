@@ -1,4 +1,5 @@
 import { makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
 
 export const useStyles = makeStyles(
   theme => ({
@@ -26,6 +27,7 @@ export const useStyles = makeStyles(
     },
     titleContainer: {
       display: "flex",
+      alignItems: "center",
     },
     supportText: {
       color: theme.palette.saleor.main[3],
@@ -35,6 +37,15 @@ export const useStyles = makeStyles(
     },
     success: {
       color: theme.palette.success.dark,
+    },
+    actions: {
+      gap: theme.spacing(1),
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "right",
+    },
+    payments: {
+      paddingRight: vars.spacing[6],
     },
   }),
   { name: "OrderPayment" },

@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import AddressFormatter from "@dashboard/components/AddressFormatter";
+import CardMenu from "@dashboard/components/CardMenu";
+import CardTitle from "@dashboard/components/CardTitle";
+import Skeleton from "@dashboard/components/Skeleton";
+import { AddressFragment, AddressTypeEnum } from "@dashboard/graphql";
 import { Card, CardContent } from "@material-ui/core";
-import AddressFormatter from "@saleor/components/AddressFormatter";
-import CardMenu from "@saleor/components/CardMenu";
-import CardTitle from "@saleor/components/CardTitle";
-import Skeleton from "@saleor/components/Skeleton";
-import { AddressFragment, AddressTypeEnum } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
@@ -87,18 +88,19 @@ const CustomerAddress: React.FC<CustomerAddressProps> = props => {
   const intl = useIntl();
 
   return (
-    <Card className={classes.card}>
+    <Card data-test-id="address-card" className={classes.card}>
       <CardTitle
+        data-test-id="address-type-title"
         title={
           address ? (
             <>
               {isDefaultBillingAddress && isDefaultShippingAddress
                 ? intl.formatMessage(messages.defaultAddress)
                 : isDefaultShippingAddress
-                ? intl.formatMessage(messages.defaultShippingAddress)
-                : isDefaultBillingAddress
-                ? intl.formatMessage(messages.defaultBillingAddress)
-                : null}
+                  ? intl.formatMessage(messages.defaultShippingAddress)
+                  : isDefaultBillingAddress
+                    ? intl.formatMessage(messages.defaultBillingAddress)
+                    : null}
             </>
           ) : (
             <Skeleton />
@@ -138,5 +140,6 @@ const CustomerAddress: React.FC<CustomerAddressProps> = props => {
     </Card>
   );
 };
+
 CustomerAddress.displayName = "CustomerAddress";
 export default CustomerAddress;

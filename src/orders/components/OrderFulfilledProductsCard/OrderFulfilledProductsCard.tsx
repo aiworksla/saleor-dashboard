@@ -1,16 +1,15 @@
-import { Card, TableBody } from "@material-ui/core";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import { FulfillmentStatus, OrderDetailsFragment } from "@saleor/graphql";
-import TrashIcon from "@saleor/icons/Trash";
+// @ts-strict-ignore
+import { FulfillmentStatus, OrderDetailsFragment } from "@dashboard/graphql";
+import TrashIcon from "@dashboard/icons/Trash";
+import { orderHasTransactions } from "@dashboard/orders/types";
+import { mergeRepeatedOrderLines } from "@dashboard/orders/utils/data";
+import { CardContent } from "@material-ui/core";
 import { IconButton } from "@saleor/macaw-ui";
-import { mergeRepeatedOrderLines } from "@saleor/orders/utils/data";
+import { Box, Divider } from "@saleor/macaw-ui-next";
 import React from "react";
 
-import { renderCollection } from "../../../misc";
 import OrderCardTitle from "../OrderCardTitle";
-import TableHeader from "../OrderProductsCardElements/OrderProductsCardHeader";
-import TableLine from "../OrderProductsCardElements/OrderProductsTableRow";
+import { OrderDetailsDatagrid } from "../OrderDetailsDatagrid";
 import ActionButtons from "./ActionButtons";
 import ExtraInfoLines from "./ExtraInfoLines";
 import useStyles from "./styles";
@@ -22,7 +21,8 @@ interface OrderFulfilledProductsCardProps {
   onOrderFulfillmentApprove: () => void;
   onOrderFulfillmentCancel: () => void;
   onTrackingCodeAdd: () => void;
-  onRefund: () => void;
+  dataTestId?: string;
+  onShowMetadata: (id: string) => void;
 }
 
 const statusesToMergeLines = [
@@ -31,11 +31,7 @@ const statusesToMergeLines = [
   FulfillmentStatus.RETURNED,
   FulfillmentStatus.REPLACED,
 ];
-const cancelableStatuses = [
-  FulfillmentStatus.FULFILLED,
-  FulfillmentStatus.WAITING_FOR_APPROVAL,
-];
-
+const cancelableStatuses = [FulfillmentStatus.FULFILLED, FulfillmentStatus.WAITING_FOR_APPROVAL];
 const OrderFulfilledProductsCard: React.FC<OrderFulfilledProductsCardProps> = props => {
   const {
     fulfillment,
@@ -44,7 +40,8 @@ const OrderFulfilledProductsCard: React.FC<OrderFulfilledProductsCardProps> = pr
     onOrderFulfillmentApprove,
     onOrderFulfillmentCancel,
     onTrackingCodeAdd,
-    onRefund,
+    onShowMetadata,
+    dataTestId,
   } = props;
   const classes = useStyles(props);
 
@@ -54,24 +51,23 @@ const OrderFulfilledProductsCard: React.FC<OrderFulfilledProductsCardProps> = pr
 
   const getLines = () => {
     if (statusesToMergeLines.includes(fulfillment?.status)) {
-      return mergeRepeatedOrderLines(fulfillment.lines);
+      return mergeRepeatedOrderLines(fulfillment.lines).map(order => order.orderLine);
     }
 
-    return fulfillment?.lines || [];
+    return fulfillment?.lines.map(order => order.orderLine) || [];
   };
 
   return (
-    <>
-      <Card>
-        <OrderCardTitle
-          withStatus
-          lines={fulfillment?.lines}
-          fulfillmentOrder={fulfillment?.fulfillmentOrder}
-          status={fulfillment?.status}
-          warehouseName={fulfillment?.warehouse?.name}
-          orderNumber={order?.number}
-          toolbar={
-            cancelableStatuses.includes(fulfillment?.status) && (
+    <Box data-test-id={dataTestId}>
+      <OrderCardTitle
+        withStatus
+        fulfillmentOrder={fulfillment?.fulfillmentOrder}
+        status={fulfillment?.status}
+        warehouseName={fulfillment?.warehouse?.name}
+        orderNumber={order?.number}
+        toolbar={
+          <Box display="flex" alignItems="center" gap={6}>
+            {cancelableStatuses.includes(fulfillment?.status) && (
               <IconButton
                 variant="secondary"
                 className={classes.deleteIcon}
@@ -80,30 +76,27 @@ const OrderFulfilledProductsCard: React.FC<OrderFulfilledProductsCardProps> = pr
               >
                 <TrashIcon />
               </IconButton>
-            )
-          }
-        />
-        <ResponsiveTable className={classes.table}>
-          <TableHeader />
-          <TableBody>
-            {renderCollection(getLines(), line => (
-              <TableLine key={line.id} line={line} />
-            ))}
-          </TableBody>
-          <ExtraInfoLines fulfillment={fulfillment} />
-        </ResponsiveTable>
-        <ActionButtons
-          status={fulfillment?.status}
-          trackingNumber={fulfillment?.trackingNumber}
-          orderIsPaid={order?.isPaid}
-          fulfillmentAllowUnpaid={fulfillmentAllowUnpaid}
-          onTrackingCodeAdd={onTrackingCodeAdd}
-          onRefund={onRefund}
-          onApprove={onOrderFulfillmentApprove}
-        />
-      </Card>
-      <CardSpacer />
-    </>
+            )}
+            <ActionButtons
+              orderId={order?.id}
+              status={fulfillment?.status}
+              trackingNumber={fulfillment?.trackingNumber}
+              orderIsPaid={order?.isPaid}
+              fulfillmentAllowUnpaid={fulfillmentAllowUnpaid}
+              onTrackingCodeAdd={onTrackingCodeAdd}
+              onApprove={onOrderFulfillmentApprove}
+              hasTransactions={orderHasTransactions(order)}
+            />
+          </Box>
+        }
+      />
+      <CardContent>
+        <OrderDetailsDatagrid lines={getLines()} loading={false} onShowMetadata={onShowMetadata} />
+        <ExtraInfoLines fulfillment={fulfillment} />
+      </CardContent>
+      {props.children}
+      <Divider />
+    </Box>
   );
 };
 

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
   FormControl,
   FormHelperText,
@@ -9,7 +10,6 @@ import {
 } from "@material-ui/core";
 import { SelectProps } from "@material-ui/core/Select";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
 import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
@@ -60,7 +60,7 @@ interface SingleSelectFieldProps {
   placeholder?: string;
   value?: string;
   InputProps?: OutlinedInputProps;
-  onChange(event: any);
+  onChange: (event: any) => any;
 }
 
 export const SingleSelectField: React.FC<SingleSelectFieldProps> = props => {
@@ -80,21 +80,17 @@ export const SingleSelectField: React.FC<SingleSelectFieldProps> = props => {
     testId,
   } = props;
   const classes = useStyles(props);
-
-  const choicesByKey: { [key: string]: string } =
+  const choicesByKey: Record<string, string> =
     choices === undefined
       ? {}
       : choices.reduce((prev, curr) => {
           prev[curr.value] = curr.label;
+
           return prev;
         }, {});
 
   return (
-    <FormControl
-      className={classNames(classes.formControl, className)}
-      error={error}
-      disabled={disabled}
-    >
+    <FormControl className={clsx(classes.formControl, className)} error={error} disabled={disabled}>
       <InputLabel className={classes.label} shrink={!!value}>
         {label}
       </InputLabel>
@@ -114,7 +110,7 @@ export const SingleSelectField: React.FC<SingleSelectFieldProps> = props => {
             {...InputProps}
             classes={{
               ...(InputProps?.classes || {}),
-              input: classNames(InputProps?.classes?.input, {
+              input: clsx(InputProps?.classes?.input, {
                 [classes.noLabel]: !label,
               }),
             }}
@@ -140,11 +136,7 @@ export const SingleSelectField: React.FC<SingleSelectFieldProps> = props => {
             </MenuItem>
           ))
         ) : (
-          <MenuItem
-            data-test-id="select-field-option"
-            data-test-disabled
-            disabled={true}
-          >
+          <MenuItem data-test-id="select-field-option" data-test-disabled disabled={true}>
             <FormattedMessage id="hX5PAb" defaultMessage="No results found" />
           </MenuItem>
         )}

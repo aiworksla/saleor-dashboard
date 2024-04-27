@@ -1,4 +1,4 @@
-export const PAGE_DETAILS = {
+export const PAGE_DETAILS_SELECTORS = {
   nameInput: '[name="title"]',
   pageTypesAutocompleteSelect:
     '[data-test-id="page-types-autocomplete-select"]',
@@ -6,6 +6,6 @@ export const PAGE_DETAILS = {
   isNotPublishedCheckbox: '[name="isPublished"][value=false]',
   uploadFileButton: '[data-test-id="button-upload-file"]',
   richTextEditorAttributeValue: '[class*="ce-paragraph"]',
-  booleanAttributeValueCheckbox: '[name*="attribute:"][type="checkbox"]',
+  booleanAttributeValueCheckbox: '[data-macaw-ui-component="Toggle"]',
   numericAttributeValueInput: '[name*="attribute:"]',
 };

@@ -9,6 +9,7 @@ import {
   createCheckout,
 } from "../../../support/api/requests/Checkout";
 import { getOrder } from "../../../support/api/requests/Order";
+import { updatePlugin } from "../../../support/api/requests/Plugins";
 import { getDefaultChannel } from "../../../support/api/utils/channelsUtils";
 import {
   addAdyenPayment,
@@ -17,12 +18,8 @@ import {
 import {
   createProductInChannel,
   createTypeAttributeAndCategoryForProduct,
-  deleteProductsStartsWith,
 } from "../../../support/api/utils/products/productsUtils";
-import {
-  createShipping,
-  deleteShippingStartsWith,
-} from "../../../support/api/utils/shippingUtils";
+import { createShipping } from "../../../support/api/utils/shippingUtils";
 
 describe("Adyen payments", () => {
   const startsWith = "Adyen";
@@ -39,9 +36,7 @@ describe("Adyen payments", () => {
   let cardData;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
+    cy.loginUserViaRequest();
     cy.fixture("cards").then(cardsResp => {
       paymentCards = cardsResp.adyen;
       cardData = {
@@ -66,15 +61,19 @@ describe("Adyen payments", () => {
         });
       })
       .then(
-        ({
-          warehouse: warehouseResp,
-          shippingZone: shippingZoneResp,
-          shippingMethod: shippingMethodResp,
-        }) => {
+        ({ warehouse: warehouseResp, shippingMethod: shippingMethodResp }) => {
           warehouse = warehouseResp;
           shippingMethod = shippingMethodResp;
         },
-      );
+      )
+      .then(() => {
+        updatePlugin(
+          "mirumee.payments.adyen",
+          "adyen-auto-capture",
+          true,
+          defaultChannel.id,
+        );
+      });
     createTypeAttributeAndCategoryForProduct({ name })
       .then(({ productType, attribute, category }) => {
         createProductInChannel({
@@ -86,11 +85,23 @@ describe("Adyen payments", () => {
           categoryId: category.id,
         });
       })
-      .then(({ variantsList: variants }) => (variantsList = variants));
+      .then(({ variantsList: variants }) => {
+        variantsList = variants;
+        cy.checkIfDataAreNotNull({
+          address,
+          defaultChannel,
+          warehouse,
+          shippingMethod,
+          variantsList,
+          checkout,
+          paymentCards,
+          cardData,
+        });
+      });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
     createCheckout({
       channelSlug: defaultChannel.slug,
       email,
@@ -114,7 +125,7 @@ describe("Adyen payments", () => {
 
   it(
     "should purchase products with simple card",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const simpleCard = cardData;
       simpleCard.encryptedCardNumber =
@@ -132,7 +143,7 @@ describe("Adyen payments", () => {
 
   it(
     "should purchase product with 3D secure 2 Auth",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const threeDSecureCard = cardData;
       threeDSecureCard.encryptedCardNumber =
@@ -150,7 +161,7 @@ describe("Adyen payments", () => {
 
   it(
     "should purchase product with 3D secure 1 Auth",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const threeDSecureCardOneAuth = cardData;
       threeDSecureCardOneAuth.encryptedCardNumber =
@@ -169,7 +180,7 @@ describe("Adyen payments", () => {
 
   it(
     "should fail with unknown security number",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const simpleCard = cardData;
       simpleCard.encryptedCardNumber =
@@ -185,7 +196,7 @@ describe("Adyen payments", () => {
 
   it(
     "should fail with timeout in 3D authorization",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const errorCard = cardData;
       errorCard.encryptedCardNumber =
@@ -199,7 +210,7 @@ describe("Adyen payments", () => {
 
   it(
     "should fail with closed account",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const closeAccount = cardData;
       closeAccount.encryptedCardNumber =

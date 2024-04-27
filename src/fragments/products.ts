@@ -46,7 +46,7 @@ export const fragmentProductMedia = gql`
     id
     alt
     sortOrder
-    url
+    url(size: 1024)
     type
     oembedData
   }
@@ -79,6 +79,7 @@ export const channelListingProductFragment = gql`
 
 export const channelListingProductVariantFragment = gql`
   fragment ChannelListingProductVariant on ProductVariantChannelListing {
+    id
     channel {
       id
       name
@@ -101,13 +102,21 @@ export const productFragment = gql`
   fragment ProductWithChannelListings on Product {
     id
     name
-    thumbnail {
+    thumbnail(size: 1024) {
       url
     }
     productType {
       id
       name
       hasVariants
+    }
+    category @include(if: $includeCategories) {
+      id
+      name
+    }
+    collections @include(if: $includeCollections) {
+      id
+      name
     }
     channelListings {
       ...ChannelListingProductWithoutPricing
@@ -148,19 +157,7 @@ export const productVariantAttributesFragment = gql`
     productType {
       id
       variantAttributes {
-        id
-        name
-        inputType
-        valueRequired
-        unit
-        choices(
-          first: $firstValues
-          after: $afterValues
-          last: $lastValues
-          before: $beforeValues
-        ) {
-          ...AttributeValueList
-        }
+        ...VariantAttribute
       }
     }
     channelListings {
@@ -184,8 +181,7 @@ export const productDetailsVariant = gql`
         name
       }
       values {
-        id
-        name
+        ...AttributeValueDetails
       }
     }
     media {
@@ -226,7 +222,6 @@ export const productFragmentDetails = gql`
       id
       name
     }
-    chargeTaxes
     channelListings {
       ...ChannelListingProductWithoutPricing
     }
@@ -241,15 +236,13 @@ export const productFragmentDetails = gql`
       id
       name
       hasVariants
-      taxType {
-        ...TaxType
-      }
     }
     weight {
       ...Weight
     }
-    taxType {
-      ...TaxType
+    taxClass {
+      id
+      name
     }
   }
 `;
@@ -263,12 +256,7 @@ export const variantAttributeFragment = gql`
     entityType
     valueRequired
     unit
-    choices(
-      first: $firstValues
-      after: $afterValues
-      last: $lastValues
-      before: $beforeValues
-    ) {
+    choices(first: $firstValues, after: $afterValues, last: $lastValues, before: $beforeValues) {
       ...AttributeValueList
     }
   }
@@ -292,9 +280,7 @@ export const fragmentVariant = gql`
     selectionAttributes: attributes(variantSelection: VARIANT_SELECTION) {
       ...SelectedVariantAttribute
     }
-    nonSelectionAttributes: attributes(
-      variantSelection: NOT_VARIANT_SELECTION
-    ) {
+    nonSelectionAttributes: attributes(variantSelection: NOT_VARIANT_SELECTION) {
       ...SelectedVariantAttribute
     }
     media {
@@ -332,7 +318,7 @@ export const fragmentVariant = gql`
         sku
         media {
           id
-          url
+          url(size: 200)
           type
           oembedData
         }

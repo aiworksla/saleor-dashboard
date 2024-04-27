@@ -19,9 +19,7 @@ const DeleteWarningDialogConsentContent: React.FC<DeleteWarningDialogConsentCont
   onConsentChange,
 }) => {
   const classes = useStyles();
-
-  const handleConsentChange = ({ target }: ChangeEvent<any>) =>
-    onConsentChange(target.value);
+  const handleConsentChange = ({ target }: ChangeEvent<any>) => onConsentChange(target.value);
 
   return (
     <>
@@ -32,11 +30,7 @@ const DeleteWarningDialogConsentContent: React.FC<DeleteWarningDialogConsentCont
           name="delete-assigned-items-consent"
           checked={isConsentChecked}
           onChange={handleConsentChange}
-          label={
-            <Typography className={classes.consentLabel}>
-              {consentLabel}
-            </Typography>
-          }
+          label={<Typography className={classes.consentLabel}>{consentLabel}</Typography>}
         />
       )}
     </>

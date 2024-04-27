@@ -1,5 +1,5 @@
-import { GiftCardErrorFragment, TimePeriodTypeEnum } from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
+import { GiftCardErrorFragment, TimePeriodTypeEnum } from "@dashboard/graphql";
+import { FormChange } from "@dashboard/hooks/useForm";
 
 import { GiftCardExpiryType } from "../GiftCardCreateDialog/types";
 
@@ -21,15 +21,11 @@ export const giftCardBulkCreateErrorKeys: GiftCardErrorKey[] = [
   "count",
 ];
 
-export interface GiftCardBulkCreateFormData
-  extends GiftCardCreateCommonFormData {
+export interface GiftCardBulkCreateFormData extends GiftCardCreateCommonFormData {
   cardsAmount: number;
 }
 
-export type GiftCardBulkCreateFormError = Pick<
-  GiftCardErrorFragment,
-  "code" | "field"
->;
+export type GiftCardBulkCreateFormError = Pick<GiftCardErrorFragment, "code" | "field">;
 
 export type GiftCardBulkCreateFormErrors = Partial<
   Record<GiftCardErrorKey, GiftCardBulkCreateFormError>
@@ -52,9 +48,4 @@ export interface GiftCardCreateCommonFormData {
   balanceAmount: number;
   balanceCurrency: string;
   expiryDate: string;
-}
-
-export interface GiftCardBulkCreateFormData
-  extends GiftCardCreateCommonFormData {
-  cardsAmount: number;
 }

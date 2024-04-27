@@ -1,14 +1,15 @@
-import { FilterElement } from "@saleor/components/Filter";
+// @ts-strict-ignore
+import { FilterElement } from "@dashboard/components/Filter";
 import {
   ProductTypeConfigurable,
   ProductTypeEnum,
   ProductTypeFilterInput,
-} from "@saleor/graphql";
-import { findValueInEnum, maybe } from "@saleor/misc";
+} from "@dashboard/graphql";
+import { findValueInEnum, maybe } from "@dashboard/misc";
 import {
   ProductTypeFilterKeys,
   ProductTypeListFilterOpts,
-} from "@saleor/productTypes/components/ProductTypeListPage";
+} from "@dashboard/productTypes/components/ProductTypeListPage";
 
 import {
   createFilterTabUtils,
@@ -23,15 +24,11 @@ import {
 
 export const PRODUCT_TYPE_FILTERS_KEY = "productTypeFilters";
 
-export function getFilterOpts(
-  params: ProductTypeListUrlFilters,
-): ProductTypeListFilterOpts {
+export function getFilterOpts(params: ProductTypeListUrlFilters): ProductTypeListFilterOpts {
   return {
     configurable: {
       active: !!maybe(() => params.configurable),
-      value: maybe(() =>
-        findValueInEnum(params.configurable, ProductTypeConfigurable),
-      ),
+      value: maybe(() => findValueInEnum(params.configurable, ProductTypeConfigurable)),
     },
     type: {
       active: !!maybe(() => params.type),
@@ -40,16 +37,12 @@ export function getFilterOpts(
   };
 }
 
-export function getFilterVariables(
-  params: ProductTypeListUrlFilters,
-): ProductTypeFilterInput {
+export function getFilterVariables(params: ProductTypeListUrlFilters): ProductTypeFilterInput {
   return {
     configurable: params.configurable
       ? findValueInEnum(params.configurable, ProductTypeConfigurable)
       : undefined,
-    productType: params.type
-      ? findValueInEnum(params.type, ProductTypeEnum)
-      : undefined,
+    productType: params.type ? findValueInEnum(params.type, ProductTypeEnum) : undefined,
     search: params.query,
   };
 }
@@ -61,29 +54,17 @@ export function getFilterQueryParam(
 
   switch (name) {
     case ProductTypeFilterKeys.configurable:
-      return getSingleValueQueryParam(
-        filter,
-        ProductTypeListUrlFiltersEnum.configurable,
-      );
+      return getSingleValueQueryParam(filter, ProductTypeListUrlFiltersEnum.configurable);
 
     case ProductTypeFilterKeys.type:
-      return getSingleValueQueryParam(
-        filter,
-        ProductTypeListUrlFiltersEnum.type,
-      );
+      return getSingleValueQueryParam(filter, ProductTypeListUrlFiltersEnum.type);
   }
 }
 
-export const {
-  deleteFilterTab,
-  getFilterTabs,
-  saveFilterTab,
-} = createFilterTabUtils<ProductTypeListUrlFilters>(PRODUCT_TYPE_FILTERS_KEY);
+export const { deleteFilterTab, getFilterTabs, saveFilterTab } =
+  createFilterTabUtils<ProductTypeListUrlFilters>(PRODUCT_TYPE_FILTERS_KEY);
 
-export const {
-  areFiltersApplied,
-  getActiveFilters,
-  getFiltersCurrentTab,
-} = createFilterUtils<ProductTypeListUrlQueryParams, ProductTypeListUrlFilters>(
-  ProductTypeListUrlFiltersEnum,
-);
+export const { areFiltersApplied, getActiveFilters, getFiltersCurrentTab } = createFilterUtils<
+  ProductTypeListUrlQueryParams,
+  ProductTypeListUrlFilters
+>(ProductTypeListUrlFiltersEnum);

@@ -1,96 +1,64 @@
-import { Typography } from "@material-ui/core";
-import { appsListPath } from "@saleor/apps/urls";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import Grid from "@saleor/components/Grid";
-import Hr from "@saleor/components/Hr";
-import { AppQuery } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import classNames from "classnames";
+import { borderHeight, topBarHeight } from "@dashboard/components/AppLayout/consts";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { APP_VERSION } from "@dashboard/config";
+import { AppQuery } from "@dashboard/graphql";
+import useShop from "@dashboard/hooks/useShop";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
-import { FormattedMessage, useIntl } from "react-intl";
 
 import { AppFrame } from "../AppFrame";
-import { useStyles } from "./styles";
-import useSettingsBreadcrumbs from "./useSettingsBreadcrumbs";
+import { AppPageNav } from "./AppPageNav";
 
 export interface AppPageProps {
   data: AppQuery["app"];
   url: string;
   onError: () => void;
-  aboutHref: string;
   refetch?: () => void;
 }
 
-export const AppPage: React.FC<AppPageProps> = ({
-  data,
-  url,
-  aboutHref,
-  onError,
-  refetch,
-}) => {
-  const intl = useIntl();
-  const classes = useStyles({});
-  const [breadcrumbs, onBreadcrumbClick] = useSettingsBreadcrumbs();
+export const AppPage: React.FC<AppPageProps> = ({ data, url, onError, refetch }) => {
+  const shop = useShop();
+
+  /**
+   * TODO Make some loading state
+   */
+  if (!shop?.version) {
+    return null;
+  }
 
   return (
-    <Container>
-      <Backlink href={appsListPath}>
-        {intl.formatMessage(sectionNames.apps)}
-      </Backlink>
-      <Grid variant="uniform">
-        <div className={classes.breadcrumbContainer}>
-          <div className={classes.breadcrumbs}>
-            <Typography
-              className={classNames(
-                classes.breadcrumb,
-                classes.breadcrumbDisabled,
-              )}
-              variant="h5"
-            >
-              {data?.name}
-            </Typography>
-            {breadcrumbs.map(b => (
-              <Typography
-                className={classes.breadcrumb}
-                variant="h5"
-                onClick={() => onBreadcrumbClick(b.value)}
-                key={b.label}
-              >
-                {b.label}
-              </Typography>
-            ))}
-          </div>
-        </div>
-        <div className={classes.appSettingsHeader}>
-          <Button href={aboutHref} variant="primary">
-            <FormattedMessage
-              id="UCHtG6"
-              defaultMessage="About"
-              description="button"
+    <DetailPageLayout gridTemplateColumns={1} withSavebar={false}>
+      <AppPageNav
+        appId={data?.id || ""}
+        name={data?.name}
+        supportUrl={data?.supportUrl}
+        homepageUrl={data?.homepageUrl}
+        author={data?.author}
+        appLogoUrl={data?.brand?.logo.default}
+        showMangeAppButton={true}
+      />
+      <DetailPageLayout.Content>
+        <Box
+          position="relative"
+          // It removes extra space between iframe and container
+          __lineHeight={0}
+          height="100%"
+          __minHeight={`calc(100vh - ${borderHeight} - ${topBarHeight})`}
+        >
+          {url && data?.id && data?.accessToken && (
+            <AppFrame
+              src={url}
+              appToken={data?.accessToken ?? ""}
+              onError={onError}
+              appId={data?.id ?? ""}
+              refetch={refetch}
+              coreVersion={shop.version}
+              dashboardVersion={APP_VERSION}
             />
-          </Button>
-        </div>
-      </Grid>
-      <CardSpacer />
-
-      <Hr />
-
-      <CardSpacer />
-      <div className={classes.iframeContainer}>
-        {url && (
-          <AppFrame
-            src={url}
-            appToken={data.accessToken}
-            onError={onError}
-            appId={data.id}
-            refetch={refetch}
-          />
-        )}
-      </div>
-    </Container>
+          )}
+        </Box>
+      </DetailPageLayout.Content>
+    </DetailPageLayout>
   );
 };
 

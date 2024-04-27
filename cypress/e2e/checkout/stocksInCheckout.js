@@ -8,8 +8,12 @@ import {
   createCheckout,
 } from "../../support/api/requests/Checkout";
 import { getVariants } from "../../support/api/requests/Product";
-import { createWaitingForCaptureOrder } from "../../support/api/utils/ordersUtils";
-import { createNewProductWithSeveralVariants } from "../../support/api/utils/products/productsUtils";
+import {
+  createWaitingForCaptureOrder,
+} from "../../support/api/utils/ordersUtils";
+import {
+  createNewProductWithSeveralVariants,
+} from "../../support/api/utils/products/productsUtils";
 
 describe("Manage products stocks in checkout", () => {
   const startsWith = "CyStocksCheckout-";
@@ -23,7 +27,7 @@ describe("Manage products stocks in checkout", () => {
   let lastVariantInStock;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
 
     const variantsData = [
       {
@@ -56,6 +60,14 @@ describe("Manage products stocks in checkout", () => {
       lastVariantInStock = resp.createdVariants.find(
         variant => variant.name === "lastVariantInStock",
       );
+      cy.checkIfDataAreNotNull({
+        defaultChannel,
+        address,
+        shippingMethod,
+        variantsWithLowStock,
+        variantsWithoutTrackInventory,
+        lastVariantInStock,
+      });
     });
   });
 
@@ -112,6 +124,7 @@ describe("Manage products stocks in checkout", () => {
       })
         .then(({ order }) => {
           expect(order, "order should be created").to.be.ok;
+          cy.clearSessionData().loginUserViaRequest();
           getVariants([lastVariantInStock]);
         })
         .then(variantsList => {

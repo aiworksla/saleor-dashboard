@@ -21,7 +21,7 @@
 const graphql = require("graphql-request");
 
 module.exports = async (on, config) => {
-  // require("cypress-mochawesome-reporter/plugin")(on); - uncomment to run reports
+  // require("cypress-mochawesome-reporter/plugin")(on);
 
   require("dotenv").config();
 
@@ -35,9 +35,12 @@ module.exports = async (on, config) => {
   config.env.SECOND_USER_NAME = process.env.CYPRESS_SECOND_USER_NAME;
   config.env.PERMISSIONS_USERS_PASSWORD =
     process.env.CYPRESS_PERMISSIONS_USERS_PASSWORD;
+  config.env.MAILPITURL = process.env.CYPRESS_MAILPITURL;
   config.env.grepTags = process.env.CYPRESS_grepTags;
+  config.baseUrl = process.env.BASE_URL;
+  config.env.LOCALE_CODE = process.env.LOCALE_CODE;
 
-  on("before:browser:launch", ({}, launchOptions) => {
+  on("before:browser:launch", (_browser = {}, launchOptions) => {
     launchOptions.args.push("--proxy-bypass-list=<-loopback>");
     return launchOptions;
   });

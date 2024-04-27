@@ -1,13 +1,14 @@
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { CountryFragment } from "@dashboard/graphql";
 import { Card, TableBody, TableCell } from "@material-ui/core";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { CountryFragment } from "@saleor/graphql";
 import { DeleteIcon, IconButton, makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -26,7 +27,8 @@ const useStyles = makeStyles(
   theme => ({
     iconCell: {
       "&:last-child": {
-        paddingRight: theme.spacing(2),
+        paddingRight: theme.spacing(3),
+        paddingLeft: 0,
       },
       width: `calc(48px + ${theme.spacing(4)})`,
     },
@@ -69,18 +71,9 @@ const useStyles = makeStyles(
   }),
   { name: "CountryList" },
 );
-
 const CountryList: React.FC<CountryListProps> = props => {
-  const {
-    countries,
-    disabled,
-    emptyText,
-    title,
-    onCountryAssign,
-    onCountryUnassign,
-  } = props;
+  const { countries, disabled, emptyText, title, onCountryAssign, onCountryUnassign } = props;
   const classes = useStyles(props);
-
   const [isCollapsed, setCollapseStatus] = React.useState(true);
   const toggleCollapse = () => setCollapseStatus(!isCollapsed);
 
@@ -93,25 +86,15 @@ const CountryList: React.FC<CountryListProps> = props => {
       <CardTitle
         title={title}
         toolbar={
-          <Button
-            disabled={disabled}
-            onClick={onCountryAssign}
-            data-test-id="assign-country"
-          >
-            <FormattedMessage
-              id="zZCCqz"
-              defaultMessage="Assign countries"
-              description="button"
-            />
+          <Button disabled={disabled} onClick={onCountryAssign} data-test-id="assign-country">
+            <FormattedMessage id="zZCCqz" defaultMessage="Assign countries" description="button" />
           </Button>
         }
       />
       <ResponsiveTable>
         <TableBody>
           <TableRowLink className={classes.pointer} onClick={toggleCollapse}>
-            <TableCell
-              className={classNames(classes.wideColumn, classes.toLeft)}
-            >
+            <TableCell className={clsx(classes.wideColumn, classes.toLeft)}>
               <FormattedMessage
                 id="62Ywh2"
                 defaultMessage="{number} Countries"
@@ -121,13 +104,11 @@ const CountryList: React.FC<CountryListProps> = props => {
                 }}
               />
             </TableCell>
-            <TableCell
-              className={classNames(classes.textRight, classes.iconCell)}
-            >
+            <TableCell className={clsx(classes.textRight, classes.iconCell)}>
               <IconButton variant="secondary">
                 <ArrowDropDownIcon
                   data-test-id="countries-drop-down-icon"
-                  className={classNames({
+                  className={clsx({
                     [classes.rotate]: !isCollapsed,
                   })}
                 />
@@ -146,9 +127,7 @@ const CountryList: React.FC<CountryListProps> = props => {
                           {(countryIndex === 0 ||
                             countries[countryIndex].country[0] !==
                               countries[countryIndex - 1].country[0]) && (
-                            <span className={classes.indicator}>
-                              {country.country[0]}
-                            </span>
+                            <span className={classes.indicator}>{country.country[0]}</span>
                           )}
                           {country.country}
                         </>
@@ -156,12 +135,10 @@ const CountryList: React.FC<CountryListProps> = props => {
                       <Skeleton />,
                     )}
                   </TableCell>
-                  <TableCell
-                    className={classNames(classes.textRight, classes.iconCell)}
-                  >
+                  <TableCell className={clsx(classes.textRight, classes.iconCell)}>
                     <IconButton
                       data-test-id="delete-icon"
-                      color="primary"
+                      variant="secondary"
                       disabled={!country || disabled}
                       onClick={() => onCountryUnassign(country.code)}
                     >
@@ -183,4 +160,5 @@ const CountryList: React.FC<CountryListProps> = props => {
     </Card>
   );
 };
+
 export default CountryList;

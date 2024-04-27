@@ -1,13 +1,13 @@
+import { ATTRIBUTE_TYPES_WITH_CONFIGURABLE_FACED_NAVIGATION } from "@dashboard/attributes/utils/data";
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import ControlledSwitch from "@dashboard/components/ControlledSwitch";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { AttributeErrorFragment, AttributeTypeEnum } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAttributeErrorMessage from "@dashboard/utils/errors/attribute";
 import { Card, CardContent, TextField, Typography } from "@material-ui/core";
-import { ATTRIBUTE_TYPES_WITH_CONFIGURABLE_FACED_NAVIGATION } from "@saleor/attributes/utils/data";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import ControlledSwitch from "@saleor/components/ControlledSwitch";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { AttributeErrorFragment, AttributeTypeEnum } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAttributeErrorMessage from "@saleor/utils/errors/attribute";
 import React from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
@@ -21,8 +21,7 @@ const messages = defineMessages({
   },
   availableInGridCaption: {
     id: "AzMSmb",
-    defaultMessage:
-      "If enabled this attribute can be used as a column in product table.",
+    defaultMessage: "If enabled this attribute can be used as a column in product table.",
     description: "caption",
   },
   dashboardPropertiesTitle: {
@@ -82,13 +81,10 @@ const AttributeProperties: React.FC<AttributePropertiesProps> = ({
   onChange,
 }) => {
   const intl = useIntl();
-
   const formErrors = getFormErrors(["storefrontSearchPosition"], errors);
-
   const storefrontFacetedNavigationProperties =
-    ATTRIBUTE_TYPES_WITH_CONFIGURABLE_FACED_NAVIGATION.includes(
-      data.inputType,
-    ) && data.type === AttributeTypeEnum.PRODUCT_TYPE;
+    ATTRIBUTE_TYPES_WITH_CONFIGURABLE_FACED_NAVIGATION.includes(data.inputType) &&
+    data.type === AttributeTypeEnum.PRODUCT_TYPE;
 
   return (
     <Card>
@@ -110,13 +106,8 @@ const AttributeProperties: React.FC<AttributePropertiesProps> = ({
                   disabled={disabled}
                   error={!!formErrors.storefrontSearchPosition}
                   fullWidth
-                  helperText={getAttributeErrorMessage(
-                    formErrors.storefrontSearchPosition,
-                    intl,
-                  )}
-                  name={
-                    "storefrontSearchPosition" as keyof AttributePageFormData
-                  }
+                  helperText={getAttributeErrorMessage(formErrors.storefrontSearchPosition, intl)}
+                  name={"storefrontSearchPosition" as keyof AttributePageFormData}
                   label={intl.formatMessage(messages.storefrontSearchPosition)}
                   value={data.storefrontSearchPosition}
                   onChange={onChange}
@@ -144,5 +135,6 @@ const AttributeProperties: React.FC<AttributePropertiesProps> = ({
     </Card>
   );
 };
+
 AttributeProperties.displayName = "AttributeProperties";
 export default AttributeProperties;

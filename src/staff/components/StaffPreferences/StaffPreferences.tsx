@@ -1,9 +1,9 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { Locale, localeNames } from "@dashboard/components/Locale";
+import SingleAutocompleteSelectField from "@dashboard/components/SingleAutocompleteSelectField";
+import { capitalize } from "@dashboard/misc";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { Locale, localeNames } from "@saleor/components/Locale";
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import { capitalize } from "@saleor/misc";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -12,11 +12,18 @@ interface StaffPreferencesProps {
   onLocaleChange: (locale: Locale) => void;
 }
 
-const StaffPreferences: React.FC<StaffPreferencesProps> = ({
-  locale,
-  onLocaleChange,
-}) => {
+const StaffPreferences: React.FC<StaffPreferencesProps> = ({ locale, onLocaleChange }) => {
   const intl = useIntl();
+  const handleLocaleChange = async (locale: Locale) => {
+    await onLocaleChange(locale);
+    /*
+      Workaround, after changing language we reload the page.
+      saleor-sdk causes the error related to wrong cache management.
+      Migration to auth-sdk can solve it.
+      Ref: https://github.com/saleor/saleor-dashboard/issues/4340
+    */
+    window.location.reload();
+  };
 
   return (
     <Card>
@@ -36,8 +43,7 @@ const StaffPreferences: React.FC<StaffPreferencesProps> = ({
           displayValue={localeNames[locale]}
           helperText={intl.formatMessage({
             id: "JJgJwi",
-            defaultMessage:
-              "Selecting this will change the language of your dashboard",
+            defaultMessage: "Selecting this will change the language of your dashboard",
           })}
           label={intl.formatMessage({
             id: "mr9jbO",
@@ -45,7 +51,7 @@ const StaffPreferences: React.FC<StaffPreferencesProps> = ({
           })}
           name="locale"
           value={locale}
-          onChange={event => onLocaleChange(event.target.value)}
+          onChange={event => handleLocaleChange(event.target.value)}
         />
         <FormSpacer />
         <Typography>
@@ -58,5 +64,6 @@ const StaffPreferences: React.FC<StaffPreferencesProps> = ({
     </Card>
   );
 };
+
 StaffPreferences.displayName = "StaffPreferences";
 export default StaffPreferences;

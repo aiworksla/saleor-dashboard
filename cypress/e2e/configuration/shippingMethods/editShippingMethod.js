@@ -4,7 +4,9 @@
 import faker from "faker";
 
 import { shippingRateUrl } from "../../../fixtures/urlList";
-import { updateChannelWarehouses } from "../../../support/api/requests/Channels";
+import {
+  updateChannelWarehouses,
+} from "../../../support/api/requests/Channels";
 import {
   addChannelToShippingMethod,
   createShippingRate,
@@ -13,7 +15,6 @@ import {
 } from "../../../support/api/requests/ShippingMethod";
 import { createWarehouse } from "../../../support/api/requests/Warehouse";
 import { getDefaultChannel } from "../../../support/api/utils/channelsUtils";
-import { deleteShippingStartsWith } from "../../../support/api/utils/shippingUtils";
 import {
   fillUpShippingRate,
   saveRateAfterUpdate,
@@ -31,8 +32,7 @@ describe("As a user I should be able to update and delete shipping method", () =
   let warehouse;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteShippingStartsWith(startsWith);
+    cy.loginUserViaRequest();
 
     getDefaultChannel()
       .then(channel => {
@@ -50,6 +50,13 @@ describe("As a user I should be able to update and delete shipping method", () =
           createShippingZone(name, "US", defaultChannel.id, warehouse.id).then(
             shippingZoneResp => {
               shippingZone = shippingZoneResp;
+              cy.checkIfDataAreNotNull({
+                defaultChannel,
+                shippingZone,
+                shippingMethod,
+                warehouse,
+                usAddress,
+              });
             },
           );
         });
@@ -59,7 +66,7 @@ describe("As a user I should be able to update and delete shipping method", () =
   beforeEach(() => {
     const rateName = `${startsWith}${faker.datatype.number()}`;
 
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
     createShippingRate({
       name: rateName,
       shippingZone: shippingZone.id,

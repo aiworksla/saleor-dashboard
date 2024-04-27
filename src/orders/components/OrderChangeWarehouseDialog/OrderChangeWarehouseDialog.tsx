@@ -1,3 +1,13 @@
+// @ts-strict-ignore
+import Debounce from "@dashboard/components/Debounce";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { OrderFulfillLineFragment, WarehouseFragment } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
+import { getById } from "@dashboard/misc";
+import { getLineAvailableQuantityInWarehouse } from "@dashboard/orders/utils/data";
+import useWarehouseSearch from "@dashboard/searches/useWarehouseSearch";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import {
   Dialog,
   DialogActions,
@@ -10,11 +20,6 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import Debounce from "@saleor/components/Debounce";
-import Skeleton from "@saleor/components/Skeleton";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { OrderFulfillLineFragment, WarehouseFragment } from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
 import {
   Button,
   DialogHeader,
@@ -25,13 +30,9 @@ import {
   SearchIcon,
   useElementScroll,
 } from "@saleor/macaw-ui";
-import { getLineAvailableQuantityInWarehouse } from "@saleor/orders/utils/data";
-import useWarehouseSearch from "@saleor/searches/useWarehouseSearch";
-import { mapEdgesToItems } from "@saleor/utils/maps";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { getById } from "../OrderReturnPage/utils";
 import { changeWarehouseDialogMessages as messages } from "./messages";
 import { useStyles } from "./styles";
 
@@ -40,7 +41,7 @@ export interface OrderChangeWarehouseDialogProps {
   line: OrderFulfillLineFragment;
   currentWarehouseId: string;
   onConfirm: (warehouse: WarehouseFragment) => void;
-  onClose();
+  onClose: () => any;
 }
 
 export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProps> = ({
@@ -52,15 +53,11 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
 }) => {
   const classes = useStyles();
   const intl = useIntl();
-
   const { anchor, position, setAnchor } = useElementScroll();
-  const topShadow = isScrolledToTop(anchor, position, 20) === false;
-  const bottomShadow = isScrolledToBottom(anchor, position, 20) === false;
-
+  const topShadow = !isScrolledToTop(anchor, position, 20);
+  const bottomShadow = !isScrolledToBottom(anchor, position, 20);
   const [query, setQuery] = React.useState<string>("");
-  const [selectedWarehouseId, setSelectedWarehouseId] = React.useState<
-    string | null
-  >(null);
+  const [selectedWarehouseId, setSelectedWarehouseId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (currentWarehouseId) {
@@ -68,7 +65,11 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
     }
   }, [currentWarehouseId]);
 
-  const { result: warehousesOpts, loadMore, search } = useWarehouseSearch({
+  const {
+    result: warehousesOpts,
+    loadMore,
+    search,
+  } = useWarehouseSearch({
     variables: {
       after: null,
       first: 20,
@@ -76,11 +77,7 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
     },
   });
   const filteredWarehouses = mapEdgesToItems(warehousesOpts?.data?.search);
-
-  const selectedWarehouse = filteredWarehouses?.find(
-    getById(selectedWarehouseId ?? ""),
-  );
-
+  const selectedWarehouse = filteredWarehouses?.find(getById(selectedWarehouseId ?? ""));
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedWarehouseId(e.target.value);
   };
@@ -111,22 +108,20 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
           />
           <Debounce debounceFn={search}>
             {debounceSearchChange => {
-              const handleSearchChange = (
-                event: React.ChangeEvent<HTMLInputElement>,
-              ) => {
+              const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 const value = event.target.value;
+
                 setQuery(value);
                 debounceSearchChange(value);
               };
+
               return (
                 <TextField
                   className={classes.searchBox}
                   value={query}
                   variant="outlined"
                   onChange={handleSearchChange}
-                  placeholder={intl.formatMessage(
-                    messages.searchFieldPlaceholder,
-                  )}
+                  placeholder={intl.formatMessage(messages.searchFieldPlaceholder)}
                   fullWidth
                   InputProps={{
                     startAdornment: (
@@ -155,10 +150,8 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
             className={classes.tableBody}
           >
             {filteredWarehouses.map(warehouse => {
-              const lineQuantityInWarehouse = getLineAvailableQuantityInWarehouse(
-                line,
-                warehouse,
-              );
+              const lineQuantityInWarehouse = getLineAvailableQuantityInWarehouse(line, warehouse);
+
               return (
                 <TableRowLink key={warehouse.id}>
                   <TableCell className={classes.tableCell}>
@@ -167,9 +160,7 @@ export const OrderChangeWarehouseDialog: React.FC<OrderChangeWarehouseDialogProp
                       control={<Radio color="primary" />}
                       label={
                         <div className={classes.radioLabelContainer}>
-                          <span className={classes.warehouseName}>
-                            {warehouse.name}
-                          </span>
+                          <span className={classes.warehouseName}>{warehouse.name}</span>
                           <Typography className={classes.supportText}>
                             <FormattedMessage
                               {...messages.productAvailability}

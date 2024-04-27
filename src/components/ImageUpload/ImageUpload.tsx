@@ -1,7 +1,9 @@
+// @ts-strict-ignore
 import { Typography } from "@material-ui/core";
-import { fade } from "@material-ui/core/styles/colorManipulator";
+import { alpha } from "@material-ui/core/styles";
 import { ImageIcon, makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { vars } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -21,7 +23,7 @@ interface ImageUploadProps {
 const useStyles = makeStyles(
   theme => ({
     backdrop: {
-      background: fade(theme.palette.primary.main, 0.1),
+      background: alpha(theme.palette.primary.main, 0.1),
       color: theme.palette.primary.main,
     },
     fileField: {
@@ -29,7 +31,7 @@ const useStyles = makeStyles(
     },
     imageContainer: {
       background: "#ffffff",
-      border: "1px solid #eaeaea",
+      border: `1px solid ${vars.colors.border.default1}`,
       borderRadius: theme.spacing(),
       height: 148,
       justifySelf: "start",
@@ -69,7 +71,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = props => {
     hideUploadIcon,
     onImageUpload,
   } = props;
-
   const classes = useStyles(props);
 
   return (
@@ -78,22 +79,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = props => {
         <>
           <div
             {...getRootProps()}
-            className={classNames(className, classes.photosIconContainer, {
+            className={clsx(className, classes.photosIconContainer, {
               [classes.backdrop]: isDragActive,
               [isActiveClassName]: isDragActive,
             })}
           >
             {!hideUploadIcon && (
               <div
-                className={classNames(iconContainerClassName, {
+                className={clsx(iconContainerClassName, {
                   [iconContainerActiveClassName]: isDragActive,
                 })}
               >
-                <input
-                  {...getInputProps()}
-                  className={classes.fileField}
-                  accept="image/*"
-                />
+                <input {...getInputProps()} className={classes.fileField} accept="image/*" />
                 <ImageIcon className={classes.photosIcon} />
                 <Typography className={classes.uploadText}>
                   <FormattedMessage

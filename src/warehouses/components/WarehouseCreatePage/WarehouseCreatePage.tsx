@@ -1,27 +1,23 @@
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import CompanyAddressInput from "@saleor/components/CompanyAddressInput";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import { AddressTypeInput } from "@saleor/customers/types";
-import {
-  CountryWithCodeFragment,
-  WarehouseErrorFragment,
-} from "@saleor/graphql";
-import useAddressValidation from "@saleor/hooks/useAddressValidation";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import createSingleAutocompleteSelectHandler from "@saleor/utils/handlers/singleAutocompleteSelectChangeHandler";
-import { mapCountriesToChoices } from "@saleor/utils/maps";
-import { warehouseListUrl } from "@saleor/warehouses/urls";
+// @ts-strict-ignore
+import { createCountryHandler } from "@dashboard/components/AddressEdit/createCountryHandler";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import CompanyAddressInput from "@dashboard/components/CompanyAddressInput";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
+import { AddressTypeInput } from "@dashboard/customers/types";
+import { CountryWithCodeFragment, WarehouseErrorFragment } from "@dashboard/graphql";
+import useAddressValidation from "@dashboard/hooks/useAddressValidation";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import createSingleAutocompleteSelectHandler from "@dashboard/utils/handlers/singleAutocompleteSelectChangeHandler";
+import { mapCountriesToChoices } from "@dashboard/utils/maps";
+import { warehouseListUrl } from "@dashboard/warehouses/urls";
 import React from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 
 import WarehouseInfo from "../WarehouseInfo";
 
@@ -47,7 +43,6 @@ const initialForm: WarehouseCreatePageFormData = {
   streetAddress1: "",
   streetAddress2: "",
 };
-
 const WarehouseCreatePage: React.FC<WarehouseCreatePageProps> = ({
   countries,
   disabled,
@@ -57,44 +52,33 @@ const WarehouseCreatePage: React.FC<WarehouseCreatePageProps> = ({
 }) => {
   const intl = useIntl();
   const navigate = useNavigator();
-
   const [displayCountry, setDisplayCountry] = useStateFromProps("");
-
-  const {
-    errors: validationErrors,
-    submit: handleSubmit,
-  } = useAddressValidation(onSubmit);
+  const { errors: validationErrors, submit: handleSubmit } = useAddressValidation(onSubmit);
 
   return (
     <Form confirmLeave initial={initialForm} onSubmit={handleSubmit}>
-      {({ change, data, submit }) => {
+      {({ change, data, set, submit }) => {
         const countryChoices = mapCountriesToChoices(countries);
-        const handleCountryChange = createSingleAutocompleteSelectHandler(
+        const countrySelect = createSingleAutocompleteSelectHandler(
           change,
           setDisplayCountry,
           countryChoices,
         );
+        const handleCountrySelect = createCountryHandler(countrySelect, set);
 
         return (
-          <Container>
-            <Backlink href={warehouseListUrl()}>
-              <FormattedMessage {...sectionNames.warehouses} />
-            </Backlink>
-            <PageHeader
+          <DetailPageLayout gridTemplateColumns={1}>
+            <TopNav
+              href={warehouseListUrl()}
               title={intl.formatMessage({
                 id: "GhcypC",
                 defaultMessage: "Create Warehouse",
                 description: "header",
               })}
             />
-            <Grid>
+            <DetailPageLayout.Content>
               <div>
-                <WarehouseInfo
-                  data={data}
-                  disabled={disabled}
-                  errors={errors}
-                  onChange={change}
-                />
+                <WarehouseInfo data={data} disabled={disabled} errors={errors} onChange={change} />
                 <CardSpacer />
                 <CompanyAddressInput
                   countries={countryChoices}
@@ -108,17 +92,17 @@ const WarehouseCreatePage: React.FC<WarehouseCreatePageProps> = ({
                     description: "warehouse",
                   })}
                   onChange={change}
-                  onCountryChange={handleCountryChange}
+                  onCountryChange={handleCountrySelect}
                 />
               </div>
-            </Grid>
-            <Savebar
-              disabled={disabled}
-              onCancel={() => navigate(warehouseListUrl())}
-              onSubmit={submit}
-              state={saveButtonBarState}
-            />
-          </Container>
+              <Savebar
+                disabled={disabled}
+                onCancel={() => navigate(warehouseListUrl())}
+                onSubmit={submit}
+                state={saveButtonBarState}
+              />
+            </DetailPageLayout.Content>
+          </DetailPageLayout>
         );
       }}
     </Form>

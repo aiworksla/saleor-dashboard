@@ -1,11 +1,12 @@
-import ActionDialog from "@saleor/components/ActionDialog";
+// @ts-strict-ignore
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import SingleAutocompleteSelectField, {
   SingleAutocompleteChoiceType,
-} from "@saleor/components/SingleAutocompleteSelectField";
-import useModalDialogOpen from "@saleor/hooks/useModalDialogOpen";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { FetchMoreProps } from "@saleor/types";
+} from "@dashboard/components/SingleAutocompleteSelectField";
+import useModalDialogOpen from "@dashboard/hooks/useModalDialogOpen";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { FetchMoreProps } from "@dashboard/types";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -66,5 +67,6 @@ const ProductTypePickerDialog: React.FC<ProductTypePickerDialogProps> = ({
     </ActionDialog>
   );
 };
+
 ProductTypePickerDialog.displayName = "ProductTypePickerDialog";
 export default ProductTypePickerDialog;

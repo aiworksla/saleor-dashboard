@@ -1,113 +1,59 @@
-import {
-  Actions,
-  DispatchResponseEvent,
-  Events,
-  NotificationAction,
-  RedirectAction,
-} from "@saleor/app-sdk/app-bridge";
-import { appPath } from "@saleor/apps/urls";
-import { APP_MOUNT_URI } from "@saleor/config";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import React from "react";
-import { useIntl } from "react-intl";
-import { useLocation } from "react-router";
-import urlJoin from "url-join";
+import { AppActionsHandler } from "@dashboard/apps/components/AppFrame/appActionsHandler";
+import { usePostToExtension } from "@dashboard/apps/components/AppFrame/usePostToExtension";
+import { Actions, DispatchResponseEvent } from "@saleor/app-sdk/app-bridge";
+import React, { useState } from "react";
 
-import { useExternalApp } from "../ExternalAppContext";
-
-const sendResponseStatus = (
-  actionId: string,
-  ok: boolean,
-): DispatchResponseEvent => ({
-  type: "response",
-  payload: {
-    actionId,
-    ok,
-  },
-});
-
-const isAppDeepUrlChange = (appId: string, from: string, to: string) => {
-  const appCompletePath = appPath(encodeURIComponent(appId));
-
-  return to.startsWith(appCompletePath) && from.startsWith(appCompletePath);
-};
-
+/**
+ * TODO Refactor to named attributes
+ */
 export const useAppActions = (
-  frameEl: React.MutableRefObject<HTMLIFrameElement>,
+  frameEl: HTMLIFrameElement | null,
   appOrigin: string,
   appId: string,
+  appToken: string,
+  versions: {
+    core: string;
+    dashboard: string;
+  },
 ) => {
-  const navigate = useNavigator();
-  const notify = useNotifier();
-  const location = useLocation();
-  const { closeApp } = useExternalApp();
-  const intl = useIntl();
-
-  const actionReducer = (
-    action: Actions | undefined,
-  ): DispatchResponseEvent => {
+  const postToExtension = usePostToExtension(frameEl, appOrigin);
+  const { handle: handleNotification } = AppActionsHandler.useHandleNotificationAction();
+  const { handle: handleUpdateRouting } = AppActionsHandler.useHandleUpdateRoutingAction(appId);
+  const { handle: handleRedirect } = AppActionsHandler.useHandleRedirectAction(appId);
+  const { handle: handleNotifyReady } = AppActionsHandler.useNotifyReadyAction(
+    frameEl,
+    appOrigin,
+    appToken,
+    versions,
+  );
+  const { handle: handlePermissionRequest } = AppActionsHandler.useHandlePermissionRequest(appId);
+  /**
+   * Store if app has performed a handshake with Dashboard, to avoid sending events before that
+   */
+  const [handshakeDone, setHandshakeDone] = useState(false);
+  const handleAction = (action: Actions | undefined): DispatchResponseEvent => {
     switch (action?.type) {
       case "notification": {
-        const {
-          actionId,
-          ...notification
-        } = action.payload as NotificationAction["payload"];
-
-        notify({
-          ...notification,
-        });
-
-        return sendResponseStatus(actionId, true);
+        return handleNotification(action);
       }
       case "redirect": {
-        const {
-          to,
-          newContext,
-          actionId,
-        } = action.payload as RedirectAction["payload"];
+        return handleRedirect(action);
+      }
+      case "updateRouting": {
+        return handleUpdateRouting(action);
+      }
+      /**
+       * Send handshake after app informs its ready and mounted
+       */
+      case "notifyReady": {
+        const response = handleNotifyReady(action);
 
-        let success = true;
-        const appDeepUrlChange = isAppDeepUrlChange(
-          appId,
-          location.pathname,
-          to,
-        );
+        setHandshakeDone(true);
 
-        try {
-          if (newContext) {
-            window.open(to);
-          } else if (appDeepUrlChange) {
-            const exactLocation = urlJoin(APP_MOUNT_URI, to);
-
-            // Change only url without reloading if we are in the same app
-            window.history.pushState(null, "", exactLocation);
-          } else if (to.startsWith("/")) {
-            navigate(to);
-            closeApp();
-          } else {
-            const isExternalDomain =
-              new URL(to).hostname !== window.location.hostname;
-
-            if (isExternalDomain) {
-              success = window.confirm(
-                intl.formatMessage({
-                  id: "MSItJD",
-                  defaultMessage:
-                    "You are about to leave the Dashboard. Do you want to continue?",
-                }),
-              );
-            }
-
-            if (success) {
-              window.location.href = to;
-            }
-          }
-        } catch (e) {
-          success = false;
-        }
-
-        return sendResponseStatus(actionId, success);
+        return response;
+      }
+      case "requestPermissions": {
+        return handlePermissionRequest(action);
       }
       default: {
         throw new Error("Unknown action type");
@@ -115,16 +61,10 @@ export const useAppActions = (
     }
   };
 
-  const postToExtension = (event: Events) => {
-    if (frameEl.current) {
-      frameEl.current.contentWindow.postMessage(event, appOrigin);
-    }
-  };
-
   React.useEffect(() => {
     const handler = (event: MessageEvent<Actions>) => {
       if (event.origin === appOrigin) {
-        const response = actionReducer(event.data);
+        const response = handleAction(event.data);
 
         postToExtension(response);
       }
@@ -135,9 +75,11 @@ export const useAppActions = (
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, []);
+  }, [appOrigin, handleAction, postToExtension]);
 
   return {
+    handshakeDone,
     postToExtension,
+    setHandshakeDone,
   };
 };

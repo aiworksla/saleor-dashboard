@@ -1,16 +1,11 @@
+// @ts-strict-ignore
+import Form from "@dashboard/components/Form";
+import Hr from "@dashboard/components/Hr";
+import Skeleton from "@dashboard/components/Skeleton";
+import Timeline, { TimelineAddNote, TimelineNote } from "@dashboard/components/Timeline";
+import { GiftCardEventsEnum, useGiftCardAddNoteMutation } from "@dashboard/graphql";
+import useNotifier from "@dashboard/hooks/useNotifier";
 import { Typography } from "@material-ui/core";
-import Form from "@saleor/components/Form";
-import Hr from "@saleor/components/Hr";
-import Skeleton from "@saleor/components/Skeleton";
-import Timeline, {
-  TimelineAddNote,
-  TimelineNote,
-} from "@saleor/components/Timeline";
-import {
-  GiftCardEventsEnum,
-  useGiftCardAddNoteMutation,
-} from "@saleor/graphql";
-import useNotifier from "@saleor/hooks/useNotifier";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -29,7 +24,6 @@ const GiftCardHistory: React.FC = () => {
   const notify = useNotifier();
   const { id, events } = useGiftCardHistoryEvents();
   const classes = useStyles();
-
   const [addTimelineNote, { loading }] = useGiftCardAddNoteMutation({
     refetchQueries: [GIFT_CARD_DETAILS_QUERY],
     onCompleted: ({ giftCardAddNote }) => {
@@ -48,9 +42,9 @@ const GiftCardHistory: React.FC = () => {
       }
     },
   });
-
   const onNoteAdd = (data: FormData) => {
     const { message } = data;
+
     addTimelineNote({ variables: { id, input: { message } } });
   };
 
@@ -78,7 +72,7 @@ const GiftCardHistory: React.FC = () => {
               .slice()
               .reverse()
               .map(event => {
-                const { id, message, type, date, user } = event;
+                const { id, message, type, date, user, app } = event;
 
                 if (type === GiftCardEventsEnum.NOTE_ADDED) {
                   return (
@@ -87,13 +81,13 @@ const GiftCardHistory: React.FC = () => {
                       user={user}
                       message={message}
                       key={id}
+                      app={app}
+                      hasPlainDate={false}
                     />
                   );
                 }
 
-                return (
-                  <GiftCardTimelineEvent key={id} date={date} event={event} />
-                );
+                return <GiftCardTimelineEvent key={id} date={date} event={event} />;
               })}
           </>
         ) : (

@@ -1,7 +1,6 @@
+import { Button } from "@dashboard/components/Button";
+import FormSpacer from "@dashboard/components/FormSpacer";
 import { Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import FormSpacer from "@saleor/components/FormSpacer";
-import {} from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -16,7 +15,6 @@ export interface ResetPasswordSuccessPageProps {
 
 const ResetPasswordSuccessPage: React.FC<ResetPasswordSuccessPageProps> = props => {
   const { onBack } = props;
-
   const classes = useStyles(props);
 
   return (
@@ -36,12 +34,9 @@ const ResetPasswordSuccessPage: React.FC<ResetPasswordSuccessPageProps> = props 
         variant="primary"
         onClick={onBack}
         type="submit"
+        data-test-id="back-to-login-button"
       >
-        <FormattedMessage
-          id="2oyWT9"
-          defaultMessage="Back to login"
-          description="button"
-        />
+        <FormattedMessage id="2oyWT9" defaultMessage="Back to login" description="button" />
       </Button>
     </>
   );

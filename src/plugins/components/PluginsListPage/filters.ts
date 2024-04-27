@@ -1,12 +1,13 @@
-import { IFilter } from "@saleor/components/Filter";
-import { PluginConfigurationType } from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import { AutocompleteFilterOpts, FilterOpts } from "@saleor/types";
+// @ts-strict-ignore
+import { IFilter } from "@dashboard/components/Filter";
+import { PluginConfigurationType } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { AutocompleteFilterOpts, FilterOpts } from "@dashboard/types";
 import {
   createAutocompleteField,
   createBooleanField,
   createOptionsField,
-} from "@saleor/utils/filters/fields";
+} from "@dashboard/utils/filters/fields";
 import { defineMessages, IntlShape } from "react-intl";
 
 import {
@@ -100,15 +101,11 @@ export function createFilterStructure(
         [
           {
             value: PluginConfigurationType.GLOBAL,
-            label: intl.formatMessage(
-              pluginChannelConfigurationCellMessages.globalLabel,
-            ),
+            label: intl.formatMessage(pluginChannelConfigurationCellMessages.globalLabel),
           },
           {
             value: PluginConfigurationType.PER_CHANNEL,
-            label: intl.formatMessage(
-              pluginChannelConfigurationCellMessages.channelLabel,
-            ),
+            label: intl.formatMessage(pluginChannelConfigurationCellMessages.channelLabel),
           },
         ],
       ),

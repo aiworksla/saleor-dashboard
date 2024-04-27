@@ -1,120 +1,160 @@
-import AccountPermissions from "@saleor/components/AccountPermissions";
-import { Backlink } from "@saleor/components/Backlink";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
+import { useUser } from "@dashboard/auth";
+import AccountPermissions from "@dashboard/components/AccountPermissions";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { ChannelPermission } from "@dashboard/components/ChannelPermission";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
 import {
+  ChannelFragment,
   PermissionEnum,
   PermissionGroupDetailsFragment,
   PermissionGroupErrorFragment,
   UserPermissionFragment,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import {
-  MembersListUrlSortField,
-  permissionGroupListUrl,
-} from "@saleor/permissionGroups/urls";
-import {
-  extractPermissionCodes,
-  isGroupFullAccess,
-} from "@saleor/permissionGroups/utils";
-import { ListActions, SortPage } from "@saleor/types";
-import { getFormErrors } from "@saleor/utils/errors";
-import getPermissionGroupErrorMessage from "@saleor/utils/errors/permissionGroups";
+} from "@dashboard/graphql";
+import { FormChange, SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { buttonMessages } from "@dashboard/intl";
+import { MembersListUrlSortField, permissionGroupListUrl } from "@dashboard/permissionGroups/urls";
+import { ListActions, SortPage } from "@dashboard/types";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getPermissionGroupErrorMessage from "@dashboard/utils/errors/permissionGroups";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
+import {
+  checkIfUserHasRestictedAccessToChannels,
+  extractPermissionCodes,
+  getInitialChannels,
+  getUserAccessibleChannelsOptions,
+  isGroupFullAccess,
+} from "../../utils";
 import PermissionGroupInfo from "../PermissionGroupInfo";
 import PermissionGroupMemberList from "../PermissionGroupMemberList";
 
 export interface PermissionGroupDetailsPageFormData {
   name: string;
   hasFullAccess: boolean;
+  hasAllChannels: boolean;
   isActive: boolean;
   permissions: PermissionEnum[];
   users: PermissionGroupDetailsFragment["users"];
+  channels: string[];
 }
 
-export interface PermissionData
-  extends Omit<UserPermissionFragment, "__typename"> {
+export interface PermissionData extends Omit<UserPermissionFragment, "__typename"> {
   lastSource?: boolean;
   disabled?: boolean;
 }
 
-export interface PermissionGroupDetailsPageProps
+export interface PermissonGroupDetailsPageProps
   extends ListActions,
     SortPage<MembersListUrlSortField> {
+  channels: ChannelFragment[];
   disabled: boolean;
+  isUserAbleToEditChannels: boolean;
   errors: PermissionGroupErrorFragment[];
   members: PermissionGroupDetailsFragment["users"];
-  permissionGroup: PermissionGroupDetailsFragment;
+  permissionGroup: PermissionGroupDetailsFragment | null | undefined;
   permissions: PermissionData[];
   permissionsExceeded: boolean;
-  saveButtonBarState: ConfirmButtonTransitionState;
+  saveButtonBarState: "loading" | "success" | "error" | "default";
   onAssign: () => void;
+  onDelete: () => void;
   onUnassign: (ids: string[]) => void;
   onSubmit: (data: PermissionGroupDetailsPageFormData) => SubmitPromise;
 }
 
-const PermissionGroupDetailsPage: React.FC<PermissionGroupDetailsPageProps> = ({
+export const PermissionGroupDetailsPage: React.FC<PermissonGroupDetailsPageProps> = ({
   disabled,
   errors,
   members,
   onSubmit,
+  onDelete,
   permissionGroup,
   permissions,
   permissionsExceeded,
   saveButtonBarState,
+  channels,
+  isUserAbleToEditChannels,
   ...listProps
 }) => {
   const intl = useIntl();
   const navigate = useNavigator();
-
+  const user = useUser();
+  const channelsOptions = getUserAccessibleChannelsOptions(channels, user.user);
+  const hasUserRestrictedChannels = checkIfUserHasRestictedAccessToChannels(user.user);
   const initialForm: PermissionGroupDetailsPageFormData = {
     hasFullAccess: isGroupFullAccess(permissionGroup, permissions),
+    hasAllChannels: !permissionGroup?.restrictedAccessToChannels ?? false,
+    channels: getInitialChannels(permissionGroup, channels?.length ?? 0),
     isActive: false,
     name: permissionGroup?.name || "",
     permissions: extractPermissionCodes(permissionGroup),
     users: members,
   };
-
   const formErrors = getFormErrors(["addPermissions"], errors);
-  const permissionsError = getPermissionGroupErrorMessage(
-    formErrors.addPermissions,
-    intl,
-  );
+  const permissionsError = getPermissionGroupErrorMessage(formErrors.addPermissions, intl);
 
   return (
     <Form confirmLeave initial={initialForm} onSubmit={onSubmit}>
-      {({ data, change, submit }) => (
-        <Container>
-          <Backlink href={permissionGroupListUrl()}>
-            {intl.formatMessage(sectionNames.permissionGroups)}
-          </Backlink>
-          <PageHeader title={permissionGroup?.name} />
+      {({ data, change, submit }) => {
+        const handleChannelChange: FormChange = event => {
+          change({
+            target: {
+              name: "channels",
+              value: event.target.value,
+            },
+          });
+        };
+        const handleHasAllChannelsChange = () => {
+          change({
+            target: {
+              name: "hasAllChannels",
+              value: !data.hasAllChannels,
+            },
+          });
+        };
 
-          <Grid>
-            <div>
+        return (
+          <DetailPageLayout>
+            <TopNav href={permissionGroupListUrl()} title={permissionGroup?.name} />
+            <DetailPageLayout.Content>
               <PermissionGroupInfo
                 data={data}
                 disabled={disabled}
                 errors={errors}
                 onChange={change}
               />
+
+              <FormSpacer />
+
+              <Box paddingX={6}>
+                <ChannelPermission
+                  allChannels={
+                    // I pass all channels because Multiselect components based on ids,
+                    // and need data that will take information about channel
+                    !isUserAbleToEditChannels ? channels : channelsOptions
+                  }
+                  hasAllChannels={data.hasAllChannels}
+                  selectedChannels={data.channels}
+                  onHasAllChannelsChange={handleHasAllChannelsChange}
+                  onChannelChange={handleChannelChange}
+                  disabled={!isUserAbleToEditChannels || disabled}
+                  disabledSelectAllChannels={hasUserRestrictedChannels}
+                />
+              </Box>
+
               <FormSpacer />
               <PermissionGroupMemberList
                 disabled={disabled}
                 {...listProps}
                 users={data?.users || []}
               />
-            </div>
-            <div>
+            </DetailPageLayout.Content>
+            <DetailPageLayout.RightSidebar>
               <AccountPermissions
                 permissionsExceeded={permissionsExceeded}
                 data={data}
@@ -122,11 +162,7 @@ const PermissionGroupDetailsPage: React.FC<PermissionGroupDetailsPageProps> = ({
                 permissions={permissions}
                 onChange={change}
                 errorMessage={permissionsError}
-                fullAccessLabel={intl.formatMessage({
-                  id: "mAabef",
-                  defaultMessage: "Group has full access to the store",
-                  description: "checkbox label",
-                })}
+                fullAccessLabel={intl.formatMessage(buttonMessages.selectAll)}
                 description={intl.formatMessage({
                   id: "CYZse9",
                   defaultMessage:
@@ -134,20 +170,19 @@ const PermissionGroupDetailsPage: React.FC<PermissionGroupDetailsPageProps> = ({
                   description: "card description",
                 })}
               />
+            </DetailPageLayout.RightSidebar>
+            <div>
+              <Savebar
+                onCancel={() => navigate(permissionGroupListUrl())}
+                onDelete={onDelete}
+                onSubmit={submit}
+                state={saveButtonBarState}
+                disabled={disabled}
+              />
             </div>
-          </Grid>
-          <div>
-            <Savebar
-              onCancel={() => navigate(permissionGroupListUrl())}
-              onSubmit={submit}
-              state={saveButtonBarState}
-              disabled={disabled}
-            />
-          </div>
-        </Container>
-      )}
+          </DetailPageLayout>
+        );
+      }}
     </Form>
   );
 };
-PermissionGroupDetailsPage.displayName = "PermissionGroupDetailsPage";
-export default PermissionGroupDetailsPage;

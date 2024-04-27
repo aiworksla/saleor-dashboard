@@ -1,19 +1,19 @@
-import { Card, CardContent, TextField } from "@material-ui/core";
-import { NumericUnits } from "@saleor/attributes/components/AttributeDetails/NumericUnits";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import FormSpacer from "@saleor/components/FormSpacer";
-import SingleSelectField from "@saleor/components/SingleSelectField";
+import { NumericUnits } from "@dashboard/attributes/components/AttributeDetails/NumericUnits";
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import SingleSelectField from "@dashboard/components/SingleSelectField";
 import {
   AttributeEntityTypeEnum,
   AttributeErrorFragment,
   AttributeInputTypeEnum,
-} from "@saleor/graphql";
-import { UseFormResult } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
+} from "@dashboard/graphql";
+import { UseFormResult } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAttributeErrorMessage from "@dashboard/utils/errors/attribute";
+import { Card, CardContent, TextField } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAttributeErrorMessage from "@saleor/utils/errors/attribute";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 import slugify from "slugify";
@@ -39,7 +39,6 @@ const entityTypeMessages = defineMessages({
     description: "product variant attribute entity type",
   },
 });
-
 const useStyles = makeStyles(
   theme => ({
     inputTypeSection: {
@@ -66,17 +65,8 @@ export interface AttributeDetailsProps
 }
 
 const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
-  const {
-    canChangeType,
-    errors,
-    clearErrors,
-    setError,
-    data,
-    disabled,
-    apiErrors,
-    onChange,
-    set,
-  } = props;
+  const { canChangeType, errors, clearErrors, setError, data, disabled, apiErrors, onChange, set } =
+    props;
   const classes = useStyles(props);
   const intl = useIntl();
   const inputTypeChoices = [
@@ -139,7 +129,6 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
       value: AttributeEntityTypeEnum.PRODUCT_VARIANT,
     },
   ];
-
   const formApiErrors = getFormErrors(
     ["name", "slug", "inputType", "entityType", "unit"],
     apiErrors,
@@ -147,11 +136,10 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
 
   return (
     <Card>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
+          data-test-id="attribute-default-label-input"
           disabled={disabled}
           error={!!formApiErrors.name}
           label={intl.formatMessage(messages.attributeLabel)}
@@ -163,6 +151,7 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
         />
         <FormSpacer />
         <TextField
+          data-test-id="attribute-code-input"
           disabled={disabled}
           error={!!formApiErrors.slug}
           label={intl.formatMessage(messages.attributeSlug)}
@@ -177,7 +166,7 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
           onChange={onChange}
         />
         <FormSpacer />
-        <div className={classes.inputTypeSection}>
+        <div className={classes.inputTypeSection} data-test-id="attribute-type-select">
           <SingleSelectField
             choices={inputTypeChoices}
             disabled={disabled || !canChangeType}
@@ -197,7 +186,7 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
               label={intl.formatMessage(messages.entityType)}
               name="entityType"
               onChange={onChange}
-              value={data.entityType}
+              value={data.entityType ?? undefined}
             />
           )}
         </div>
@@ -223,5 +212,6 @@ const AttributeDetails: React.FC<AttributeDetailsProps> = props => {
     </Card>
   );
 };
+
 AttributeDetails.displayName = "AttributeDetails";
 export default AttributeDetails;

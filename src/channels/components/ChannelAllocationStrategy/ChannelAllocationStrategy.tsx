@@ -1,10 +1,10 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import PreviewPill from "@dashboard/components/PreviewPill";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
+import { AllocationStrategyEnum, StockSettingsInput } from "@dashboard/graphql";
 import { Card, CardContent, Typography } from "@material-ui/core";
 import HelpOutline from "@material-ui/icons/HelpOutline";
-import CardTitle from "@saleor/components/CardTitle";
-import PreviewPill from "@saleor/components/PreviewPill";
-import RadioGroupField from "@saleor/components/RadioGroupField";
-import { AllocationStrategyEnum, StockSettingsInput } from "@saleor/graphql";
-import { Tooltip } from "@saleor/macaw-ui";
+import { Tooltip } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -52,26 +52,22 @@ const ChannelAllocationStrategy: React.FC<ChannelAllocationStrategyProps> = ({
           label={
             <Typography>
               <FormattedMessage {...messages.allocationStrategyDescription} />
-              <Tooltip
-                title={
-                  <>
-                    <FormattedMessage {...messages.allocaationMayOccur} />
-                    <ul>
-                      <li>
-                        <FormattedMessage
-                          {...messages.allocaationMayOccurWithTrackInventory}
-                        />
-                      </li>
-                      <li>
-                        <FormattedMessage
-                          {...messages.allocaationMayOccurWithReservationTime}
-                        />
-                      </li>
-                    </ul>
-                  </>
-                }
-              >
-                <HelpOutline className={classes.tooltipIcon} />
+              <Tooltip>
+                <Tooltip.Trigger>
+                  <HelpOutline className={classes.tooltipIcon} />
+                </Tooltip.Trigger>
+                <Tooltip.Content side="bottom">
+                  <Tooltip.Arrow />
+                  <FormattedMessage {...messages.allocaationMayOccur} />
+                  <ul>
+                    <li>
+                      <FormattedMessage {...messages.allocaationMayOccurWithTrackInventory} />
+                    </li>
+                    <li>
+                      <FormattedMessage {...messages.allocaationMayOccurWithReservationTime} />
+                    </li>
+                  </ul>
+                </Tooltip.Content>
               </Tooltip>
             </Typography>
           }
@@ -95,12 +91,13 @@ const ChannelAllocationStrategy: React.FC<ChannelAllocationStrategyProps> = ({
           }))}
           disabled={disabled}
           name="allocationStrategy"
-          value={data?.allocationStrategy}
+          value={data?.allocationStrategy!}
           onChange={onChange}
         />
       </CardContent>
     </Card>
   );
 };
+
 ChannelAllocationStrategy.displayName = "ChannelAllocationStrategy";
 export default ChannelAllocationStrategy;

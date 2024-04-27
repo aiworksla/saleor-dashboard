@@ -1,9 +1,10 @@
+// @ts-strict-ignore
+import AddressFormatter from "@dashboard/components/AddressFormatter";
+import { AddressFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import AddressFormatter from "@saleor/components/AddressFormatter";
-import { AddressFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { EditIcon } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -20,12 +21,11 @@ export interface CustomerAddressChoiceCardProps {
 const CustomerAddressChoiceCard: React.FC<CustomerAddressChoiceCardProps> = props => {
   const { address, selected, editable, onSelect, onEditClick } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
     <Card
-      className={classNames(classes.card, {
+      className={clsx(classes.card, {
         [classes.cardSelected]: selected,
         [classes.selectableCard]: !editable && !selected,
       })}
@@ -47,5 +47,6 @@ const CustomerAddressChoiceCard: React.FC<CustomerAddressChoiceCardProps> = prop
     </Card>
   );
 };
+
 CustomerAddressChoiceCard.displayName = "CustomerAddressChoiceCard";
 export default CustomerAddressChoiceCard;

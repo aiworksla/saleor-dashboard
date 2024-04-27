@@ -1,20 +1,20 @@
-import { IFilter } from "@saleor/components/Filter";
-import { MultiAutocompleteChoiceType } from "@saleor/components/MultiAutocompleteSelectField";
-import { OrderStatusFilter, PaymentChargeStatusEnum } from "@saleor/graphql";
+import { IFilter } from "@dashboard/components/Filter";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { OrderStatusFilter, PaymentChargeStatusEnum } from "@dashboard/graphql";
 import {
   commonMessages,
   commonStatusMessages,
   orderStatusMessages,
   paymentStatusMessages,
-} from "@saleor/intl";
-import { FilterOpts, KeyValue, MinMax } from "@saleor/types";
+} from "@dashboard/intl";
+import { FilterOpts, KeyValue, MinMax } from "@dashboard/types";
 import {
   createBooleanField,
   createDateField,
   createKeyValueField,
   createOptionsField,
   createTextField,
-} from "@saleor/utils/filters/fields";
+} from "@dashboard/utils/filters/fields";
 import { defineMessages, IntlShape } from "react-intl";
 
 export enum OrderFilterKeys {
@@ -39,7 +39,7 @@ export interface OrderListFilterOpts {
   customer: FilterOpts<string>;
   status: FilterOpts<OrderStatusFilter[]>;
   paymentStatus: FilterOpts<PaymentChargeStatusEnum[]>;
-  channel?: FilterOpts<MultiAutocompleteChoiceType[]>;
+  channel: FilterOpts<string[]> & { choices: SingleAutocompleteChoiceType[] };
   clickAndCollect: FilterOpts<boolean>;
   preorder: FilterOpts<boolean>;
   giftCard: FilterOpts<OrderFilterGiftCard[]>;
@@ -247,15 +247,15 @@ export function createFilterStructure(
       ),
       active: opts.metadata.active,
     },
-    ...(opts?.channel?.value.length
+    ...(opts?.channel?.choices?.length
       ? [
           {
             ...createOptionsField(
               OrderFilterKeys.channel,
               intl.formatMessage(messages.channel),
-              [],
-              true,
               opts.channel.value,
+              true,
+              opts.channel.choices,
             ),
             active: opts.channel.active,
           },

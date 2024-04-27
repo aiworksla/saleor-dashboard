@@ -1,10 +1,11 @@
+import ActionDialog from "@dashboard/components/ActionDialog";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { Choice } from "@dashboard/components/SingleSelectField";
+import useChoiceSearch from "@dashboard/hooks/useChoiceSearch";
+import useModalDialogOpen from "@dashboard/hooks/useModalDialogOpen";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
 import { MenuItem } from "@material-ui/core";
-import ActionDialog from "@saleor/components/ActionDialog";
-import { Choice } from "@saleor/components/SingleSelectField";
-import useChoiceSearch from "@saleor/hooks/useChoiceSearch";
-import useModalDialogOpen from "@saleor/hooks/useModalDialogOpen";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { Autocomplete, ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+import { Autocomplete } from "@saleor/macaw-ui";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -29,7 +30,7 @@ const ChannelPickerDialog: React.FC<ChannelPickerDialogProps> = ({
 }) => {
   const intl = useIntl();
   const [choice, setChoice] = useStateFromProps(
-    defaultChoice || (!!channelsChoices.length ? channelsChoices[0].value : ""),
+    defaultChoice || (channelsChoices.length ? channelsChoices[0].value : ""),
   );
   const { result, search } = useChoiceSearch(channelsChoices);
 
@@ -73,5 +74,6 @@ const ChannelPickerDialog: React.FC<ChannelPickerDialogProps> = ({
     </ActionDialog>
   );
 };
+
 ChannelPickerDialog.displayName = "ChannelPickerDialog";
 export default ChannelPickerDialog;

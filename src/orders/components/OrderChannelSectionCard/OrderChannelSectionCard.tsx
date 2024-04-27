@@ -1,9 +1,9 @@
+import { channelUrl } from "@dashboard/channels/urls";
+import CardTitle from "@dashboard/components/CardTitle";
+import Link from "@dashboard/components/Link";
+import Skeleton from "@dashboard/components/Skeleton";
+import { ChannelFragment } from "@dashboard/graphql";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import { channelUrl } from "@saleor/channels/urls";
-import CardTitle from "@saleor/components/CardTitle";
-import Link from "@saleor/components/Link";
-import Skeleton from "@saleor/components/Skeleton";
-import { ChannelFragment } from "@saleor/graphql";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -11,9 +11,7 @@ export interface OrderChannelSectionCardProps {
   channel?: Pick<ChannelFragment, "id" | "name">;
 }
 
-export const OrderChannelSectionCard: React.FC<OrderChannelSectionCardProps> = ({
-  channel,
-}) => {
+export const OrderChannelSectionCard: React.FC<OrderChannelSectionCardProps> = ({ channel }) => {
   const intl = useIntl();
 
   return (

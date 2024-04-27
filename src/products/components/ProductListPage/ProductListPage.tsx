@@ -1,249 +1,217 @@
-import { Card } from "@material-ui/core";
+// @ts-strict-ignore
+import { LazyQueryResult } from "@apollo/client/react";
 import {
   extensionMountPoints,
   mapToMenuItems,
   mapToMenuItemsForProductOverviewActions,
   useExtensions,
-} from "@saleor/apps/useExtensions";
-import { ButtonWithSelect } from "@saleor/components/ButtonWithSelect";
-import CardMenu from "@saleor/components/CardMenu";
-import ColumnPicker from "@saleor/components/ColumnPicker";
-import Container from "@saleor/components/Container";
-import { getByName } from "@saleor/components/Filter/utils";
-import FilterBar from "@saleor/components/FilterBar";
-import LimitReachedAlert from "@saleor/components/LimitReachedAlert";
-import { MultiAutocompleteChoiceType } from "@saleor/components/MultiAutocompleteSelectField";
-import PageHeader from "@saleor/components/PageHeader";
-import { ProductListColumns } from "@saleor/config";
+} from "@dashboard/apps/hooks/useExtensions";
+import { ListFilters } from "@dashboard/components/AppLayout/ListFilters";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { BulkDeleteButton } from "@dashboard/components/BulkDeleteButton";
+import { ButtonWithDropdown } from "@dashboard/components/ButtonWithDropdown";
+import { getByName } from "@dashboard/components/Filter/utils";
+import { FilterPresetsSelect } from "@dashboard/components/FilterPresetsSelect";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import LimitReachedAlert from "@dashboard/components/LimitReachedAlert";
+import { ProductListColumns } from "@dashboard/config";
 import {
+  Exact,
   GridAttributesQuery,
   ProductListQuery,
   RefreshLimitsQuery,
-  SearchAvailableInGridAttributesQuery,
-} from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import { makeStyles } from "@saleor/macaw-ui";
+  useAvailableColumnAttributesLazyQuery,
+} from "@dashboard/graphql";
+import useLocalStorage from "@dashboard/hooks/useLocalStorage";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { sectionNames } from "@dashboard/intl";
 import {
   ChannelProps,
-  FetchMoreProps,
   FilterPageProps,
-  ListActions,
   PageListProps,
   RelayToFlat,
   SortPage,
-} from "@saleor/types";
-import { hasLimits, isLimitReached } from "@saleor/utils/limits";
-import React from "react";
+} from "@dashboard/types";
+import { hasLimits, isLimitReached } from "@dashboard/utils/limits";
+import { Card } from "@material-ui/core";
+import { Box, Button, ChevronRightIcon, Text } from "@saleor/macaw-ui-next";
+import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { ProductListUrlSortField } from "../../urls";
-import ProductList from "../ProductList";
-import { columnsMessages } from "../ProductList/messages";
-import {
-  createFilterStructure,
-  ProductFilterKeys,
-  ProductListFilterOpts,
-} from "./filters";
-import { getAttributeColumnValue } from "./utils";
+import { ProductListUrlSortField, productUrl } from "../../urls";
+import { ProductListDatagrid } from "../ProductListDatagrid";
+import { ProductListTiles } from "../ProductListTiles/ProductListTiles";
+import { ProductListViewSwitch } from "../ProductListViewSwitch";
+import { createFilterStructure, ProductFilterKeys, ProductListFilterOpts } from "./filters";
 
 export interface ProductListPageProps
   extends PageListProps<ProductListColumns>,
-    ListActions,
-    FilterPageProps<ProductFilterKeys, ProductListFilterOpts>,
-    FetchMoreProps,
+    Omit<FilterPageProps<ProductFilterKeys, ProductListFilterOpts>, "onTabDelete">,
     SortPage<ProductListUrlSortField>,
     ChannelProps {
   activeAttributeSortId: string;
-  availableInGridAttributes: RelayToFlat<
-    SearchAvailableInGridAttributesQuery["availableInGrid"]
-  >;
-  columnQuery: string;
   currencySymbol: string;
-  gridAttributes: RelayToFlat<GridAttributesQuery["grid"]>;
+  gridAttributesOpts: LazyQueryResult<
+    GridAttributesQuery,
+    Exact<{
+      ids: string | string[];
+    }>
+  >;
   limits: RefreshLimitsQuery["shop"]["limits"];
   products: RelayToFlat<ProductListQuery["products"]>;
   selectedProductIds: string[];
+  hasPresetsChanged: boolean;
   onAdd: () => void;
   onExport: () => void;
-  onColumnQueryChange: (query: string) => void;
+  onTabUpdate: (tabName: string) => void;
+  onTabDelete: (tabIndex: number) => void;
+  availableColumnsAttributesOpts: ReturnType<typeof useAvailableColumnAttributesLazyQuery>;
+  onProductsDelete: () => void;
+  onSelectProductIds: (ids: number[], clearSelection: () => void) => void;
+  clearRowSelection: () => void;
 }
 
-const useStyles = makeStyles(
-  theme => ({
-    columnPicker: {
-      marginRight: theme.spacing(3),
-      [theme.breakpoints.down("xs")]: {
-        "& > button": {
-          width: "100%",
-        },
-      },
-    },
-    settings: {
-      [theme.breakpoints.up("sm")]: {
-        marginRight: theme.spacing(2),
-      },
-    },
-  }),
-  { name: "ProductListPage" },
-);
+export type ProductListViewType = "datagrid" | "tile";
+
+const DEFAULT_PRODUCT_LIST_VIEW_TYPE: ProductListViewType = "datagrid";
 
 export const ProductListPage: React.FC<ProductListPageProps> = props => {
   const {
-    columnQuery,
     currencySymbol,
-    currentTab,
     defaultSettings,
-    gridAttributes,
+    gridAttributesOpts,
     limits,
-    availableInGridAttributes,
+    availableColumnsAttributesOpts,
     filterOpts,
-    hasMore,
     initialSearch,
-    loading,
     settings,
-    tabs,
     onAdd,
-    onAll,
-    onColumnQueryChange,
     onExport,
-    onFetchMore,
     onFilterChange,
     onFilterAttributeFocus,
     onSearchChange,
+    onUpdateListSettings,
+    selectedChannelId,
+    activeAttributeSortId,
     onTabChange,
     onTabDelete,
     onTabSave,
-    onUpdateListSettings,
-    selectedChannelId,
+    onAll,
+    currentTab,
+    tabs,
+    onTabUpdate,
+    hasPresetsChanged,
     selectedProductIds,
+    onProductsDelete,
+    clearRowSelection,
     ...listProps
   } = props;
   const intl = useIntl();
-  const classes = useStyles(props);
-
-  const staticColumns = [
-    {
-      label: intl.formatMessage(columnsMessages.availability),
-      value: "availability" as ProductListColumns,
-    },
-    {
-      label: intl.formatMessage(columnsMessages.price),
-      value: "price" as ProductListColumns,
-    },
-    {
-      label: intl.formatMessage(columnsMessages.type),
-      value: "productType" as ProductListColumns,
-    },
-    {
-      label: intl.formatMessage(columnsMessages.updatedAt),
-      value: "date" as ProductListColumns,
-    },
-  ];
-
-  const initialColumnsChoices = React.useMemo(() => {
-    const selectedStaticColumns = staticColumns.filter(column =>
-      (settings.columns || []).includes(column.value),
-    );
-    const selectedAttributeColumns = gridAttributes.map(attribute => ({
-      label: attribute.name,
-      value: getAttributeColumnValue(attribute.id),
-    }));
-
-    return [...selectedStaticColumns, ...selectedAttributeColumns];
-  }, [gridAttributes, settings.columns]);
-
-  const handleSave = (columns: ProductListColumns[]) =>
-    onUpdateListSettings("columns", columns);
-
+  const navigate = useNavigator();
   const filterStructure = createFilterStructure(intl, filterOpts);
-
+  const [isFilterPresetOpen, setFilterPresetOpen] = useState(false);
   const filterDependency = filterStructure.find(getByName("channel"));
-
-  const availableColumns: MultiAutocompleteChoiceType[] = [
-    ...staticColumns,
-    ...availableInGridAttributes.map(
-      attribute =>
-        ({
-          label: attribute.name,
-          value: getAttributeColumnValue(attribute.id),
-        } as MultiAutocompleteChoiceType),
-    ),
-  ];
-
   const limitReached = isLimitReached(limits, "productVariants");
-  const {
-    PRODUCT_OVERVIEW_CREATE,
-    PRODUCT_OVERVIEW_MORE_ACTIONS,
-  } = useExtensions(extensionMountPoints.PRODUCT_LIST);
-
+  const { PRODUCT_OVERVIEW_CREATE, PRODUCT_OVERVIEW_MORE_ACTIONS } = useExtensions(
+    extensionMountPoints.PRODUCT_LIST,
+  );
   const extensionMenuItems = mapToMenuItemsForProductOverviewActions(
     PRODUCT_OVERVIEW_MORE_ACTIONS,
     selectedProductIds,
   );
   const extensionCreateButtonItems = mapToMenuItems(PRODUCT_OVERVIEW_CREATE);
+  const [storedProductListViewType, setProductListViewType] = useLocalStorage<ProductListViewType>(
+    "productListViewType",
+    DEFAULT_PRODUCT_LIST_VIEW_TYPE,
+  );
+  const isDatagridView = storedProductListViewType === "datagrid";
 
   return (
-    <Container>
-      <PageHeader
-        cardMenu={
-          <CardMenu
-            className={classes.settings}
-            menuItems={[
-              {
-                label: intl.formatMessage({
-                  id: "7FL+WZ",
-                  defaultMessage: "Export Products",
-                  description: "export products to csv file, button",
-                }),
-                onSelect: onExport,
-                testId: "export",
-              },
-              ...extensionMenuItems,
-            ]}
-            data-test-id="menu"
-          />
-        }
+    <ListPageLayout>
+      <TopNav
+        withoutBorder
+        isAlignToRight={false}
         title={intl.formatMessage(sectionNames.products)}
-        limitText={
-          hasLimits(limits, "productVariants") &&
-          intl.formatMessage(
-            {
-              id: "Kw0jHS",
-              defaultMessage: "{count}/{max} SKUs used",
-              description: "created products counter",
-            },
-            {
-              count: limits.currentUsage.productVariants,
-              max: limits.allowedUsage.productVariants,
-            },
-          )
-        }
       >
-        <ColumnPicker
-          className={classes.columnPicker}
-          availableColumns={availableColumns}
-          initialColumns={initialColumnsChoices}
-          defaultColumns={defaultSettings.columns}
-          hasMore={hasMore}
-          loading={loading}
-          query={columnQuery}
-          onQueryChange={onColumnQueryChange}
-          onFetchMore={onFetchMore}
-          onSave={handleSave}
-        />
-        <ButtonWithSelect
-          options={extensionCreateButtonItems}
-          data-test-id="add-product"
-          disabled={limitReached}
-          onClick={onAdd}
-        >
-          <FormattedMessage
-            id="JFmOfi"
-            defaultMessage="Create Product"
-            description="button"
-          />
-        </ButtonWithSelect>
-      </PageHeader>
+        <Box __flex={1} display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex">
+            <Box marginX={3} display="flex" alignItems="center">
+              <ChevronRightIcon />
+            </Box>
+
+            <FilterPresetsSelect
+              presetsChanged={hasPresetsChanged}
+              onSelect={onTabChange}
+              onRemove={onTabDelete}
+              onUpdate={onTabUpdate}
+              savedPresets={tabs}
+              activePreset={currentTab}
+              onSelectAll={onAll}
+              onSave={onTabSave}
+              isOpen={isFilterPresetOpen}
+              onOpenChange={setFilterPresetOpen}
+              selectAllLabel={intl.formatMessage({
+                id: "tCLTCb",
+                defaultMessage: "All products",
+                description: "tab name",
+              })}
+            />
+          </Box>
+          <Box display="flex" alignItems="center" gap={2}>
+            {hasLimits(limits, "productVariants") && (
+              <Text size={2}>
+                {intl.formatMessage(
+                  {
+                    id: "Kw0jHS",
+                    defaultMessage: "{count}/{max} SKUs used",
+                    description: "created products counter",
+                  },
+                  {
+                    count: limits.currentUsage.productVariants,
+                    max: limits.allowedUsage.productVariants,
+                  },
+                )}
+              </Text>
+            )}
+            <TopNav.Menu
+              dataTestId="menu"
+              items={[
+                {
+                  label: intl.formatMessage({
+                    id: "7FL+WZ",
+                    defaultMessage: "Export Products",
+                    description: "export products to csv file, button",
+                  }),
+                  onSelect: onExport,
+                  testId: "export",
+                },
+                ...extensionMenuItems,
+              ]}
+            />
+            {extensionCreateButtonItems.length > 0 ? (
+              <ButtonWithDropdown
+                onClick={onAdd}
+                testId={"add-product"}
+                options={extensionCreateButtonItems}
+              >
+                <FormattedMessage
+                  id="JFmOfi"
+                  defaultMessage="Create Product"
+                  description="button"
+                />
+              </ButtonWithDropdown>
+            ) : (
+              <Button data-test-id="add-product" onClick={onAdd}>
+                <FormattedMessage
+                  id="JFmOfi"
+                  defaultMessage="Create Product"
+                  description="button"
+                />
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </TopNav>
       {limitReached && (
         <LimitReachedAlert
           title={intl.formatMessage({
@@ -259,39 +227,75 @@ export const ProductListPage: React.FC<ProductListPageProps> = props => {
         </LimitReachedAlert>
       )}
       <Card>
-        <FilterBar
-          currencySymbol={currencySymbol}
-          currentTab={currentTab}
-          initialSearch={initialSearch}
-          onAll={onAll}
-          onFilterChange={onFilterChange}
-          onFilterAttributeFocus={onFilterAttributeFocus}
-          onSearchChange={onSearchChange}
-          onTabChange={onTabChange}
-          onTabDelete={onTabDelete}
-          onTabSave={onTabSave}
-          tabs={tabs}
-          allTabLabel={intl.formatMessage({
-            id: "aFLtLk",
-            defaultMessage: "All Products",
-            description: "tab name",
-          })}
-          filterStructure={filterStructure}
-          searchPlaceholder={intl.formatMessage({
-            id: "kIvvax",
-            defaultMessage: "Search Products...",
-          })}
-        />
-        <ProductList
-          {...listProps}
-          gridAttributes={gridAttributes}
-          settings={settings}
-          selectedChannelId={selectedChannelId}
-          onUpdateListSettings={onUpdateListSettings}
-          filterDependency={filterDependency}
-        />
+        <Box
+          display="flex"
+          flexDirection="column"
+          width="100%"
+          alignItems="stretch"
+          justifyContent="space-between"
+        >
+          <ListFilters
+            currencySymbol={currencySymbol}
+            initialSearch={initialSearch}
+            onFilterChange={onFilterChange}
+            onFilterAttributeFocus={onFilterAttributeFocus}
+            onSearchChange={onSearchChange}
+            filterStructure={filterStructure}
+            searchPlaceholder={intl.formatMessage({
+              id: "kIvvax",
+              defaultMessage: "Search Products...",
+            })}
+            actions={
+              <Box display="flex" gap={4}>
+                {selectedProductIds.length > 0 && (
+                  <BulkDeleteButton onClick={onProductsDelete}>
+                    <FormattedMessage defaultMessage="Delete products" id="uwk5e9" />
+                  </BulkDeleteButton>
+                )}
+                <ProductListViewSwitch
+                  defaultValue={storedProductListViewType}
+                  setProductListViewType={props => {
+                    setProductListViewType(props);
+                    clearRowSelection();
+                  }}
+                />
+              </Box>
+            }
+          />
+        </Box>
+        {isDatagridView ? (
+          <ProductListDatagrid
+            {...listProps}
+            hasRowHover={!isFilterPresetOpen}
+            filterDependency={filterDependency}
+            activeAttributeSortId={activeAttributeSortId}
+            defaultSettings={defaultSettings}
+            availableColumnsAttributesOpts={availableColumnsAttributesOpts}
+            loading={listProps.disabled}
+            gridAttributesOpts={gridAttributesOpts}
+            products={listProps.products}
+            settings={settings}
+            selectedChannelId={selectedChannelId}
+            onUpdateListSettings={onUpdateListSettings}
+            rowAnchor={productUrl}
+            onRowClick={id => {
+              navigate(productUrl(id));
+            }}
+          />
+        ) : (
+          <ProductListTiles
+            {...listProps}
+            settings={settings}
+            loading={listProps.disabled}
+            onUpdateListSettings={onUpdateListSettings}
+            products={listProps.products}
+            onTileClick={id => {
+              navigate(productUrl(id));
+            }}
+          />
+        )}
       </Card>
-    </Container>
+    </ListPageLayout>
   );
 };
 ProductListPage.displayName = "ProductListPage";

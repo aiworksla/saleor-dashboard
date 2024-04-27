@@ -1,5 +1,5 @@
+import Link from "@dashboard/components/Link";
 import AddIcon from "@material-ui/icons/Add";
-import Link from "@saleor/components/Link";
 import { IconButton, makeStyles } from "@saleor/macaw-ui";
 import React, { MutableRefObject } from "react";
 
@@ -43,12 +43,7 @@ const CardAddItemsFooter: React.FC<CardAddItemsFooterProps> = ({
       <Link data-test-id={testIds.link} onClick={onAdd}>
         {title}
       </Link>
-      <IconButton
-        variant="secondary"
-        data-test-id={testIds.button}
-        color="primary"
-        onClick={onAdd}
-      >
+      <IconButton variant="secondary" data-test-id={testIds.button} color="primary" onClick={onAdd}>
         <AddIcon />
       </IconButton>
       {children}

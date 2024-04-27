@@ -1,7 +1,8 @@
+// @ts-strict-ignore
 import notFoundImage from "@assets/images/what.svg";
+import useAppState from "@dashboard/hooks/useAppState";
+import useNavigator from "@dashboard/hooks/useNavigator";
 import { Typography } from "@material-ui/core";
-import useAppState from "@saleor/hooks/useAppState";
-import useNavigator from "@saleor/hooks/useNavigator";
 import { Button } from "@saleor/macaw-ui";
 import React from "react";
 import SVG from "react-inlinesvg";
@@ -19,7 +20,6 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ onBack, onRefresh }) => {
   const classes = useStyles();
   const navigate = useNavigator();
   const [appState, dispatchAppState] = useAppState();
-
   const handleOnBack = () => {
     navigate("/", { replace: true });
     dispatchAppState({
@@ -30,9 +30,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ onBack, onRefresh }) => {
     });
     onBack();
   };
-
-  const errorTrackingId =
-    appState.error?.type === "unhandled" ? appState.error.id : null;
+  const errorTrackingId = appState.error?.type === "unhandled" ? appState.error.id : null;
 
   return (
     <div className={classes.root}>
@@ -48,11 +46,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ onBack, onRefresh }) => {
             </Typography>
             {!!errorTrackingId && (
               <div>
-                <Typography
-                  variant="caption"
-                  color="textSecondary"
-                  className={classes.errorId}
-                >
+                <Typography variant="caption" color="textSecondary" className={classes.errorId}>
                   Error ID
                 </Typography>
                 <Typography variant="body1">{errorTrackingId}</Typography>
@@ -75,5 +69,6 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ onBack, onRefresh }) => {
     </div>
   );
 };
+
 ErrorPage.displayName = "ErrorPage";
 export default ErrorPage;

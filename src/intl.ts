@@ -1,23 +1,13 @@
 import { defineMessages, IntlShape } from "react-intl";
 
 export const commonMessages = defineMessages({
-  active: {
-    id: "c24hjq",
-    defaultMessage: "Active",
-    description: "status",
-  },
-  notActive: {
-    id: "NwQXZp",
-    defaultMessage: "Not active",
-    description: "status",
-  },
   availability: {
     id: "hOxIeP",
     defaultMessage: "Availability",
   },
-  catalog: {
-    id: "GOdq5V",
-    defaultMessage: "Catalog",
+  products: {
+    id: "7NFfmz",
+    defaultMessage: "Products",
   },
   chooseFile: {
     id: "eWcvOc",
@@ -130,8 +120,7 @@ export const commonMessages = defineMessages({
   },
   sessionExpired: {
     id: "Fvvgoi",
-    defaultMessage:
-      "Your session has expired. Please log in again to continue.",
+    defaultMessage: "Your session has expired. Please log in again to continue.",
   },
   somethingWentWrong: {
     id: "LVa5ew",
@@ -140,6 +129,10 @@ export const commonMessages = defineMessages({
   defaultErrorTitle: {
     id: "JqiqNj",
     defaultMessage: "Something went wrong",
+  },
+  update: {
+    defaultMessage: "Update",
+    id: "BWpuKl",
   },
   startDate: {
     id: "QirE3M",
@@ -160,6 +153,10 @@ export const commonMessages = defineMessages({
   summary: {
     id: "RrCui3",
     defaultMessage: "Summary",
+  },
+  type: {
+    defaultMessage: "Type",
+    id: "+U6ozc",
   },
   translationAttributes: {
     id: "+xTpT1",
@@ -196,6 +193,39 @@ export const commonMessages = defineMessages({
     id: "z9c6/C",
     defaultMessage: "Deprecated",
   },
+  pspReference: {
+    defaultMessage: "PSP Reference",
+    id: "kMziE/",
+  },
+  pspReferenceOptional: {
+    defaultMessage: "PSP Reference (optional)",
+    id: "GJwcSd",
+  },
+  settings: {
+    id: "D3idYv",
+    defaultMessage: "Settings",
+  },
+  noOfRows: {
+    id: "2HfSiT",
+    defaultMessage: "No. of rows",
+    description: "pagination",
+  },
+  product: {
+    defaultMessage: "Product",
+    id: "x/ZVlU",
+  },
+  metadata: {
+    defaultMessage: "Metadata",
+    id: "8Q504V",
+  },
+  viewMetadata: {
+    defaultMessage: "View metadata",
+    id: "E/yzIO",
+  },
+  loading: {
+    defaultMessage: "Loading...",
+    id: "gjBiyj",
+  },
 });
 
 export const errorMessages = defineMessages({
@@ -216,6 +246,14 @@ export const errorMessages = defineMessages({
     id: "7+GBlj",
     defaultMessage: "Error code {errorCode} {fieldError}",
   },
+  voucherCodesErrorMessage: {
+    id: "2dgbGR",
+    defaultMessage: "Those codes already exist",
+  },
+  voucherCodeErrorMessage: {
+    id: "WY3IXU",
+    defaultMessage: "This code already exists",
+  },
   codeErrorFieldMessage: {
     id: "Qox+kb",
     defaultMessage: "on field {fieldName}",
@@ -228,14 +266,34 @@ export const buttonMessages = defineMessages({
     defaultMessage: "Accept",
     description: "button",
   },
+  add: {
+    id: "BJtUQI",
+    defaultMessage: "Add",
+    description: "button",
+  },
   approve: {
     id: "59XppT",
     defaultMessage: "Approve",
     description: "button",
   },
+  apply: {
+    defaultMessage: "Apply",
+    id: "iBW3rG",
+    description: "button",
+  },
   assign: {
     id: "oiuwOl",
     defaultMessage: "Assign",
+    description: "button",
+  },
+  activate: {
+    id: "+b3KCV",
+    defaultMessage: "Activate",
+    description: "button",
+  },
+  deactivate: {
+    id: "gygOA1",
+    defaultMessage: "Deactivate",
     description: "button",
   },
   back: {
@@ -338,6 +396,24 @@ export const buttonMessages = defineMessages({
     defaultMessage: "Undo",
     description: "button",
   },
+  install: {
+    id: "KDvRBi",
+    defaultMessage: "Install",
+    description: "button",
+  },
+  retry: {
+    id: "KMxiiF",
+    defaultMessage: "Retry",
+    description: "button",
+  },
+  close: {
+    id: "rbrahO",
+    defaultMessage: "Close",
+  },
+  noPermission: {
+    id: "ORQvOg",
+    defaultMessage: "You don't have permission to perform this action",
+  },
 });
 
 export const sectionNames = defineMessages({
@@ -401,11 +477,6 @@ export const sectionNames = defineMessages({
     defaultMessage: "Home",
     description: "home section name",
   },
-  marketplace: {
-    id: "E+M17x",
-    defaultMessage: "Marketplace",
-    description: "marketplace section name",
-  },
   navigation: {
     id: "9C7PZE",
     defaultMessage: "Navigation",
@@ -425,6 +496,11 @@ export const sectionNames = defineMessages({
     id: "H6NsC1",
     defaultMessage: "Pages",
     description: "pages section name",
+  },
+  content: {
+    id: "NelCIl",
+    defaultMessage: "Content",
+    description: "content section name",
   },
   permissionGroups: {
     id: "DNTxWr",
@@ -501,18 +577,37 @@ export const sectionNames = defineMessages({
     defaultMessage: "Warehouses",
     description: "warehouses section name",
   },
-  webhooks: {
-    id: "6nSTuC",
-    defaultMessage: "Webhooks",
-    description: "webhooks section name",
+  webhooksAndEvents: {
+    id: "BFR6CF",
+    defaultMessage: "Webhooks & Events",
+    description: "webhooks and events section name",
   },
 });
 
 export const commonStatusMessages = defineMessages({
+  active: {
+    id: "c24hjq",
+    defaultMessage: "Active",
+    description: "status",
+  },
+  notActive: {
+    id: "NwQXZp",
+    defaultMessage: "Not active",
+    description: "status",
+  },
   cancelled: {
     id: "dOQB9o",
     defaultMessage: "Cancelled",
     description: "payment status",
+  },
+  disabled: {
+    id: "tthToS",
+    defaultMessage: "Disabled",
+  },
+  deactivated: {
+    id: "pGwvpX",
+    defaultMessage: "Deactivated",
+    description: "status",
   },
 });
 
@@ -603,7 +698,5 @@ export const paymentStatusMessages = defineMessages({
 });
 
 export function translateBoolean(value: boolean, intl: IntlShape): string {
-  return value
-    ? intl.formatMessage(commonMessages.yes)
-    : intl.formatMessage(commonMessages.no);
+  return value ? intl.formatMessage(commonMessages.yes) : intl.formatMessage(commonMessages.no);
 }

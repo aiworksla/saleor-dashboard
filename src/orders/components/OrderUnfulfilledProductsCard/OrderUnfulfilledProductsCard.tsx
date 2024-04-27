@@ -1,16 +1,13 @@
-import { Card, CardActions, TableBody, Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardSpacer from "@saleor/components/CardSpacer";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import { OrderLineFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { renderCollection } from "@saleor/misc";
+import { Button } from "@dashboard/components/Button";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { OrderLineFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { Card, CardActions, CardContent, Typography } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import OrderCardTitle from "../OrderCardTitle";
-import TableHeader from "../OrderProductsCardElements/OrderProductsCardHeader";
-import TableLine from "../OrderProductsCardElements/OrderProductsTableRow";
+import { OrderDetailsDatagrid } from "../OrderDetailsDatagrid";
 import { useStyles } from "./styles";
 
 interface OrderUnfulfilledProductsCardProps {
@@ -18,15 +15,18 @@ interface OrderUnfulfilledProductsCardProps {
   notAllowedToFulfillUnpaid: boolean;
   lines: OrderLineFragment[];
   onFulfill: () => void;
+  loading: boolean;
+  onShowMetadata: (id: string) => void;
 }
 
-const OrderUnfulfilledProductsCard: React.FC<OrderUnfulfilledProductsCardProps> = props => {
-  const {
-    showFulfillmentAction,
-    notAllowedToFulfillUnpaid,
-    lines,
-    onFulfill,
-  } = props;
+const OrderUnfulfilledProductsCard: React.FC<OrderUnfulfilledProductsCardProps> = ({
+  showFulfillmentAction,
+  notAllowedToFulfillUnpaid,
+  onShowMetadata,
+  lines,
+  onFulfill,
+  loading,
+}) => {
   const classes = useStyles();
 
   if (!lines.length) {
@@ -36,42 +36,27 @@ const OrderUnfulfilledProductsCard: React.FC<OrderUnfulfilledProductsCardProps> 
   return (
     <>
       <Card>
-        <OrderCardTitle
-          lines={lines}
-          withStatus
-          status="unfulfilled"
-          className={classes.cardTitle}
-        />
-        <ResponsiveTable className={classes.table}>
-          <TableHeader />
-          <TableBody>
-            {renderCollection(lines, line => (
-              <TableLine key={line.id} isOrderLine line={line} />
-            ))}
-          </TableBody>
-        </ResponsiveTable>
-        {showFulfillmentAction && (
-          <CardActions className={classes.actions}>
-            <Button
-              variant="primary"
-              onClick={onFulfill}
-              disabled={notAllowedToFulfillUnpaid}
-            >
-              <FormattedMessage
-                id="/Xwjww"
-                defaultMessage="Fulfill"
-                description="button"
-              />
-            </Button>
-            {notAllowedToFulfillUnpaid && (
-              <Typography color="error" variant="caption">
-                <FormattedMessage
-                  {...commonMessages.cannotFullfillUnpaidOrder}
-                />
-              </Typography>
-            )}
-          </CardActions>
-        )}
+        <OrderCardTitle withStatus status="unfulfilled" className={classes.cardTitle} />
+        <CardContent>
+          <OrderDetailsDatagrid lines={lines} loading={loading} onShowMetadata={onShowMetadata} />
+          {showFulfillmentAction && (
+            <CardActions className={classes.actions}>
+              <Button
+                data-test-id="fulfill-button"
+                variant="primary"
+                onClick={onFulfill}
+                disabled={notAllowedToFulfillUnpaid}
+              >
+                <FormattedMessage id="/Xwjww" defaultMessage="Fulfill" description="button" />
+              </Button>
+              {notAllowedToFulfillUnpaid && (
+                <Typography color="error" variant="caption">
+                  <FormattedMessage {...commonMessages.cannotFullfillUnpaidOrder} />
+                </Typography>
+              )}
+            </CardActions>
+          )}
+        </CardContent>
       </Card>
       <CardSpacer />
     </>

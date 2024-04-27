@@ -4,7 +4,7 @@
 import faker from "faker";
 
 import { APP_DETAILS } from "../elements/apps/appDetails";
-import { APPS_LIST } from "../elements/apps/appsList";
+import { APPS_LIST_SELECTORS } from "../elements/apps/appsList";
 import { WEBHOOK_DETAILS } from "../elements/apps/webhookDetails";
 import { BUTTON_SELECTORS } from "../elements/shared/button-selectors";
 import { appDetailsUrl, urlList } from "../fixtures/urlList";
@@ -17,23 +17,19 @@ import {
 } from "../support/api/requests/Checkout";
 import { createVoucher } from "../support/api/requests/Discounts/Vouchers";
 import { createGiftCard } from "../support/api/requests/GiftCard";
-import { deleteAppsStartsWith } from "../support/api/utils/appUtils";
 import { getDefaultChannel } from "../support/api/utils/channelsUtils";
 import { getShippingMethodIdFromCheckout } from "../support/api/utils/ordersUtils";
 import {
   createProductInChannel,
   createTypeAttributeAndCategoryForProduct,
-  deleteProductsStartsWith,
 } from "../support/api/utils/products/productsUtils";
-import {
-  createShipping,
-  deleteShippingStartsWith,
-} from "../support/api/utils/shippingUtils";
+import { createShipping } from "../support/api/utils/shippingUtils";
 import { discountOptions } from "../support/pages/discounts/vouchersPage";
 
 describe("As a staff user I want to manage apps", () => {
-  const startsWith = "Apps";
+  const startsWith = "Apps-";
   const name = `${startsWith}${faker.datatype.number()}`;
+  const productSlug = name + faker.datatype.number();
 
   let createdApp;
   let defaultChannel;
@@ -45,10 +41,7 @@ describe("As a staff user I want to manage apps", () => {
   const email = `example@example.com`;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteAppsStartsWith(startsWith);
-    deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
+    cy.loginUserViaRequest();
 
     createApp(name, "MANAGE_APPS").then(app => {
       createdApp = app;
@@ -82,13 +75,25 @@ describe("As a staff user I want to manage apps", () => {
           productTypeId: productType.id,
           attributeId: attribute.id,
           categoryId: category.id,
+          slug: productSlug,
         });
       })
-      .then(({ variantsList: variants }) => (variantsList = variants));
+      .then(({ variantsList: variants }) => {
+        variantsList = variants;
+        cy.checkIfDataAreNotNull({
+          createdApp,
+          defaultChannel,
+          address,
+          warehouse,
+          shippingMethod,
+          variantsList,
+          checkout,
+        });
+      });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest("auth", ONE_PERMISSION_USERS.app);
+    cy.loginUserViaRequest("auth", ONE_PERMISSION_USERS.app);
   });
 
   it(
@@ -97,10 +102,8 @@ describe("As a staff user I want to manage apps", () => {
     () => {
       const randomAppName = `${startsWith}${faker.datatype.number()}`;
 
-      cy.visit(urlList.apps)
-        .get(APPS_LIST.webhookAndEventsTab)
-        .click()
-        .get(APPS_LIST.createLocalAppButton)
+      cy.visit(urlList.webhooksAndEvents)
+        .get(APPS_LIST_SELECTORS.createLocalAppButton)
         .click()
         .get(APP_DETAILS.nameInput)
         .type(randomAppName)
@@ -136,7 +139,11 @@ describe("As a staff user I want to manage apps", () => {
         .get(WEBHOOK_DETAILS.nameInput)
         .type(randomWebhookName)
         .get(WEBHOOK_DETAILS.targetUrlInput)
-        .type(targetUrl)
+        .type(targetUrl);
+      cy.get(WEBHOOK_DETAILS.webhookObjects).first().click();
+      cy.get(WEBHOOK_DETAILS.webhookEventsCheckboxes)
+        .first()
+        .click()
         .get(BUTTON_SELECTORS.confirm)
         .click()
         .confirmationMessageShouldDisappear();

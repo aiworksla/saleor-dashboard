@@ -3,8 +3,12 @@
 
 import faker from "faker";
 
-import { CHANNEL_FORM_SELECTORS } from "../../../elements/channels/channel-form-selectors";
-import { DRAFT_ORDER_SELECTORS } from "../../../elements/orders/draft-order-selectors";
+import {
+  CHANNEL_FORM_SELECTORS,
+} from "../../../elements/channels/channel-form-selectors";
+import {
+  DRAFT_ORDER_SELECTORS,
+} from "../../../elements/orders/draft-order-selectors";
 import { ORDERS_SELECTORS } from "../../../elements/orders/orders-selectors";
 import { urlList } from "../../../fixtures/urlList";
 import {
@@ -12,17 +16,17 @@ import {
   createChannel,
 } from "../../../support/api/requests/Channels";
 import { createCheckout } from "../../../support/api/requests/Checkout";
-import { getProductDetails } from "../../../support/api/requests/storeFront/ProductDetails";
 import {
-  deleteChannelsStartsWith,
-  getDefaultChannel,
-} from "../../../support/api/utils/channelsUtils";
+  getProductDetails,
+} from "../../../support/api/requests/storeFront/ProductDetails";
+import { getDefaultChannel } from "../../../support/api/utils/channelsUtils";
 import {
   createProductInChannel,
   createTypeAttributeAndCategoryForProduct,
-  deleteProductsStartsWith,
 } from "../../../support/api/utils/products/productsUtils";
-import { isProductVisible } from "../../../support/api/utils/storeFront/storeFrontProductUtils";
+import {
+  isProductVisible,
+} from "../../../support/api/utils/storeFront/storeFrontProductUtils";
 
 describe("Tests on inactive channel", () => {
   const channelStartsWith = `InactiveChannel`;
@@ -34,9 +38,7 @@ describe("Tests on inactive channel", () => {
   let newChannel;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteChannelsStartsWith(channelStartsWith);
-    deleteProductsStartsWith(channelStartsWith);
+    cy.loginUserViaRequest();
     cy.fixture("addresses").then(({ plAddress }) => {
       address = plAddress;
     });
@@ -48,19 +50,20 @@ describe("Tests on inactive channel", () => {
       currencyCode: currency,
     }).then(channel => {
       newChannel = channel;
+      cy.checkIfDataAreNotNull({ address, defaultChannel, newChannel });
     });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
     "should not be possible to add products to order with inactive channel. TC: SALEOR_0706",
-    { tags: ["@channel", "@allEnv"] },
+    { tags: ["@channel", "@allEnv", "@stable"] },
     () => {
       cy.visit(urlList.orders)
-        .get(ORDERS_SELECTORS.createOrder)
+        .get(ORDERS_SELECTORS.createOrderButton)
         .click()
         .get(CHANNEL_FORM_SELECTORS.channelSelect)
         .click()

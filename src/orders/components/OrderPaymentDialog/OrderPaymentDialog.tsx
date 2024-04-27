@@ -1,3 +1,12 @@
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { OrderErrorFragment } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
 import {
   Dialog,
   DialogActions,
@@ -6,15 +15,6 @@ import {
   DialogTitle,
   TextField,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { OrderErrorFragment } from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -40,7 +40,6 @@ const OrderPaymentDialog: React.FC<OrderPaymentDialogProps> = ({
   onSubmit,
 }) => {
   const intl = useIntl();
-
   const formFields = ["payment"];
   const formErrors = getFormErrors(formFields, errors);
 
@@ -54,7 +53,7 @@ const OrderPaymentDialog: React.FC<OrderPaymentDialogProps> = ({
       >
         {({ data, change, submit }) => (
           <>
-            <DialogTitle>
+            <DialogTitle disableTypography>
               {intl.formatMessage({
                 id: "+PbHKD",
                 defaultMessage: "Capture Payment",
@@ -94,10 +93,7 @@ const OrderPaymentDialog: React.FC<OrderPaymentDialogProps> = ({
             </DialogContent>
             <DialogActions>
               <BackButton onClick={onClose} />
-              <ConfirmButton
-                transitionState={confirmButtonState}
-                onClick={submit}
-              >
+              <ConfirmButton transitionState={confirmButtonState} onClick={submit}>
                 <FormattedMessage {...buttonMessages.confirm} />
               </ConfirmButton>
             </DialogActions>
@@ -107,5 +103,6 @@ const OrderPaymentDialog: React.FC<OrderPaymentDialogProps> = ({
     </Dialog>
   );
 };
+
 OrderPaymentDialog.displayName = "OrderPaymentDialog";
 export default OrderPaymentDialog;

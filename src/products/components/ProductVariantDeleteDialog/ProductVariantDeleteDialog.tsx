@@ -1,3 +1,6 @@
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
 import {
   Dialog,
   DialogActions,
@@ -5,9 +8,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
+import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -28,23 +29,18 @@ export interface ProductVariantDeleteDialogProps {
   confirmButtonState: ConfirmButtonTransitionState;
   open: boolean;
   name: string;
-  onClose?();
-  onConfirm?();
+  onClose?: () => any;
+  onConfirm?: () => any;
 }
 
 const ProductVariantDeleteDialog: React.FC<ProductVariantDeleteDialogProps> = props => {
   const { confirmButtonState, name, open, onConfirm, onClose } = props;
-
   const classes = useStyles(props);
 
   return (
     <Dialog onClose={onClose} open={open}>
-      <DialogTitle>
-        <FormattedMessage
-          id="GFJabu"
-          defaultMessage="Delete Variant"
-          description="dialog header"
-        />
+      <DialogTitle disableTypography>
+        <FormattedMessage id="GFJabu" defaultMessage="Delete Variant" description="dialog header" />
       </DialogTitle>
       <DialogContent>
         <DialogContentText>
@@ -64,16 +60,14 @@ const ProductVariantDeleteDialog: React.FC<ProductVariantDeleteDialogProps> = pr
           transitionState={confirmButtonState}
           className={classes.deleteButton}
           onClick={onConfirm}
+          data-test-id="delete-variant-button"
         >
-          <FormattedMessage
-            id="rbkmfG"
-            defaultMessage="Delete variant"
-            description="button"
-          />
+          <FormattedMessage id="rbkmfG" defaultMessage="Delete variant" description="button" />
         </ConfirmButton>
       </DialogActions>
     </Dialog>
   );
 };
+
 ProductVariantDeleteDialog.displayName = "ProductVariantDeleteDialog";
 export default ProductVariantDeleteDialog;

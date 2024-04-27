@@ -1,5 +1,14 @@
 export const PRODUCTS_LIST = {
-  productsList: "[data-test-id*='id']",
+  newFilters: {
+    saveFiltersButton: "[data-test-id='save-filters-button']",
+    rightInput: "[data-test-id='right-0']",
+    dropDownOptions: "[data-test-id='select-option']",
+    leftInput: "[data-test-id='left-0']",
+    showFiltersButton: "[data-test-id='filters-button']",
+    addFilterButton: "[data-test-id='add-filter-button']",
+  },
+  productsList: "[data-test-id^='id-']",
+  dataGridTable: "[data-testid='data-grid-canvas']",
   productsNames: "[data-test-id='name']",
   dialogProductTypeInput: "[data-test-id='dialog-product-type']",
   createProductBtn: "[data-test-id='add-product']",
@@ -30,6 +39,12 @@ export const PRODUCTS_LIST = {
       productType: '[data-test-id="filter-group-active-productType"]',
       stock: '[data-test-id="filter-group-active-stock"]',
       channel: '[data-test-id="filter-group-active-channel"]',
+      currency: '[data-test-id="filter-group-active-currency"]',
+      currencySpecific: {
+        THB: '[data-test-id="filter-option-THB"]',
+        PLN: '[data-test-id="filter-option-PLN"]',
+        USD: '[data-test-id="filter-option-USD"]',
+      },
     },
     filterField: {
       filterField: '[data-test-id*="filter-field"]',
@@ -41,8 +56,9 @@ export const PRODUCTS_LIST = {
     },
     filterBySearchInput: '[data-test-id="filter-field-autocomplete-input"]',
   },
-  nextPageButton: "[data-test='button-pagination-next']",
-  previousPagePagination: "[data-test='button-pagination-back']",
   resultsOnPageSelect: "[data-test-id='PaginationRowNumberSelect']",
   rowNumberOption: "[data-test-id='rowNumberOption']",
+  tileViewButton: '[data-test-id="tile-view-button"]',
+  datagridViewButton: '[data-test-id="datagrid-view-button"]',
+  tileProductsView: '[data-test-id="tile-view"]',
 };

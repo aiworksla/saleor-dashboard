@@ -1,10 +1,11 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import {
   SearchGiftCardTagsDocument,
   SearchGiftCardTagsQuery,
   SearchGiftCardTagsQueryVariables,
-} from "@saleor/graphql";
-import makeTopLevelSearch from "@saleor/hooks/makeTopLevelSearch";
+} from "@dashboard/graphql";
+import makeTopLevelSearch from "@dashboard/hooks/makeTopLevelSearch";
 
 export const searchGiftCardTags = gql`
   query SearchGiftCardTags(
@@ -35,7 +36,6 @@ export const searchGiftCardTags = gql`
   }
 `;
 
-export default makeTopLevelSearch<
-  SearchGiftCardTagsQuery,
-  SearchGiftCardTagsQueryVariables
->(SearchGiftCardTagsDocument);
+export default makeTopLevelSearch<SearchGiftCardTagsQuery, SearchGiftCardTagsQueryVariables>(
+  SearchGiftCardTagsDocument,
+);

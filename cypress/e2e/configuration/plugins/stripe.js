@@ -1,5 +1,6 @@
 /// <reference types="cypress"/>
 /// <reference types="../../../support"/>
+import faker from "faker";
 
 import {
   addShippingMethod,
@@ -8,19 +9,16 @@ import {
 } from "../../../support/api/requests/Checkout";
 import { getOrder } from "../../../support/api/requests/Order";
 import { confirmThreeDSecure } from "../../../support/api/requests/stripe";
-import { deleteCollectionsStartsWith } from "../../../support/api/utils/catalog/collectionsUtils";
 import {
   addStripePaymentAndGetConfirmationData,
   getShippingMethodIdFromCheckout,
 } from "../../../support/api/utils/ordersUtils";
 import {
   createProductWithShipping,
-  deleteProductsStartsWith,
 } from "../../../support/api/utils/products/productsUtils";
-import { deleteShippingStartsWith } from "../../../support/api/utils/shippingUtils";
 
 describe("Stripe payments", () => {
-  const startsWith = "Stripe-";
+  const startsWith = "Stripe-" + faker.datatype.number();
   const email = `example@example.com`;
 
   let address;
@@ -32,10 +30,7 @@ describe("Stripe payments", () => {
   let cardData;
 
   before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteProductsStartsWith(startsWith);
-    deleteShippingStartsWith(startsWith);
-    deleteCollectionsStartsWith(startsWith);
+    cy.loginUserViaRequest();
     cy.fixture("cards").then(({ stripe }) => {
       paymentCards = stripe;
       cardData = {
@@ -50,11 +45,20 @@ describe("Stripe payments", () => {
       defaultChannel = values.defaultChannel;
       shippingMethod = values.shippingMethod;
       variantsList = values.variantsList;
+      cy.checkIfDataAreNotNull({
+        address,
+        defaultChannel,
+        shippingMethod,
+        variantsList,
+        checkout,
+        paymentCards,
+        cardData,
+      });
     });
   });
 
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
     createCheckout({
       channelSlug: defaultChannel.slug,
       email,
@@ -78,7 +82,7 @@ describe("Stripe payments", () => {
 
   it(
     "should purchase products with simple card",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const simpleCard = cardData;
       simpleCard.cardNumber = paymentCards.simpleCardNumber;
@@ -101,7 +105,7 @@ describe("Stripe payments", () => {
 
   it(
     "should not purchase products with card with insufficient funds",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const simpleCard = cardData;
       simpleCard.cardNumber = paymentCards.insufficientFundsCard;
@@ -117,7 +121,7 @@ describe("Stripe payments", () => {
 
   it(
     "should purchase products with 3D secure card",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const threeDSecureCard = cardData;
       threeDSecureCard.cardNumber = paymentCards.threeDSecureAuthCard;
@@ -143,7 +147,7 @@ describe("Stripe payments", () => {
 
   it(
     "should not purchase product when 3D secure not pass",
-    { tags: ["@payments", "@stagedOnly"] },
+    { tags: ["@payments", "@allEnv"] },
     () => {
       const threeDSecureCard = cardData;
       threeDSecureCard.cardNumber = paymentCards.threeDSecureAuthCard;

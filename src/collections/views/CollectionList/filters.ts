@@ -1,11 +1,12 @@
+// @ts-strict-ignore
 import {
   CollectionFilterKeys,
   CollectionListFilterOpts,
-} from "@saleor/collections/components/CollectionListPage";
-import { FilterElement, FilterElementRegular } from "@saleor/components/Filter";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
-import { CollectionFilterInput, CollectionPublished } from "@saleor/graphql";
-import { findValueInEnum, maybe } from "@saleor/misc";
+} from "@dashboard/collections/components/CollectionListPage";
+import { FilterElement, FilterElementRegular } from "@dashboard/components/Filter";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { CollectionFilterInput, CollectionPublished } from "@dashboard/graphql";
+import { findValueInEnum, maybe } from "@dashboard/misc";
 
 import {
   createFilterTabUtils,
@@ -38,13 +39,9 @@ export function getFilterOpts(
   };
 }
 
-export function getFilterVariables(
-  params: CollectionListUrlFilters,
-): CollectionFilterInput {
+export function getFilterVariables(params: CollectionListUrlFilters): CollectionFilterInput {
   return {
-    published: params.status
-      ? findValueInEnum(params.status, CollectionPublished)
-      : undefined,
+    published: params.status ? findValueInEnum(params.status, CollectionPublished) : undefined,
     search: params.query,
   };
 }
@@ -62,23 +59,13 @@ export function getFilterQueryParam(
         CollectionPublished,
       );
     case CollectionFilterKeys.channel:
-      return getSingleValueQueryParam(
-        filter,
-        CollectionListUrlFiltersEnum.channel,
-      );
+      return getSingleValueQueryParam(filter, CollectionListUrlFiltersEnum.channel);
   }
 }
 
-export const {
-  deleteFilterTab,
-  getFilterTabs,
-  saveFilterTab,
-} = createFilterTabUtils<CollectionListUrlFilters>(COLLECTION_FILTERS_KEY);
+export const storageUtils = createFilterTabUtils<string>(COLLECTION_FILTERS_KEY);
 
-export const {
-  areFiltersApplied,
-  getActiveFilters,
-  getFiltersCurrentTab,
-} = createFilterUtils<CollectionListUrlQueryParams, CollectionListUrlFilters>(
-  CollectionListUrlFiltersEnum,
-);
+export const { areFiltersApplied, getActiveFilters, getFiltersCurrentTab } = createFilterUtils<
+  CollectionListUrlQueryParams,
+  CollectionListUrlFilters
+>(CollectionListUrlFiltersEnum);

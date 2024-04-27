@@ -1,40 +1,43 @@
+// @ts-strict-ignore
 import {
   getAttributesDisplayData,
   getRichTextAttributesFromMap,
   getRichTextDataFromAttributes,
   mergeAttributes,
-} from "@saleor/attributes/utils/data";
+} from "@dashboard/attributes/utils/data";
 import {
   createAttributeChangeHandler,
   createAttributeFileChangeHandler,
   createAttributeMultiChangeHandler,
   createAttributeReferenceChangeHandler,
+  createAttributeReferenceMetadataHandler,
   createAttributeValueReorderHandler,
   createFetchMoreReferencesHandler,
   createFetchReferencesHandler,
-} from "@saleor/attributes/utils/handlers";
+} from "@dashboard/attributes/utils/handlers";
 import {
   DatagridChangeOpts,
   DatagridChangeStateContext,
   useDatagridChangeState,
-} from "@saleor/components/Datagrid/useDatagridChange";
-import { useExitFormDialog } from "@saleor/components/Form/useExitFormDialog";
-import { ProductFragment } from "@saleor/graphql";
-import useForm from "@saleor/hooks/useForm";
-import useFormset from "@saleor/hooks/useFormset";
-import useHandleFormSubmit from "@saleor/hooks/useHandleFormSubmit";
+} from "@dashboard/components/Datagrid/hooks/useDatagridChange";
+import { useExitFormDialog } from "@dashboard/components/Form/useExitFormDialog";
+import { ProductFragment } from "@dashboard/graphql";
+import useForm from "@dashboard/hooks/useForm";
+import useFormset from "@dashboard/hooks/useFormset";
+import useHandleFormSubmit from "@dashboard/hooks/useHandleFormSubmit";
+import useLocale from "@dashboard/hooks/useLocale";
 import {
   getAttributeInputFromProduct,
   getProductUpdatePageFormData,
-} from "@saleor/products/utils/data";
-import { PRODUCT_UPDATE_FORM_ID } from "@saleor/products/views/ProductUpdate/consts";
-import createMultiAutocompleteSelectHandler from "@saleor/utils/handlers/multiAutocompleteSelectChangeHandler";
-import createSingleAutocompleteSelectHandler from "@saleor/utils/handlers/singleAutocompleteSelectChangeHandler";
-import getMetadata from "@saleor/utils/metadata/getMetadata";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
-import { RichTextContext } from "@saleor/utils/richText/context";
-import { useMultipleRichText } from "@saleor/utils/richText/useMultipleRichText";
-import useRichText from "@saleor/utils/richText/useRichText";
+} from "@dashboard/products/utils/data";
+import { PRODUCT_UPDATE_FORM_ID } from "@dashboard/products/views/ProductUpdate/consts";
+import createMultiselectChangeHandler from "@dashboard/utils/handlers/multiselectChangeHandler";
+import createSingleAutocompleteSelectHandler from "@dashboard/utils/handlers/singleAutocompleteSelectChangeHandler";
+import getMetadata from "@dashboard/utils/metadata/getMetadata";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
+import { RichTextContext } from "@dashboard/utils/richText/context";
+import { useMultipleRichText } from "@dashboard/utils/richText/useMultipleRichText";
+import useRichText from "@dashboard/utils/richText/useRichText";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useProductChannelListingsForm } from "./formChannels";
@@ -46,8 +49,9 @@ import {
   UseProductUpdateFormOpts,
   UseProductUpdateFormOutput,
 } from "./types";
+import { prepareVariantChangeData } from "./utils";
 
-function useProductUpdateForm(
+export function useProductUpdateForm(
   product: ProductFragment,
   onSubmit: (data: ProductUpdateSubmitData) => SubmitResult,
   disabled: boolean,
@@ -58,78 +62,61 @@ function useProductUpdateForm(
     () => getProductUpdatePageFormData(product, product?.variants),
     [product],
   );
-
   const form = useForm(initial, undefined, {
     confirmLeave: true,
     formId: PRODUCT_UPDATE_FORM_ID,
   });
-
-  const {
-    handleChange,
-    triggerChange,
-    toggleValue,
-    data: formData,
-    setIsSubmitDisabled,
-  } = form;
-
+  const { handleChange, triggerChange, toggleValues, data: formData, setIsSubmitDisabled } = form;
+  const { locale } = useLocale();
   const datagrid = useDatagridChangeState();
   const variants = useRef<DatagridChangeOpts>({
     added: [],
     removed: [],
     updates: [],
   });
-  const handleVariantChange = React.useCallback((data: DatagridChangeOpts) => {
-    variants.current = data;
-    triggerChange();
-  }, []);
-
+  const handleVariantChange = React.useCallback(
+    (data: DatagridChangeOpts) => {
+      variants.current = prepareVariantChangeData(data, locale, product);
+      triggerChange();
+    },
+    [locale, product, triggerChange],
+  );
   const attributes = useFormset(getAttributeInputFromProduct(product));
-  const {
-    getters: attributeRichTextGetters,
-    getValues: getAttributeRichTextValues,
-  } = useMultipleRichText({
-    initial: getRichTextDataFromAttributes(attributes.data),
-    triggerChange,
-  });
+  const { getters: attributeRichTextGetters, getValues: getAttributeRichTextValues } =
+    useMultipleRichText({
+      initial: getRichTextDataFromAttributes(attributes.data),
+      triggerChange,
+    });
   const attributesWithNewFileValue = useFormset<null, File>([]);
   const richText = useRichText({
     initial: product?.description,
     loading: !product,
     triggerChange,
   });
-
   const { setExitDialogSubmitRef } = useExitFormDialog({
     formId: PRODUCT_UPDATE_FORM_ID,
   });
-
   const {
     isMetadataModified,
     isPrivateMetadataModified,
     makeChangeHandler: makeMetadataChangeHandler,
   } = useMetadataChangeTrigger();
-
   const {
     channels,
     handleChannelChange,
     handleChannelListUpdate,
     touched: touchedChannels,
   } = useProductChannelListingsForm(product, triggerChange);
-
-  const handleCollectionSelect = createMultiAutocompleteSelectHandler(
-    event => toggleValue(event),
+  const handleCollectionSelect = createMultiselectChangeHandler(
+    toggleValues,
     opts.setSelectedCollections,
-    opts.selectedCollections,
-    opts.collections,
   );
   const handleCategorySelect = createSingleAutocompleteSelectHandler(
     handleChange,
     opts.setSelectedCategory,
     opts.categories,
   );
-  const handleAttributeChange = createAttributeChangeHandler(
-    attributes.change,
-    triggerChange,
-  );
+  const handleAttributeChange = createAttributeChangeHandler(attributes.change, triggerChange);
   const handleAttributeMultiChange = createAttributeMultiChangeHandler(
     attributes.change,
     attributes.data,
@@ -137,6 +124,10 @@ function useProductUpdateForm(
   );
   const handleAttributeReferenceChange = createAttributeReferenceChangeHandler(
     attributes.change,
+    triggerChange,
+  );
+  const handleAttributeMetadataChange = createAttributeReferenceMetadataHandler(
+    attributes.setMetadata,
     triggerChange,
   );
   const handleFetchReferences = createFetchReferencesHandler(
@@ -163,13 +154,12 @@ function useProductUpdateForm(
     attributes.data,
     triggerChange,
   );
-  const handleTaxTypeSelect = createSingleAutocompleteSelectHandler(
+  const handleTaxClassSelect = createSingleAutocompleteSelectHandler(
     handleChange,
-    opts.setSelectedTaxType,
-    opts.taxTypes,
+    opts.setSelectedTaxClass,
+    opts.taxClasses,
   );
   const changeMetadata = makeMetadataChangeHandler(handleChange);
-
   const data: ProductUpdateData = {
     ...formData,
     attributes: getAttributesDisplayData(
@@ -181,16 +171,12 @@ function useProductUpdateForm(
     channels,
     description: null,
   };
-
   const getSubmitData = async (): Promise<ProductUpdateSubmitData> => ({
     ...data,
     ...getMetadata(data, isMetadataModified, isPrivateMetadataModified),
     attributes: mergeAttributes(
       attributes.data,
-      getRichTextAttributesFromMap(
-        attributes.data,
-        await getAttributeRichTextValues(),
-      ),
+      getRichTextAttributesFromMap(attributes.data, await getAttributeRichTextValues()),
     ),
     attributesWithNewFileValue: attributesWithNewFileValue.data,
     channels: {
@@ -202,7 +188,6 @@ function useProductUpdateForm(
     description: await richText.getValue(),
     variants: variants.current,
   });
-
   const handleSubmit = async (data: ProductUpdateSubmitData) => {
     const errors = await onSubmit(data);
 
@@ -212,16 +197,14 @@ function useProductUpdateForm(
 
     return errors;
   };
-
   const handleFormSubmit = useHandleFormSubmit({
     formId: form.formId,
     onSubmit: handleSubmit,
   });
-
   const submit = useCallback(async () => {
     const result = await handleFormSubmit(await getSubmitData());
-    await refetch();
 
+    await refetch();
     datagrid.setAdded(prevAdded =>
       prevAdded.filter((_, index) =>
         result.some(
@@ -248,6 +231,11 @@ function useProductUpdateForm(
           ),
     );
     datagrid.setRemoved([]);
+    variants.current = {
+      added: [],
+      removed: [],
+      updates: [],
+    };
 
     return result;
   }, [datagrid, handleFormSubmit, getSubmitData]);
@@ -259,17 +247,12 @@ function useProductUpdateForm(
       return false;
     }
 
-    if (
-      data.isPreorder &&
-      data.hasPreorderEndDate &&
-      !!form.errors.preorderEndDateTime
-    ) {
+    if (data.isPreorder && data.hasPreorderEndDate && !!form.errors.preorderEndDateTime) {
       return false;
     }
 
     return true;
   };
-
   const isSaveDisabled = disabled;
   const isSubmitDisabled = isSaveDisabled || !isValid();
 
@@ -293,9 +276,10 @@ function useProductUpdateForm(
       selectAttributeFile: handleAttributeFileChange,
       selectAttributeMultiple: handleAttributeMultiChange,
       selectAttributeReference: handleAttributeReferenceChange,
+      selectAttributeReferenceMetadata: handleAttributeMetadataChange,
       selectCategory: handleCategorySelect,
       selectCollection: handleCollectionSelect,
-      selectTaxRate: handleTaxTypeSelect,
+      selectTaxClass: handleTaxClassSelect,
       updateChannelList: handleChannelListUpdate,
     },
     submit,
@@ -322,11 +306,9 @@ const ProductUpdateForm: React.FC<ProductUpdateFormProps> = ({
   );
 
   return (
-    <form onSubmit={props.submit}>
+    <form onSubmit={props.submit} data-test-id="product-update-form">
       <DatagridChangeStateContext.Provider value={datagrid}>
-        <RichTextContext.Provider value={richText}>
-          {children(props)}
-        </RichTextContext.Provider>
+        <RichTextContext.Provider value={richText}>{children(props)}</RichTextContext.Provider>
       </DatagridChangeStateContext.Provider>
     </form>
   );

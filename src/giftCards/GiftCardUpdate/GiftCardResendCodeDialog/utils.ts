@@ -1,11 +1,9 @@
-import { UserError } from "@saleor/types";
-import { FormErrors, getFormErrors } from "@saleor/utils/errors";
+// @ts-strict-ignore
+import { UserError } from "@dashboard/types";
+import { FormErrors, getFormErrors } from "@dashboard/utils/errors";
 import { useEffect, useState } from "react";
 
-export function useDialogFormReset<
-  TError extends UserError,
-  TKey extends string
->({
+export function useDialogFormReset<TError extends UserError, TKey extends string>({
   reset,
   apiErrors,
   keys,
@@ -24,9 +22,9 @@ export function useDialogFormReset<
       reset();
     }
   }, [open]);
-
   useEffect(() => {
     const errors = getFormErrors(keys, apiErrors);
+
     setFormErrors(errors);
   }, [apiErrors]);
 

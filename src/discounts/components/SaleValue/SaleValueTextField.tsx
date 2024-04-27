@@ -1,5 +1,5 @@
+import { SaleType } from "@dashboard/graphql";
 import { TextField } from "@material-ui/core";
-import { SaleType } from "@saleor/graphql";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -24,9 +24,7 @@ const SaleValueTextField: React.FC<SaleValueTextFieldProps> = ({
   onChange,
 }) => {
   const intl = useIntl();
-
   const { id, percentageValue, fixedValue } = listing;
-
   const getTextFieldValue = (dataType: SaleType) =>
     dataType === SaleType.PERCENTAGE ? percentageValue : fixedValue;
 

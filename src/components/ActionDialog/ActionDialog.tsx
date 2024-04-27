@@ -1,6 +1,7 @@
+// @ts-strict-ignore
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { DialogProps } from "@dashboard/types";
 import { Dialog, DialogContent, DialogTitle } from "@material-ui/core";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { DialogProps } from "@saleor/types";
 import React from "react";
 
 import DialogButtons from "./DialogButtons";
@@ -14,7 +15,8 @@ export interface ActionDialogProps extends DialogProps {
   maxWidth?: Size | false;
   title: string;
   variant?: ActionDialogVariant;
-  onConfirm();
+  backButtonText?: string;
+  onConfirm: () => any;
 }
 
 const ActionDialog: React.FC<ActionDialogProps> = props => {
@@ -22,7 +24,7 @@ const ActionDialog: React.FC<ActionDialogProps> = props => {
 
   return (
     <Dialog fullWidth onClose={onClose} open={open} maxWidth={maxWidth}>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle disableTypography>{title}</DialogTitle>
       <DialogContent>{children}</DialogContent>
       <DialogButtons {...rest} onClose={onClose} variant={variant} />
     </Dialog>
@@ -32,6 +34,5 @@ const ActionDialog: React.FC<ActionDialogProps> = props => {
 ActionDialog.defaultProps = {
   maxWidth: "xs",
 };
-
 ActionDialog.displayName = "ActionDialog";
 export default ActionDialog;

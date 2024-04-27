@@ -1,10 +1,9 @@
-import { Typography } from "@material-ui/core";
+import { ReorderAction, ReorderEvent } from "@dashboard/types";
 import { makeStyles } from "@saleor/macaw-ui";
-import { ReorderAction, ReorderEvent } from "@saleor/types";
+import { Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { SortableContainerProps } from "react-sortable-hoc";
 
-import Skeleton from "../Skeleton";
 import DraggableChip from "../SortableChip";
 import SortableContainer from "./SortableContainer";
 
@@ -48,20 +47,11 @@ export interface SortableChipsFieldProps extends SortableContainerProps {
 }
 
 const SortableChipsField: React.FC<SortableChipsFieldProps> = props => {
-  const {
-    loading,
-    values,
-    error,
-    helperText,
-    onValueDelete,
-    onValueReorder,
-  } = props;
+  const { loading, values, error, helperText, onValueDelete, onValueReorder } = props;
   const classes = useStyles(props);
-
   const handleSortStart = () => {
     document.body.classList.add(classes.grabbing);
   };
-
   const handleSortEnd = (event: ReorderEvent) => {
     document.body.classList.remove(classes.grabbing);
     onValueReorder(event);
@@ -77,23 +67,21 @@ const SortableChipsField: React.FC<SortableChipsFieldProps> = props => {
       helperClass={classes.chipHelper}
     >
       <div>
-        {loading ? (
-          <Skeleton />
-        ) : (
-          values.map((value, valueIndex) => (
-            <DraggableChip
-              className={classes.chip}
-              key={valueIndex}
-              index={valueIndex}
-              label={value.label}
-              onClose={() => onValueDelete(value.value)}
-            />
-          ))
-        )}
+        {values.map((value, valueIndex) => (
+          <DraggableChip
+            className={classes.chip}
+            loading={loading}
+            disabled={loading}
+            key={valueIndex}
+            index={valueIndex}
+            label={value.label}
+            onClose={() => onValueDelete(value.value)}
+          />
+        ))}
         {error && (
-          <Typography variant="caption" className={classes.errorText}>
+          <Text size={2} color="critical1">
             {helperText}
-          </Typography>
+          </Text>
         )}
       </div>
     </SortableContainer>

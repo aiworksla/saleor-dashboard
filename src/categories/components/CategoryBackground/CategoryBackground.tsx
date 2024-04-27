@@ -1,13 +1,14 @@
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Hr from "@dashboard/components/Hr";
+import ImageUpload from "@dashboard/components/ImageUpload";
+import MediaTile from "@dashboard/components/MediaTile";
+import Skeleton from "@dashboard/components/Skeleton";
+import { CategoryDetailsFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Hr from "@saleor/components/Hr";
-import ImageUpload from "@saleor/components/ImageUpload";
-import MediaTile from "@saleor/components/MediaTile";
-import Skeleton from "@saleor/components/Skeleton";
-import { CategoryDetailsFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -26,7 +27,7 @@ const useStyles = makeStyles(
     },
     imageContainer: {
       background: "#ffffff",
-      border: "1px solid #eaeaea",
+      border: `1px solid ${vars.colors.border.default1}`,
       borderRadius: theme.spacing(),
       height: 148,
       justifySelf: "start",
@@ -41,20 +42,18 @@ const useStyles = makeStyles(
 
 export interface CategoryBackgroundProps {
   data: CategoryUpdateData;
-  image: CategoryDetailsFragment["backgroundImage"];
+  image: CategoryDetailsFragment["backgroundImage"] | undefined | null;
   onChange: (event: React.ChangeEvent<any>) => void;
   onImageDelete: () => void;
-  onImageUpload: (file: File) => void;
+  onImageUpload: (file: File | null) => void;
 }
 
 const CategoryBackground: React.FC<CategoryBackgroundProps> = props => {
   const classes = useStyles(props);
   const intl = useIntl();
-  const anchor = React.useRef<HTMLInputElement>();
-
+  const anchor = React.useRef<HTMLInputElement>(null);
   const { data, onImageUpload, image, onChange, onImageDelete } = props;
-
-  const handleImageUploadButtonClick = () => anchor.current.click();
+  const handleImageUploadButtonClick = () => anchor.current?.click();
 
   return (
     <Card>
@@ -72,7 +71,7 @@ const CategoryBackground: React.FC<CategoryBackgroundProps> = props => {
             <input
               className={classes.fileField}
               id="fileUpload"
-              onChange={event => onImageUpload(event.target.files[0])}
+              onChange={({ target: { files } }) => onImageUpload(files && files[0])}
               type="file"
               ref={anchor}
               accept="image/*"
@@ -119,5 +118,6 @@ const CategoryBackground: React.FC<CategoryBackgroundProps> = props => {
     </Card>
   );
 };
+
 CategoryBackground.displayName = "CategoryBackground";
 export default CategoryBackground;

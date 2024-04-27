@@ -1,8 +1,4 @@
-import { Card, CardContent, Typography } from "@material-ui/core";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import { AttributeReference } from "@saleor/attributes/utils/data";
-import CardTitle from "@saleor/components/CardTitle";
-import Hr from "@saleor/components/Hr";
+import { AttributeReference } from "@dashboard/attributes/utils/data";
 import {
   AttributeEntityTypeEnum,
   AttributeInputTypeEnum,
@@ -11,16 +7,17 @@ import {
   MeasurementUnitsEnum,
   PageErrorWithAttributesFragment,
   ProductErrorWithAttributesFragment,
-} from "@saleor/graphql";
-import { FormsetAtomicData } from "@saleor/hooks/useFormset";
-import { IconButton, makeStyles } from "@saleor/macaw-ui";
-import { FetchMoreProps } from "@saleor/types";
-import { RichTextGetters } from "@saleor/utils/richText/useMultipleRichText";
-import classNames from "classnames";
+} from "@dashboard/graphql";
+import { FormsetAtomicData } from "@dashboard/hooks/useFormset";
+import { AttributeValuesMetadata } from "@dashboard/products/utils/data";
+import { FetchMoreProps } from "@dashboard/types";
+import { RichTextGetters } from "@dashboard/utils/richText/useMultipleRichText";
+import { Accordion, Box, Text } from "@saleor/macaw-ui-next";
 import React from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
-import AttributeRow from "./AttributeRow";
+import { DashboardCard } from "../Card";
+import { AttributeListItem } from "./AttributeListItem";
 import { AttributeRowHandlers, VariantAttributeScope } from "./types";
 
 export interface AttributeInputData {
@@ -33,7 +30,11 @@ export interface AttributeInputData {
   selectedValues?: AttributeValueDetailsFragment[];
   references?: AttributeReference[];
 }
-export type AttributeInput = FormsetAtomicData<AttributeInputData, string[]>;
+export type AttributeInput = FormsetAtomicData<
+  AttributeInputData,
+  string[],
+  AttributeValuesMetadata[]
+>;
 export type AttributeFileInput = FormsetAtomicData<AttributeInputData, File[]>;
 export interface AttributesProps extends AttributeRowHandlers {
   attributes: AttributeInput[];
@@ -43,66 +44,10 @@ export interface AttributesProps extends AttributeRowHandlers {
   onAttributeSelectBlur: () => void;
   disabled: boolean;
   loading: boolean;
-  errors: Array<
-    ProductErrorWithAttributesFragment | PageErrorWithAttributesFragment
-  >;
+  errors: Array<ProductErrorWithAttributesFragment | PageErrorWithAttributesFragment>;
   title?: React.ReactNode;
   richTextGetters: RichTextGetters<string>;
 }
-
-const useStyles = makeStyles(
-  theme => ({
-    attributeSection: {
-      "&:last-of-type": {
-        paddingBottom: 0,
-      },
-      padding: theme.spacing(2, 0),
-    },
-    attributeSectionLabel: {
-      alignItems: "center",
-      display: "flex",
-    },
-    card: {
-      overflow: "visible",
-    },
-    cardContent: {
-      "&:last-child": {
-        paddingBottom: theme.spacing(2),
-      },
-      paddingTop: theme.spacing(1),
-    },
-    expansionBar: {
-      display: "flex",
-    },
-    expansionBarButton: {
-      marginBottom: theme.spacing(1),
-    },
-    expansionBarButtonIcon: {
-      transition: theme.transitions.duration.short + "ms",
-    },
-    expansionBarLabel: {
-      color: theme.palette.text.disabled,
-      fontSize: 14,
-    },
-    expansionBarLabelContainer: {
-      alignItems: "center",
-      display: "flex",
-      flex: 1,
-    },
-    rotate: {
-      transform: "rotate(180deg)",
-    },
-    uploadFileButton: {
-      float: "right",
-    },
-    uploadFileContent: {
-      color: theme.palette.primary.main,
-      float: "right",
-      fontSize: theme.typography.body1.fontSize,
-    },
-  }),
-  { name: "Attributes" },
-);
 
 const messages = defineMessages({
   attributesNumber: {
@@ -117,7 +62,7 @@ const messages = defineMessages({
   },
 });
 
-const Attributes: React.FC<AttributesProps> = ({
+export const Attributes: React.FC<AttributesProps> = ({
   attributes,
   attributeValues,
   errors,
@@ -127,65 +72,55 @@ const Attributes: React.FC<AttributesProps> = ({
   ...props
 }) => {
   const intl = useIntl();
-  const classes = useStyles({});
-  const [expanded, setExpansionStatus] = React.useState(true);
-  const toggleExpansion = () => setExpansionStatus(!expanded);
 
   return (
-    <Card className={classes.card}>
-      <CardTitle title={title || intl.formatMessage(messages.header)} />
-      <CardContent className={classes.cardContent}>
-        <div className={classes.expansionBar}>
-          <div className={classes.expansionBarLabelContainer}>
-            <Typography className={classes.expansionBarLabel} variant="caption">
-              <FormattedMessage
-                {...messages.attributesNumber}
-                values={{
-                  number: attributes.length,
-                }}
-              />
-            </Typography>
-          </div>
-          <IconButton
-            variant="secondary"
-            className={classes.expansionBarButton}
-            onClick={toggleExpansion}
-            data-test-id="attributes-expand"
-          >
-            <ArrowDropDownIcon
-              className={classNames(classes.expansionBarButtonIcon, {
-                [classes.rotate]: expanded,
-              })}
-            />
-          </IconButton>
-        </div>
-        {expanded && attributes.length > 0 && (
-          <>
-            <Hr />
-            {attributes.map((attribute, attributeIndex) => {
-              const error = errors.find(err =>
-                err.attributes?.includes(attribute.id),
-              );
-
-              return (
-                <React.Fragment key={attribute.id}>
-                  {attributeIndex > 0 && <Hr />}
-                  <AttributeRow
-                    attribute={attribute}
-                    attributeValues={attributeValues}
-                    error={error}
-                    onAttributeSelectBlur={onAttributeSelectBlur}
-                    richTextGetters={richTextGetters}
-                    {...props}
-                  />
-                </React.Fragment>
-              );
-            })}
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <DashboardCard paddingTop={6}>
+      <DashboardCard.Content>
+        <Box display="flex" flexDirection="column" gap={1}>
+          <Accordion defaultValue="attributes-accordion">
+            <Accordion.Item value="attributes-accordion">
+              <Accordion.Trigger
+                data-testid="attributes-expand"
+                flexWrap="wrap"
+                alignItems="flex-start"
+              >
+                <Box display="flex" flexDirection="column" gap={2}>
+                  <Text size={5} fontWeight="bold">
+                    {title || intl.formatMessage(messages.header)}
+                  </Text>
+                  <Text size={2} color="default2">
+                    <FormattedMessage
+                      {...messages.attributesNumber}
+                      values={{
+                        number: attributes.length,
+                      }}
+                    />
+                  </Text>
+                </Box>
+                <Accordion.TriggerButton dataTestId="expand-icon" />
+              </Accordion.Trigger>
+              <Accordion.Content>
+                {attributes.length > 0 && (
+                  <ul>
+                    {attributes.map(attribute => (
+                      <React.Fragment key={attribute.id}>
+                        <AttributeListItem
+                          attribute={attribute}
+                          errors={errors}
+                          attributeValues={attributeValues}
+                          onAttributeSelectBlur={onAttributeSelectBlur}
+                          richTextGetters={richTextGetters}
+                          {...props}
+                        />
+                      </React.Fragment>
+                    ))}
+                  </ul>
+                )}
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion>
+        </Box>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-Attributes.displayName = "Attributes";
-export default Attributes;

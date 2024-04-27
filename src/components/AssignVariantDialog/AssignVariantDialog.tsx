@@ -1,3 +1,14 @@
+// @ts-strict-ignore
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Money from "@dashboard/components/Money";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { SearchProductsQuery } from "@dashboard/graphql";
+import useSearchQuery from "@dashboard/hooks/useSearchQuery";
+import { maybe, renderCollection } from "@dashboard/misc";
+import useScrollableDialogStyle from "@dashboard/styles/useScrollableDialogStyle";
+import { DialogProps, FetchMoreProps, RelayToFlat } from "@dashboard/types";
 import {
   CircularProgress,
   Dialog,
@@ -9,31 +20,22 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Money from "@saleor/components/Money";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { SearchProductsQuery } from "@saleor/graphql";
-import useSearchQuery from "@saleor/hooks/useSearchQuery";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { maybe, renderCollection } from "@saleor/misc";
-import useScrollableDialogStyle from "@saleor/styles/useScrollableDialogStyle";
-import { DialogProps, FetchMoreProps, RelayToFlat } from "@saleor/types";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { FormattedMessage, useIntl } from "react-intl";
 
+import { Container } from "../AssignContainerDialog";
 import BackButton from "../BackButton";
 import Checkbox from "../Checkbox";
 import { messages } from "./messages";
 import { useStyles } from "./styles";
 import {
+  getCompositeLabel,
   handleProductAssign,
   handleVariantAssign,
   hasAllVariantsSelected,
   isVariantSelected,
-  SearchVariant,
+  VariantWithProductLabel,
 } from "./utils";
 
 export interface AssignVariantDialogFormData {
@@ -45,11 +47,10 @@ export interface AssignVariantDialogProps extends FetchMoreProps, DialogProps {
   products: RelayToFlat<SearchProductsQuery["search"]>;
   loading: boolean;
   onFetch: (value: string) => void;
-  onSubmit: (data: string[]) => void;
+  onSubmit: (data: Container[]) => void;
 }
 
 const scrollableTargetId = "assignVariantScrollableDialog";
-
 const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
   const {
     confirmButtonState,
@@ -64,37 +65,39 @@ const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
   } = props;
   const classes = useStyles(props);
   const scrollableDialogClasses = useScrollableDialogStyle({});
-
   const intl = useIntl();
-  const [query, onQueryChange] = useSearchQuery(onFetch);
-  const [variants, setVariants] = React.useState<SearchVariant[]>([]);
-
-  const productChoices =
-    products?.filter(product => product?.variants?.length > 0) || [];
-
+  const [query, onQueryChange, queryReset] = useSearchQuery(onFetch);
+  const [variants, setVariants] = React.useState<VariantWithProductLabel[]>([]);
+  const productChoices = products?.filter(product => product?.variants?.length > 0) || [];
   const selectedVariantsToProductsMap = productChoices
     ? productChoices.map(product =>
         product.variants.map(variant => isVariantSelected(variant, variants)),
       )
     : [];
-
   const productsWithAllVariantsSelected = productChoices
-    ? productChoices.map(product =>
-        hasAllVariantsSelected(product.variants, variants),
-      )
+    ? productChoices.map(product => hasAllVariantsSelected(product.variants, variants))
     : [];
-
-  const handleSubmit = () => onSubmit(variants.map(variant => variant.id));
+  const handleSubmit = () =>
+    onSubmit(
+      variants.map(variant => ({
+        name: getCompositeLabel(variant),
+        id: variant.id,
+      })),
+    );
+  const handleClose = () => {
+    queryReset();
+    onClose();
+  };
 
   return (
     <Dialog
-      onClose={onClose}
+      onClose={handleClose}
       open={open}
       classes={{ paper: scrollableDialogClasses.dialog }}
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage {...messages.assignVariantDialogHeader} />
       </DialogTitle>
       <DialogContent>
@@ -111,10 +114,7 @@ const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
           }}
         />
       </DialogContent>
-      <DialogContent
-        className={scrollableDialogClasses.scrollArea}
-        id={scrollableTargetId}
-      >
+      <DialogContent className={scrollableDialogClasses.scrollArea} id={scrollableTargetId}>
         <InfiniteScroll
           dataLength={variants?.length}
           next={onFetchMore}
@@ -134,14 +134,9 @@ const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
                 (product, productIndex) => (
                   <React.Fragment key={product ? product.id : "skeleton"}>
                     <TableRowLink>
-                      <TableCell
-                        padding="checkbox"
-                        className={classes.productCheckboxCell}
-                      >
+                      <TableCell padding="checkbox" className={classes.productCheckboxCell}>
                         <Checkbox
-                          checked={
-                            productsWithAllVariantsSelected[productIndex]
-                          }
+                          checked={productsWithAllVariantsSelected[productIndex]}
                           disabled={loading}
                           onChange={() =>
                             handleProductAssign(
@@ -162,58 +157,50 @@ const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
                         {maybe(() => product.name)}
                       </TableCell>
                     </TableRowLink>
-                    {maybe(() => product.variants, []).map(
-                      (variant, variantIndex) => (
-                        <TableRowLink
-                          key={variant.id}
-                          data-test-id="assign-variant-table-row"
-                        >
-                          <TableCell />
-                          <TableCell className={classes.colVariantCheckbox}>
-                            <Checkbox
-                              className={classes.variantCheckbox}
-                              checked={
-                                selectedVariantsToProductsMap[productIndex][
-                                  variantIndex
-                                ]
-                              }
-                              disabled={loading}
-                              onChange={() =>
-                                handleVariantAssign(
-                                  variant,
-                                  variantIndex,
-                                  productIndex,
-                                  variants,
-                                  selectedVariantsToProductsMap,
-                                  setVariants,
-                                )
-                              }
+                    {maybe(() => product.variants, []).map((variant, variantIndex) => (
+                      <TableRowLink key={variant.id} data-test-id="assign-variant-table-row">
+                        <TableCell />
+                        <TableCell className={classes.colVariantCheckbox}>
+                          <Checkbox
+                            className={classes.variantCheckbox}
+                            checked={selectedVariantsToProductsMap[productIndex][variantIndex]}
+                            disabled={loading}
+                            onChange={() =>
+                              handleVariantAssign(
+                                variant,
+                                product,
+                                variantIndex,
+                                productIndex,
+                                variants,
+                                selectedVariantsToProductsMap,
+                                setVariants,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className={classes.colName}>
+                          <div>{variant.name}</div>
+                          <div className={classes.grayText}>
+                            <FormattedMessage
+                              {...messages.assignVariantDialogSKU}
+                              values={{
+                                sku: variant.sku,
+                              }}
                             />
-                          </TableCell>
-                          <TableCell className={classes.colName}>
-                            <div>{variant.name}</div>
-                            <div className={classes.grayText}>
-                              <FormattedMessage
-                                {...messages.assignVariantDialogSKU}
-                                values={{
-                                  sku: variant.sku,
-                                }}
-                              />
-                            </div>
-                          </TableCell>
-                          <TableCell className={classes.textRight}>
-                            {variant?.channelListings[0]?.price && (
-                              <Money money={variant.channelListings[0].price} />
-                            )}
-                          </TableCell>
-                        </TableRowLink>
-                      ),
-                    )}
+                          </div>
+                        </TableCell>
+                        <TableCell className={classes.textRight}>
+                          {variant?.channelListings[0]?.price && (
+                            <Money money={variant.channelListings[0].price} />
+                          )}
+                        </TableCell>
+                      </TableRowLink>
+                    ))}
                   </React.Fragment>
                 ),
                 () => (
                   <Typography className={classes.noContentText}>
-                    {!!query
+                    {query
                       ? intl.formatMessage(messages.noProductsInQuery)
                       : intl.formatMessage(messages.noProductsInChannel)}
                   </Typography>
@@ -237,5 +224,6 @@ const AssignVariantDialog: React.FC<AssignVariantDialogProps> = props => {
     </Dialog>
   );
 };
+
 AssignVariantDialog.displayName = "AssignVariantDialog";
 export default AssignVariantDialog;

@@ -1,11 +1,9 @@
-import {
-  useOrderSettingsQuery,
-  useOrderSettingsUpdateMutation,
-} from "@saleor/graphql";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages } from "@saleor/intl";
-import { extractMutationErrors, getMutationState } from "@saleor/misc";
-import OrderSettingsPage from "@saleor/orders/components/OrderSettingsPage";
+// @ts-strict-ignore
+import { useOrderSettingsQuery, useOrderSettingsUpdateMutation } from "@dashboard/graphql";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import { commonMessages } from "@dashboard/intl";
+import { extractMutationErrors, getMutationState } from "@dashboard/misc";
+import OrderSettingsPage from "@dashboard/orders/components/OrderSettingsPage";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -14,19 +12,15 @@ import { OrderSettingsFormData } from "../components/OrderSettingsPage/types";
 export const OrderSettings: React.FC = () => {
   const intl = useIntl();
   const notify = useNotifier();
-
   const { data, loading } = useOrderSettingsQuery({});
-
-  const [
-    orderSettingsUpdate,
-    orderSettingsUpdateOpts,
-  ] = useOrderSettingsUpdateMutation({
+  const [orderSettingsUpdate, orderSettingsUpdateOpts] = useOrderSettingsUpdateMutation({
     onCompleted: ({ orderSettingsUpdate: { errors } }) => {
       if (!errors.length) {
         notify({
           status: "success",
           text: intl.formatMessage(commonMessages.savedChanges),
         });
+
         return;
       }
 
@@ -36,7 +30,6 @@ export const OrderSettings: React.FC = () => {
       });
     },
   });
-
   const handleSubmit = async ({
     automaticallyConfirmAllNewOrders,
     automaticallyFulfillNonShippableGiftCard,

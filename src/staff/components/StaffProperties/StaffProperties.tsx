@@ -1,19 +1,17 @@
+// @ts-strict-ignore
 import photoIcon from "@assets/images/photo-icon.svg";
+import CardTitle from "@dashboard/components/CardTitle";
+import { StaffErrorFragment, StaffMemberDetailsFragment, UserFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getUserInitials } from "@dashboard/misc";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getStaffErrorMessage from "@dashboard/utils/errors/staff";
 import { Card, CardContent, TextField, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import {
-  StaffErrorFragment,
-  StaffMemberDetailsFragment,
-} from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getStaffErrorMessage from "@saleor/utils/errors/staff";
+import { vars } from "@saleor/macaw-ui-next";
 import React from "react";
 import SVG from "react-inlinesvg";
 import { FormattedMessage, useIntl } from "react-intl";
-
-import { getUserInitials } from "../../../misc";
 
 const useStyles = makeStyles(
   theme => ({
@@ -43,12 +41,12 @@ const useStyles = makeStyles(
     },
     avatarDefault: {
       "& div": {
-        color: "#fff",
+        color: vars.colors.text.buttonDefaultPrimary,
         fontSize: 35,
-        fontWeight: "bold",
+        fontWeight: 580,
         lineHeight: "120px",
       },
-      background: theme.palette.primary.main,
+      background: vars.colors.background.accent1,
       height: 120,
       textAlign: "center",
       width: 120,
@@ -105,7 +103,7 @@ interface StaffPropertiesProps {
   };
   errors: StaffErrorFragment[];
   disabled: boolean;
-  staffMember: StaffMemberDetailsFragment;
+  staffMember: StaffMemberDetailsFragment | UserFragment;
   onChange: (event: React.ChangeEvent<any>) => void;
   onImageDelete: () => void;
   onImageUpload: (file: File) => void;
@@ -122,19 +120,12 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
     onImageDelete,
     onImageUpload,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
   const imgInputAnchor = React.createRef<HTMLInputElement>();
-
   const clickImgInput = () => imgInputAnchor.current.click();
-  const formErrors = getFormErrors(
-    ["id", "firstName", "lastName", "email"],
-    errors || [],
-  );
-
+  const formErrors = getFormErrors(["id", "firstName", "lastName", "email"], errors || []);
   const hasAvatar = !!staffMember?.avatar?.url;
-
   const getFieldProps = (name: string) => ({
     disabled: props.disabled,
     error: !!formErrors[name],
@@ -158,10 +149,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
           <div>
             <div className={classes.avatar}>
               {hasAvatar ? (
-                <img
-                  className={classes.avatarImage}
-                  src={staffMember.avatar.url}
-                />
+                <img className={classes.avatarImage} src={staffMember.avatar.url} />
               ) : (
                 <div className={classes.avatarDefault}>
                   <Typography>{getUserInitials(data)}</Typography>
@@ -170,10 +158,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
               {canEditAvatar && (
                 <div className={classes.avatarHover}>
                   <SVG src={photoIcon} />
-                  <Typography
-                    onClick={clickImgInput}
-                    className={classes.avatarActionText}
-                  >
+                  <Typography onClick={clickImgInput} className={classes.avatarActionText}>
                     <FormattedMessage
                       id="+2VzH4"
                       defaultMessage="Change"
@@ -182,10 +167,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
                   </Typography>
                   {hasAvatar && (
                     <>
-                      <Typography
-                        onClick={onImageDelete}
-                        className={classes.avatarActionText}
-                      >
+                      <Typography onClick={onImageDelete} className={classes.avatarActionText}>
                         <FormattedMessage
                           id="11lR5V"
                           defaultMessage="Delete"
@@ -214,6 +196,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
                   fullWidth
                   inputProps={{
                     spellCheck: false,
+                    "data-test-id": "staffFirstName",
                   }}
                 />
               </div>
@@ -224,6 +207,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
                   fullWidth
                   inputProps={{
                     spellCheck: false,
+                    "data-test-id": "staffLastName",
                   }}
                 />
               </div>
@@ -234,6 +218,7 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
                   fullWidth
                   inputProps={{
                     spellCheck: false,
+                    "data-test-id": "staffEmail",
                   }}
                 />
               </div>
@@ -243,13 +228,12 @@ const StaffProperties: React.FC<StaffPropertiesProps> = props => {
       </CardContent>
       {!!formErrors.id && (
         <CardContent>
-          <Typography color="error">
-            {getStaffErrorMessage(formErrors.id, intl)}
-          </Typography>
+          <Typography color="error">{getStaffErrorMessage(formErrors.id, intl)}</Typography>
         </CardContent>
       )}
     </Card>
   );
 };
+
 StaffProperties.displayName = "StaffProperties";
 export default StaffProperties;

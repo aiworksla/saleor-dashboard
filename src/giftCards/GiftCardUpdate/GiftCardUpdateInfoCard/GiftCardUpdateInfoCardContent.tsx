@@ -1,16 +1,17 @@
+// @ts-strict-ignore
+import { AppUrls } from "@dashboard/apps/urls";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import Link from "@dashboard/components/Link";
+import { customerUrl } from "@dashboard/customers/urls";
+import { GiftCardEventsEnum } from "@dashboard/graphql";
+import useDateLocalize from "@dashboard/hooks/useDateLocalize";
+import { getFullName, getStringOrPlaceholder } from "@dashboard/misc";
+import Label from "@dashboard/orders/components/OrderHistory/Label";
+import { getOrderNumberLinkObject } from "@dashboard/orders/components/OrderHistory/utils";
+import { getByType } from "@dashboard/orders/components/OrderReturnPage/utils";
+import { productUrl } from "@dashboard/products/urls";
+import { staffMemberDetailsUrl } from "@dashboard/staff/urls";
 import { Typography } from "@material-ui/core";
-import { appUrl } from "@saleor/apps/urls";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Link from "@saleor/components/Link";
-import { customerUrl } from "@saleor/customers/urls";
-import { GiftCardEventsEnum } from "@saleor/graphql";
-import useDateLocalize from "@saleor/hooks/useDateLocalize";
-import { getFullName, getStringOrPlaceholder } from "@saleor/misc";
-import Label from "@saleor/orders/components/OrderHistory/Label";
-import { getOrderNumberLinkObject } from "@saleor/orders/components/OrderHistory/utils";
-import { getByType } from "@saleor/orders/components/OrderReturnPage/utils";
-import { productUrl } from "@saleor/products/urls";
-import { staffMemberDetailsUrl } from "@saleor/staff/urls";
 import React from "react";
 import { MessageDescriptor, useIntl } from "react-intl";
 
@@ -21,22 +22,10 @@ import { giftCardUpdateInfoCardMessages as messages } from "./messages";
 const GiftCardUpdateInfoCardContent: React.FC = () => {
   const intl = useIntl();
   const localizeDate = useDateLocalize();
-
   const { giftCard } = useGiftCardDetails();
-
-  const {
-    created,
-    createdByEmail,
-    createdBy,
-    usedByEmail,
-    usedBy,
-    product,
-    events,
-  } = giftCard;
-
+  const { created, createdByEmail, createdBy, usedByEmail, usedBy, product, events } = giftCard;
   const cardIssuedEvent = events.find(getByType(GiftCardEventsEnum.ISSUED));
   const cardBoughtEvent = events.find(getByType(GiftCardEventsEnum.BOUGHT));
-
   const getBuyerFieldData = (): {
     label: MessageDescriptor;
     name: string;
@@ -51,7 +40,7 @@ const GiftCardUpdateInfoCardContent: React.FC = () => {
         return {
           label: messages.issuedByAppLabel,
           name: app?.name,
-          url: appUrl(app?.id),
+          url: AppUrls.resolveAppUrl(app?.id),
         };
       }
 
@@ -77,7 +66,6 @@ const GiftCardUpdateInfoCardContent: React.FC = () => {
       url: customerUrl(createdBy?.id),
     };
   };
-
   const getOrderData = () => {
     if (cardIssuedEvent) {
       const { orderId, orderNumber } = cardIssuedEvent;
@@ -103,13 +91,7 @@ const GiftCardUpdateInfoCardContent: React.FC = () => {
 
     return null;
   };
-
-  const {
-    label: buyerLabelMessage,
-    name: buyerName,
-    url: buyerUrl,
-  } = getBuyerFieldData();
-
+  const { label: buyerLabelMessage, name: buyerName, url: buyerUrl } = getBuyerFieldData();
   const orderData = getOrderData();
 
   return (
@@ -135,20 +117,14 @@ const GiftCardUpdateInfoCardContent: React.FC = () => {
       <CardSpacer />
 
       <Label text={intl.formatMessage(buyerLabelMessage)} />
-      {buyerUrl ? (
-        <Link href={buyerUrl}>{buyerName}</Link>
-      ) : (
-        <Typography>{buyerName}</Typography>
-      )}
+      {buyerUrl ? <Link href={buyerUrl}>{buyerName}</Link> : <Typography>{buyerName}</Typography>}
       <CardSpacer />
 
       <Label text={intl.formatMessage(messages.usedByLabel)} />
       {usedBy ? (
         <Link href={customerUrl(usedBy.id)}>{getFullName(usedBy)}</Link>
       ) : (
-        <Typography>
-          {getStringOrPlaceholder(usedByEmail, PLACEHOLDER)}
-        </Typography>
+        <Typography>{getStringOrPlaceholder(usedByEmail, PLACEHOLDER)}</Typography>
       )}
     </>
   );

@@ -1,10 +1,8 @@
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import FilterTabs, { FilterTab } from "@dashboard/components/TableFilter";
+import { LanguageFragment } from "@dashboard/graphql";
+import { maybe } from "@dashboard/misc";
 import { Card } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import Container from "@saleor/components/Container";
-import PageHeader from "@saleor/components/PageHeader";
-import FilterTabs, { FilterTab } from "@saleor/components/TableFilter";
-import { LanguageFragment } from "@saleor/graphql";
-import { maybe } from "@saleor/misc";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -42,23 +40,16 @@ const tabs: TranslationsEntitiesListFilterTab[] = [
   "shippingMethods",
   "menuItems",
 ];
-
 const TranslationsEntitiesListPage: React.FC<TranslationsEntitiesListPageProps> = props => {
   const { filters, language, children } = props;
-
   const intl = useIntl();
   const queryTab = tabs.indexOf(filters.current);
   const currentTab = queryTab >= 0 ? queryTab : 0;
 
   return (
-    <Container>
-      <Backlink href={languageListUrl}>
-        {intl.formatMessage({
-          id: "GsBRWL",
-          defaultMessage: "Languages",
-        })}
-      </Backlink>
-      <PageHeader
+    <>
+      <TopNav
+        href={languageListUrl}
         title={intl.formatMessage(
           {
             id: "FemBUF",
@@ -138,8 +129,9 @@ const TranslationsEntitiesListPage: React.FC<TranslationsEntitiesListPageProps> 
         </FilterTabs>
         {children}
       </Card>
-    </Container>
+    </>
   );
 };
+
 TranslationsEntitiesListPage.displayName = "TranslationsEntitiesListPage";
 export default TranslationsEntitiesListPage;

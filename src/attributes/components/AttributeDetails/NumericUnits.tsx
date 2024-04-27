@@ -1,9 +1,9 @@
-import { AttributePageFormData } from "@saleor/attributes/components/AttributePage";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import SingleSelectField from "@saleor/components/SingleSelectField";
-import { MeasurementUnitsEnum } from "@saleor/graphql";
-import { UseFormResult } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
+import { AttributePageFormData } from "@dashboard/attributes/components/AttributePage";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import SingleSelectField from "@dashboard/components/SingleSelectField";
+import { MeasurementUnitsEnum } from "@dashboard/graphql";
+import { UseFormResult } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
 import { makeStyles } from "@saleor/macaw-ui";
 import React, { useEffect, useMemo, useState } from "react";
 import { useIntl } from "react-intl";
@@ -40,7 +40,7 @@ const useStyles = makeStyles(
 );
 
 interface UnitData {
-  unit?: MeasurementUnitsEnum;
+  unit: MeasurementUnitsEnum | null | undefined;
   system?: UnitSystem;
   type?: UnitType;
 }
@@ -66,7 +66,6 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
   const [unitData, setUnitData] = useState<UnitData>({
     unit: data.unit ?? null,
   });
-
   const { unit, system, type } = unitData;
   const errorProps = {
     error: !!errors.unit,
@@ -88,7 +87,6 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
   );
 
   useEffect(() => set({ unit }), [unit]);
-
   useEffect(() => {
     if (data.unit) {
       const selectInitialUnitData = () => {
@@ -97,14 +95,18 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
         Object.entries(unitChoices).some(([system, types]) => {
           const systemMatch = Object.entries(types).some(([type, units]) => {
             const unitMatch = units.some(({ value }) => value === data.unit);
+
             if (unitMatch) {
               initialData.type = type as UnitType;
             }
+
             return unitMatch;
           });
+
           if (systemMatch) {
             initialData.system = system as UnitSystem;
           }
+
           return systemMatch;
         });
 
@@ -114,11 +116,11 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
       setUnitData(selectInitialUnitData());
     }
   }, []);
-
   useEffect(() => {
     if (unit === undefined && !errors.unit) {
       setError("unit", formatMessage(commonMessages.requiredField));
     }
+
     if (errors.unit && (unit || unit === null)) {
       clearErrors("unit");
     }
@@ -132,9 +134,7 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
         name="selectUnit"
         label={formatMessage(M.messages.selectUnit)}
         checked={data.unit !== null}
-        onChange={({ target }) =>
-          setUnitData({ unit: target.value ? undefined : null })
-        }
+        onChange={({ target }) => setUnitData({ unit: target.value ? undefined : null })}
         disabled={disabled}
       />
       {data.unit !== null && (
@@ -145,7 +145,10 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
             label={formatMessage(M.messages.unitSystem)}
             choices={systemChoices}
             onChange={({ target }: React.ChangeEvent<HTMLSelectElement>) =>
-              setUnitData({ system: target.value as UnitSystem })
+              setUnitData(data => ({
+                ...data,
+                system: target.value as UnitSystem,
+              }))
             }
             value={system}
             disabled={disabled}
@@ -156,8 +159,8 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
             label={formatMessage(M.messages.unitOf)}
             choices={typeChoices}
             onChange={({ target }: React.ChangeEvent<HTMLSelectElement>) =>
-              setUnitData(({ system }) => ({
-                system,
+              setUnitData(data => ({
+                ...data,
                 type: target.value as UnitType,
               }))
             }
@@ -168,7 +171,7 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
             {...(type && !unit && errorProps)}
             testId="unit"
             label={formatMessage(M.messages.unit)}
-            choices={type ? unitChoices[system][type] : []}
+            choices={type && system ? unitChoices[system][type] : []}
             onChange={({ target }: React.ChangeEvent<HTMLSelectElement>) =>
               setUnitData(data => ({
                 ...data,
@@ -177,9 +180,7 @@ export const NumericUnits: React.FC<NumericUnitsProps> = ({
             }
             disabled={!type || disabled}
             value={
-              type && unitMapping[system][type].includes(unit)
-                ? unit
-                : undefined
+              type && system && unit && unitMapping[system][type].includes(unit) ? unit : undefined
             }
           />
         </div>

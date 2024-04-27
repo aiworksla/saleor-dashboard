@@ -1,7 +1,8 @@
+import { IconButton } from "@dashboard/components/IconButton";
 import { CircularProgress } from "@material-ui/core";
-import { IconButton } from "@saleor/components/IconButton";
 import { DeleteIcon, EditIcon, makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { vars } from "@saleor/macaw-ui-next";
+import clsx from "clsx";
 import React from "react";
 
 const useStyles = makeStyles(
@@ -23,7 +24,7 @@ const useStyles = makeStyles(
       borderRadius: theme.spacing(),
       height: 148,
       overflow: "hidden",
-      padding: theme.spacing(2),
+      padding: vars.spacing[1],
       position: "relative",
       width: 148,
     },
@@ -38,8 +39,13 @@ const useStyles = makeStyles(
       top: 0,
       width: 148,
     },
+    disableOverlay: {
+      "&$mediaOverlay": {
+        display: "none !important",
+      },
+    },
     mediaOverlayShadow: {
-      "&mediaOverlay": {
+      $mediaOverlay: {
         alignItems: "center",
         display: "flex",
         justifyContent: "center",
@@ -70,11 +76,12 @@ const useStyles = makeStyles(
 
 interface MediaTileBaseProps {
   media: {
-    alt: string;
+    alt: string | null;
     url: string;
     type?: string;
     oembedData?: string;
   };
+  disableOverlay?: boolean;
   loading?: boolean;
   onDelete?: () => void;
   onEdit?: (event: React.ChangeEvent<any>) => void;
@@ -93,18 +100,17 @@ export type MediaTileProps = MediaTileBaseProps &
   );
 
 const MediaTile: React.FC<MediaTileProps> = props => {
-  const { loading, onDelete, onEdit, editHref, media } = props;
+  const { loading, onDelete, onEdit, editHref, media, disableOverlay = false } = props;
   const classes = useStyles(props);
-  const parsedMediaOembedData = media?.oembedData
-    ? JSON.parse(media.oembedData)
-    : null;
+  const parsedMediaOembedData = media?.oembedData ? JSON.parse(media.oembedData) : null;
   const mediaUrl = parsedMediaOembedData?.thumbnail_url || media.url;
 
   return (
     <div className={classes.mediaContainer} data-test-id="product-image">
       <div
-        className={classNames(classes.mediaOverlay, {
+        className={clsx(classes.mediaOverlay, {
           [classes.mediaOverlayShadow]: loading,
+          [classes.disableOverlay]: disableOverlay,
         })}
       >
         {loading ? (
@@ -135,9 +141,10 @@ const MediaTile: React.FC<MediaTileProps> = props => {
           </div>
         )}
       </div>
-      <img className={classes.media} src={mediaUrl} alt={media.alt} />
+      <img className={classes.media} src={mediaUrl} alt={media.alt!} />
     </div>
   );
 };
+
 MediaTile.displayName = "MediaTile";
 export default MediaTile;

@@ -1,17 +1,15 @@
-import Hr from "@saleor/components/Hr";
-import RadioGroupField, {
-  RadioGroupFieldChoice,
-} from "@saleor/components/RadioGroupField";
+import Hr from "@dashboard/components/Hr";
+import RadioGroupField, { RadioGroupFieldChoice } from "@dashboard/components/RadioGroupField";
 import {
   ExportErrorFragment,
   ExportProductsInput,
   ExportScope,
   FileTypesEnum,
-} from "@saleor/graphql";
-import { ChangeEvent } from "@saleor/hooks/useForm";
+} from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getExportErrorMessage from "@dashboard/utils/errors/export";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getExportErrorMessage from "@saleor/utils/errors/export";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -47,7 +45,6 @@ export interface ExportDialogSettingsProps {
 }
 
 const formFields: Array<keyof ExportSettingsInput> = ["fileType", "scope"];
-
 const ExportDialogSettings: React.FC<ExportDialogSettingsProps> = ({
   data,
   errors,
@@ -59,12 +56,8 @@ const ExportDialogSettings: React.FC<ExportDialogSettingsProps> = ({
 }) => {
   const classes = useStyles({});
   const intl = useIntl();
-
   const formErrors = getFormErrors(formFields, errors);
-
-  const productExportTypeChoices: Array<RadioGroupFieldChoice<
-    FileTypesEnum
-  >> = [
+  const productExportTypeChoices: Array<RadioGroupFieldChoice<FileTypesEnum>> = [
     {
       label: intl.formatMessage({
         id: "9Tl/bT",
@@ -82,7 +75,6 @@ const ExportDialogSettings: React.FC<ExportDialogSettingsProps> = ({
       value: FileTypesEnum.CSV,
     },
   ];
-
   const exportScopeChoices = [
     {
       label: exportScopeLabels.allItems,

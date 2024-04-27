@@ -1,16 +1,11 @@
-import {
-  CircularProgress,
-  Divider,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import { UserContextError } from "@saleor/auth/types";
-import { passwordResetUrl } from "@saleor/auth/urls";
-import { Button } from "@saleor/components/Button";
-import { FormSpacer } from "@saleor/components/FormSpacer";
-import { AvailableExternalAuthenticationsQuery } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import { commonMessages } from "@saleor/intl";
+import { UserContextError } from "@dashboard/auth/types";
+import { passwordResetUrl } from "@dashboard/auth/urls";
+import { Button } from "@dashboard/components/Button";
+import { FormSpacer } from "@dashboard/components/FormSpacer";
+import { AvailableExternalAuthenticationsQuery } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import { commonMessages } from "@dashboard/intl";
+import { CircularProgress, Divider, TextField, Typography } from "@material-ui/core";
 import { EyeIcon, IconButton } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -21,24 +16,23 @@ import LoginForm, { LoginFormData } from "./form";
 import { getErrorMessage } from "./messages";
 
 export interface LoginCardProps {
-  error?: UserContextError;
+  errors: UserContextError[];
   disabled: boolean;
   loading: boolean;
   externalAuthentications?: AvailableExternalAuthenticationsQuery["shop"]["availableExternalAuthentications"];
   onExternalAuthentication: (pluginId: string) => void;
-  onSubmit?: (event: LoginFormData) => SubmitPromise;
+  onSubmit: (event: LoginFormData) => SubmitPromise;
 }
 
-const LoginCard: React.FC<LoginCardProps> = props => {
+const LoginPage: React.FC<LoginCardProps> = props => {
   const {
-    error,
+    errors,
     disabled,
     loading,
     externalAuthentications = [],
     onExternalAuthentication,
     onSubmit,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
   const [showPassword, setShowPassword] = React.useState(false);
@@ -56,17 +50,13 @@ const LoginCard: React.FC<LoginCardProps> = props => {
       {({ change: handleChange, data, submit }) => (
         <>
           <Typography variant="h3" className={classes.header}>
-            <FormattedMessage
-              id="vzgZ3U"
-              defaultMessage="Sign In"
-              description="card header"
-            />
+            <FormattedMessage id="vzgZ3U" defaultMessage="Sign In" description="card header" />
           </Typography>
-          {error && (
-            <div className={classes.panel} data-test-id="login-error-message">
+          {errors.map(error => (
+            <div className={classes.panel} key={error} data-test-id="login-error-message">
               {getErrorMessage(error, intl)}
             </div>
-          )}
+          ))}
           <TextField
             autoFocus
             fullWidth
@@ -103,7 +93,7 @@ const LoginCard: React.FC<LoginCardProps> = props => {
             {/* Not using endAdornment as it looks weird with autocomplete */}
             <IconButton
               className={classes.showPasswordBtn}
-              variant="secondary"
+              variant="ghost"
               hoverOutline={false}
               onMouseDown={() => setShowPassword(true)}
               onMouseUp={() => setShowPassword(false)}
@@ -133,11 +123,7 @@ const LoginCard: React.FC<LoginCardProps> = props => {
               type="submit"
               data-test-id="submit"
             >
-              <FormattedMessage
-                id="AubJ/S"
-                defaultMessage="Sign in"
-                description="button"
-              />
+              <FormattedMessage id="AubJ/S" defaultMessage="Sign in" description="button" />
             </Button>
           </div>
           {externalAuthentications.length > 0 && (
@@ -147,8 +133,8 @@ const LoginCard: React.FC<LoginCardProps> = props => {
               <FormSpacer />
               <Typography>
                 <FormattedMessage
-                  id="ENBELI"
-                  defaultMessage="or login using"
+                  id="aFU0vm"
+                  defaultMessage="or continue with"
                   description="description"
                 />
               </Typography>
@@ -160,9 +146,7 @@ const LoginCard: React.FC<LoginCardProps> = props => {
               <Button
                 fullWidth
                 variant="secondary"
-                onClick={() =>
-                  onExternalAuthentication(externalAuthentication.id)
-                }
+                onClick={() => onExternalAuthentication(externalAuthentication.id)}
                 data-test-id="external-authentication"
                 disabled={disabled}
               >
@@ -175,5 +159,6 @@ const LoginCard: React.FC<LoginCardProps> = props => {
     </LoginForm>
   );
 };
-LoginCard.displayName = "LoginCard";
-export default LoginCard;
+
+LoginPage.displayName = "LoginPage";
+export default LoginPage;

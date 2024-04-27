@@ -1,7 +1,8 @@
-import { TimelineEvent } from "@saleor/components/Timeline";
-import { TitleElement } from "@saleor/components/Timeline/TimelineEventHeader";
-import { OrderEventFragment, OrderEventsEnum } from "@saleor/graphql";
-import { orderUrl } from "@saleor/orders/urls";
+// @ts-strict-ignore
+import { TimelineEvent } from "@dashboard/components/Timeline";
+import { TitleElement } from "@dashboard/components/Timeline/TimelineEventHeader";
+import { OrderEventFragment, OrderEventsEnum } from "@dashboard/graphql";
+import { orderUrl } from "@dashboard/orders/urls";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 
@@ -35,11 +36,11 @@ export const discountRemovedMessages = defineMessages({
 
 interface LinkedTimelineEventProps {
   event: OrderEventFragment;
+  hasPlainDate?: boolean;
 }
 
-const LinkedTimelineEvent: React.FC<LinkedTimelineEventProps> = ({ event }) => {
+const LinkedTimelineEvent: React.FC<LinkedTimelineEventProps> = ({ event, hasPlainDate }) => {
   const intl = useIntl();
-
   const getTitleElements = (): TitleElement[] => {
     const { type, relatedOrder, lines } = event;
 
@@ -58,9 +59,7 @@ const LinkedTimelineEvent: React.FC<LinkedTimelineEventProps> = ({ event }) => {
       case OrderEventsEnum.ORDER_DISCOUNT_DELETED: {
         return [
           {
-            text: intl.formatMessage(
-              discountRemovedMessages.orderDiscountRemoved,
-            ),
+            text: intl.formatMessage(discountRemovedMessages.orderDiscountRemoved),
           },
           getEmployeeNameLink(event),
         ];
@@ -68,10 +67,9 @@ const LinkedTimelineEvent: React.FC<LinkedTimelineEventProps> = ({ event }) => {
       case OrderEventsEnum.ORDER_LINE_DISCOUNT_REMOVED: {
         return [
           {
-            text: intl.formatMessage(
-              discountRemovedMessages.productDiscountRemoved,
-              { productName: lines[0].itemName },
-            ),
+            text: intl.formatMessage(discountRemovedMessages.productDiscountRemoved, {
+              productName: lines[0].itemName,
+            }),
           },
           getEmployeeNameLink(event),
         ];
@@ -79,7 +77,13 @@ const LinkedTimelineEvent: React.FC<LinkedTimelineEventProps> = ({ event }) => {
     }
   };
 
-  return <TimelineEvent titleElements={getTitleElements()} date={event.date} />;
+  return (
+    <TimelineEvent
+      titleElements={getTitleElements()}
+      date={event.date}
+      hasPlainDate={hasPlainDate}
+    />
+  );
 };
 
 export default LinkedTimelineEvent;

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { gql } from "@apollo/client";
 import { getOperationAST } from "graphql";
 
@@ -62,11 +63,11 @@ export const giftCardTotalCount = gql`
 `;
 
 export const giftCardProductsCount = gql`
-  query GiftCardProductsCount {
+  query GiftCardProductsCount($channel: String!) {
     giftCardProductTypes: productTypes(filter: { kind: GIFT_CARD }) {
       totalCount
     }
-    giftCardProducts: products(filter: { giftCard: true }) {
+    giftCardProducts: products(filter: { giftCard: true }, channel: $channel) {
       totalCount
     }
   }

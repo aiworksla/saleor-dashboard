@@ -13,7 +13,7 @@ export function createCollection(collectionName, isPublished, channel) {
     .click()
     .get(COLLECTION_SELECTORS.nameInput)
     .type(collectionName)
-    .get(AVAILABLE_CHANNELS_FORM.menageChannelsButton)
+    .get(AVAILABLE_CHANNELS_FORM.manageChannelsButton)
     .click()
     .get(SELECT_CHANNELS_TO_ASSIGN.allChannelsCheckbox)
     .click();
@@ -25,6 +25,7 @@ export function createCollection(collectionName, isPublished, channel) {
     .get(AVAILABLE_CHANNELS_FORM.availableChannel)
     .click()
     .get(`${AVAILABLE_CHANNELS_FORM.publishedRadioButtons}${publishedSelector}`)
+    .first()
     .click();
   return saveCollection().its("response.body.data.collectionCreate.collection");
 }

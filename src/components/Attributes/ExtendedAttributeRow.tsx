@@ -1,9 +1,5 @@
-import { Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import Grid from "@saleor/components/Grid";
+import { Box, Button, Text } from "@saleor/macaw-ui-next";
 import React from "react";
-
-import { useExtendedAttributeStyles } from "./styles";
 
 interface ExtendedAttributeRowProps {
   label: string;
@@ -14,30 +10,45 @@ interface ExtendedAttributeRowProps {
 
 const ExtendedAttributeRow: React.FC<ExtendedAttributeRowProps> = props => {
   const { label, selectLabel, disabled, onSelect, children } = props;
-  const classes = useExtendedAttributeStyles(props);
 
   return (
     <>
-      <Grid className={classes.attributeSection} variant="uniform">
-        <div
-          className={classes.attributeSectionLabel}
-          data-test-id="attribute-label"
+      <Box
+        as="li"
+        alignItems="center"
+        paddingY={2}
+        display="grid"
+        gridTemplateColumns={2}
+        __gridTemplateColumns="1fr 2fr"
+        gap={5}
+      >
+        <Text data-test-id="attribute-label">{label}</Text>
+        <Button
+          disabled={disabled}
+          variant="secondary"
+          data-test-id="button-attribute-selector"
+          onClick={onSelect}
+          style={{
+            maxWidth: "fit-content",
+          }}
+          type="button"
+          justifySelf="end"
         >
-          <Typography>{label}</Typography>
-        </div>
-        <div data-test-id="attribute-selector">
-          <Button
-            className={classes.attributeSectionButton}
-            disabled={disabled}
-            variant="tertiary"
-            data-test-id="button-attribute-selector"
-            onClick={onSelect}
-          >
-            {selectLabel}
-          </Button>
-        </div>
-      </Grid>
-      <div data-test-id="attribute-value">{children}</div>
+          {selectLabel}
+        </Button>
+      </Box>
+      <Box
+        as="li"
+        alignItems="center"
+        paddingY={2}
+        display="grid"
+        gridTemplateColumns={2}
+        __gridTemplateColumns="1fr 2fr"
+        gap={5}
+      >
+        <Box />
+        <Box data-test-id="attribute-value">{children}</Box>
+      </Box>
     </>
   );
 };

@@ -1,18 +1,14 @@
-import { WarehouseSortField } from "@saleor/graphql";
-import { createGetSortQueryVariables } from "@saleor/utils/sort";
-import { WarehouseListUrlSortField } from "@saleor/warehouses/urls";
+import { WarehouseSortField } from "@dashboard/graphql";
+import { createGetSortQueryVariables } from "@dashboard/utils/sort";
+import { WarehouseListUrlSortField } from "@dashboard/warehouses/urls";
 
-export function getSortQueryField(
-  sort: WarehouseListUrlSortField,
-): WarehouseSortField {
+export function getSortQueryField(sort: WarehouseListUrlSortField): WarehouseSortField {
   switch (sort) {
     case WarehouseListUrlSortField.name:
       return WarehouseSortField.NAME;
     default:
-      return undefined;
+      throw new Error("Invalid sort field");
   }
 }
 
-export const getSortQueryVariables = createGetSortQueryVariables(
-  getSortQueryField,
-);
+export const getSortQueryVariables = createGetSortQueryVariables(getSortQueryField);

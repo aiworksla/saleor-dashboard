@@ -1,5 +1,5 @@
-import { sectionNames } from "@saleor/intl";
-import { asSortParams } from "@saleor/utils/sort";
+import { sectionNames } from "@dashboard/intl";
+import { asSortParams } from "@dashboard/utils/sort";
 import { parse as parseQs } from "qs";
 import React from "react";
 import { useIntl } from "react-intl";
@@ -15,14 +15,12 @@ import {
   PermissionGroupListUrlQueryParams,
   PermissionGroupListUrlSortField,
 } from "./urls";
-import PermissionGroupCreate from "./views/PermissionGroupCreate";
-import PermissionGroupDetailsComponent from "./views/PermissionGroupDetails";
+import { PermissionGroupCreate } from "./views/PermissionGroupCreate";
+import { PermissionGroupDetails as PermissionGroupDetailsComponent } from "./views/PermissionGroupDetails";
 import PermissionGroupListComponent from "./views/PermissionGroupList";
 
-const permissionGroupList: React.FC<RouteComponentProps<{}>> = ({
-  location,
-}) => {
-  const qs = parseQs(location.search.substr(1));
+const permissionGroupList: React.FC<RouteComponentProps<{}>> = ({ location }) => {
+  const qs = parseQs(location.search.substr(1)) as any;
   const params: PermissionGroupListUrlQueryParams = asSortParams(
     qs,
     PermissionGroupListUrlSortField,
@@ -34,23 +32,17 @@ const permissionGroupList: React.FC<RouteComponentProps<{}>> = ({
 interface PermissionGroupDetailsRouteProps {
   id: string;
 }
-const PermissionGroupDetails: React.FC<RouteComponentProps<
-  PermissionGroupDetailsRouteProps
->> = ({ match }) => {
-  const qs = parseQs(location.search.substr(1));
-  const params: PermissionGroupDetailsUrlQueryParams = asSortParams(
-    qs,
-    MembersListUrlSortField,
-  );
+
+const PermissionGroupDetails: React.FC<RouteComponentProps<PermissionGroupDetailsRouteProps>> = ({
+  match,
+}) => {
+  const qs = parseQs(location.search.substr(1)) as any;
+  const params: PermissionGroupDetailsUrlQueryParams = asSortParams(qs, MembersListUrlSortField);
 
   return (
-    <PermissionGroupDetailsComponent
-      id={decodeURIComponent(match.params.id)}
-      params={params}
-    />
+    <PermissionGroupDetailsComponent id={decodeURIComponent(match.params.id)} params={params} />
   );
 };
-
 const Component = () => {
   const intl = useIntl();
 
@@ -58,19 +50,9 @@ const Component = () => {
     <>
       <WindowTitle title={intl.formatMessage(sectionNames.permissionGroups)} />
       <Switch>
-        <Route
-          exact
-          path={permissionGroupListPath}
-          component={permissionGroupList}
-        />
-        <Route
-          path={permissionGroupAddPath}
-          component={PermissionGroupCreate}
-        />
-        <Route
-          path={permissionGroupDetailsPath(":id")}
-          component={PermissionGroupDetails}
-        />
+        <Route exact path={permissionGroupListPath} component={permissionGroupList} />
+        <Route path={permissionGroupAddPath} component={PermissionGroupCreate} />
+        <Route path={permissionGroupDetailsPath(":id")} component={PermissionGroupDetails} />
       </Switch>
     </>
   );

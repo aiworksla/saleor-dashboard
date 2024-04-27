@@ -1,7 +1,7 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
+import { AttributeTypeEnum } from "@dashboard/graphql";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import RadioGroupField from "@saleor/components/RadioGroupField";
-import { AttributeTypeEnum } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
@@ -27,7 +27,6 @@ const messages = defineMessages({
     description: "attribute type",
   },
 });
-
 const useStyles = makeStyles(
   theme => ({
     card: {
@@ -43,10 +42,8 @@ const useStyles = makeStyles(
   }),
   { name: "AttributeOrganization" },
 );
-
 const AttributeOrganization: React.FC<AttributeOrganizationProps> = props => {
   const { canChangeType, data, disabled, onChange } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
 
@@ -75,10 +72,7 @@ const AttributeOrganization: React.FC<AttributeOrganizationProps> = props => {
             disabled={disabled}
             label={
               <>
-                <FormattedMessage
-                  id="v1pNHW"
-                  defaultMessage="Attribute Class"
-                />
+                <FormattedMessage id="v1pNHW" defaultMessage="Attribute Class" />
                 <Typography variant="caption">
                   <FormattedMessage
                     id="ErNH3D"
@@ -88,7 +82,7 @@ const AttributeOrganization: React.FC<AttributeOrganizationProps> = props => {
               </>
             }
             name={"type" as keyof FormData}
-            value={data.type}
+            value={data.type as AttributeTypeEnum}
             onChange={onChange}
           />
         ) : (
@@ -107,5 +101,6 @@ const AttributeOrganization: React.FC<AttributeOrganizationProps> = props => {
     </Card>
   );
 };
+
 AttributeOrganization.displayName = "AttributeOrganization";
 export default AttributeOrganization;

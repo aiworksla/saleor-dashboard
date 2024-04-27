@@ -1,14 +1,15 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import RichTextEditor from "@dashboard/components/RichTextEditor";
+import { RichTextEditorLoading } from "@dashboard/components/RichTextEditor/RichTextEditorLoading";
+import { PageErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getPageErrorMessage from "@dashboard/utils/errors/page";
+import { useRichTextContext } from "@dashboard/utils/richText/context";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import FormSpacer from "@saleor/components/FormSpacer";
-import RichTextEditor from "@saleor/components/RichTextEditor";
-import { RichTextEditorLoading } from "@saleor/components/RichTextEditor/RichTextEditorLoading";
-import { PageErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
-import { getFormErrors } from "@saleor/utils/errors";
-import getPageErrorMessage from "@saleor/utils/errors/page";
-import { useRichTextContext } from "@saleor/utils/richText/context";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -29,26 +30,16 @@ const useStyles = makeStyles(
   },
   { name: "PageInfo" },
 );
-
 const PageInfo: React.FC<PageInfoProps> = props => {
   const { data, disabled, errors, onChange } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
-
-  const {
-    defaultValue,
-    editorRef,
-    isReadyForMount,
-    handleChange,
-  } = useRichTextContext();
+  const { defaultValue, editorRef, isReadyForMount, handleChange } = useRichTextContext();
   const formErrors = getFormErrors(["title", "content"], errors);
 
   return (
     <Card className={classes.root}>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
+      <CardTitle title={intl.formatMessage(commonMessages.generalInformations)} />
       <CardContent>
         <TextField
           disabled={disabled}
@@ -94,5 +85,6 @@ const PageInfo: React.FC<PageInfoProps> = props => {
     </Card>
   );
 };
+
 PageInfo.displayName = "PageInfo";
 export default PageInfo;

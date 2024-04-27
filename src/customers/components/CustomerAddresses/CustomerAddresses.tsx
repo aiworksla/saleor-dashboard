@@ -1,10 +1,11 @@
+// @ts-strict-ignore
+import AddressFormatter from "@dashboard/components/AddressFormatter";
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import { Hr } from "@dashboard/components/Hr";
+import { CustomerDetailsFragment } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
 import { Card, CardContent, Typography } from "@material-ui/core";
-import AddressFormatter from "@saleor/components/AddressFormatter";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import { Hr } from "@saleor/components/Hr";
-import { CustomerDetailsFragment } from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -30,7 +31,6 @@ export interface CustomerAddressesProps {
 const CustomerAddresses: React.FC<CustomerAddressesProps> = props => {
   const { customer, disabled, manageAddressHref } = props;
   const classes = useStyles(props);
-
   const intl = useIntl();
 
   return (
@@ -64,15 +64,10 @@ const CustomerAddresses: React.FC<CustomerAddressesProps> = props => {
                   description="subsection header"
                 />
               </Typography>
-              <AddressFormatter
-                address={maybe(() => customer.defaultBillingAddress)}
-              />
+              <AddressFormatter address={maybe(() => customer.defaultBillingAddress)} />
             </CardContent>
           )}
-          {maybe(
-            () =>
-              customer.defaultBillingAddress && customer.defaultShippingAddress,
-          ) && <Hr />}
+          {maybe(() => customer.defaultBillingAddress && customer.defaultShippingAddress) && <Hr />}
           {maybe(() => customer.defaultShippingAddress) && (
             <CardContent>
               <Typography className={classes.label}>
@@ -82,9 +77,7 @@ const CustomerAddresses: React.FC<CustomerAddressesProps> = props => {
                   description="subsection header"
                 />
               </Typography>
-              <AddressFormatter
-                address={maybe(() => customer.defaultShippingAddress)}
-              />
+              <AddressFormatter address={maybe(() => customer.defaultShippingAddress)} />
             </CardContent>
           )}
         </>
@@ -92,10 +85,7 @@ const CustomerAddresses: React.FC<CustomerAddressesProps> = props => {
         maybe(() => customer.defaultShippingAddress) === null ? (
         <CardContent>
           <Typography>
-            <FormattedMessage
-              id="3d1RXL"
-              defaultMessage="This customer has no addresses yet"
-            />
+            <FormattedMessage id="3d1RXL" defaultMessage="This customer has no addresses yet" />
           </Typography>
         </CardContent>
       ) : (
@@ -107,13 +97,12 @@ const CustomerAddresses: React.FC<CustomerAddressesProps> = props => {
               description="subsection header"
             />
           </Typography>
-          <AddressFormatter
-            address={maybe(() => customer.defaultBillingAddress)}
-          />
+          <AddressFormatter address={maybe(() => customer.defaultBillingAddress)} />
         </CardContent>
       )}
     </Card>
   );
 };
+
 CustomerAddresses.displayName = "CustomerAddresses";
 export default CustomerAddresses;

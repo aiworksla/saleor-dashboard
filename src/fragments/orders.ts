@@ -37,11 +37,19 @@ export const fragmentOrderEvent = gql`
       email
       firstName
       lastName
+      avatar(size: 128) {
+        url
+      }
     }
     app {
       id
       name
       appUrl
+      brand {
+        logo {
+          default(size: 128)
+        }
+      }
     }
     lines {
       quantity
@@ -84,6 +92,7 @@ export const fragmentOrderLine = gql`
     }
     variant {
       id
+      name
       quantityAvailable
       preorder {
         endDate
@@ -98,9 +107,13 @@ export const fragmentOrderLine = gql`
     }
     productName
     productSku
+    isGift
     quantity
     quantityFulfilled
     quantityToFulfill
+    totalPrice {
+      ...TaxedMoney
+    }
     unitDiscount {
       amount
       currency
@@ -135,6 +148,20 @@ export const fragmentOrderLine = gql`
   }
 `;
 
+export const fragmentOrderLineWithMetadata = gql`
+  fragment OrderLineWithMetadata on OrderLine {
+    ...OrderLine
+    variant {
+      metadata {
+        ...MetadataItem
+      }
+      privateMetadata @include(if: $isStaffUser) {
+        ...MetadataItem
+      }
+    }
+  }
+`;
+
 export const fragmentRefundOrderLine = gql`
   fragment RefundOrderLine on OrderLine {
     id
@@ -153,6 +180,7 @@ export const fragmentRefundOrderLine = gql`
 
 export const fulfillmentFragment = gql`
   fragment Fulfillment on Fulfillment {
+    ...Metadata
     id
     lines {
       id
@@ -171,6 +199,17 @@ export const fulfillmentFragment = gql`
   }
 `;
 
+export const fulfillmentFragmentWithMetadata = gql`
+  fragment FulfillmentWithMetadata on Fulfillment {
+    ...Fulfillment
+    lines {
+      orderLine {
+        ...OrderLineWithMetadata
+      }
+    }
+  }
+`;
+
 export const invoiceFragment = gql`
   fragment Invoice on Invoice {
     id
@@ -181,48 +220,47 @@ export const invoiceFragment = gql`
   }
 `;
 
+export const orderDiscount = gql`
+  fragment OrderDiscount on OrderDiscount {
+    id
+    type
+    name
+    calculationMode: valueType
+    value
+    reason
+    amount {
+      ...Money
+    }
+  }
+`;
+
 export const fragmentOrderDetails = gql`
   fragment OrderDetails on Order {
     id
+    # TODO: remove me
     token
     ...Metadata
     billingAddress {
       ...Address
     }
+    transactions {
+      ...TransactionItem
+    }
+    payments {
+      ...OrderPayment
+    }
     giftCards {
-      events {
-        id
-        type
-        orderId
-        balance {
-          initialBalance {
-            ...Money
-          }
-          currentBalance {
-            ...Money
-          }
-          oldInitialBalance {
-            ...Money
-          }
-          oldCurrentBalance {
-            ...Money
-          }
-        }
-      }
+      ...OrderGiftCard
+    }
+    grantedRefunds {
+      ...OrderGrantedRefund
     }
     isShippingRequired
     canFinalize
     created
     customerNote
     discounts {
-      id
-      type
-      calculationMode: valueType
-      value
-      reason
-      amount {
-        ...Money
-      }
+      ...OrderDiscount
     }
     events {
       ...OrderEvent
@@ -249,6 +287,7 @@ export const fragmentOrderDetails = gql`
         clickAndCollectOption
       }
     }
+    # TODO: remove me
     shippingMethod {
       id
     }
@@ -280,11 +319,39 @@ export const fragmentOrderDetails = gql`
         ...Money
       }
     }
+    totalRemainingGrant {
+      ...Money
+    }
+    totalGrantedRefund {
+      ...Money
+    }
+    totalRefundPending {
+      ...Money
+    }
+    totalRefunded {
+      ...Money
+    }
     actions
+    totalAuthorizePending {
+      ...Money
+    }
     totalAuthorized {
       ...Money
     }
+    # TODO: Remove me
     totalCaptured {
+      ...Money
+    }
+    totalCharged {
+      ...Money
+    }
+    totalChargePending {
+      ...Money
+    }
+    totalCanceled {
+      ...Money
+    }
+    totalCancelPending {
       ...Money
     }
     totalBalance {
@@ -324,8 +391,23 @@ export const fragmentOrderDetails = gql`
       defaultCountry {
         code
       }
+      orderSettings {
+        markAsPaidStrategy
+      }
     }
     isPaid
+  }
+`;
+
+export const fragmentOrderDetailsWithMetadata = gql`
+  fragment OrderDetailsWithMetadata on Order {
+    ...OrderDetails
+    fulfillments {
+      ...FulfillmentWithMetadata
+    }
+    lines {
+      ...OrderLineWithMetadata
+    }
   }
 `;
 
@@ -398,6 +480,248 @@ export const fragmentOrderLineStockData = gql`
       stocks {
         ...Stock
       }
+    }
+  }
+`;
+
+export const transactionBaseEvent = gql`
+  fragment TransactionBaseEvent on TransactionEvent {
+    id
+    pspReference
+    amount {
+      ...Money
+    }
+    externalUrl
+    type
+    message
+    createdAt
+  }
+`;
+
+export const transactionEvent = gql`
+  fragment TransactionEvent on TransactionEvent {
+    ...TransactionBaseEvent
+    createdBy {
+      ... on User {
+        ...StaffMemberAvatar
+      }
+      ... on App {
+        ...AppAvatar
+      }
+    }
+    externalUrl
+  }
+`;
+
+export const transactionBaseItemFragment = gql`
+  fragment TransactionBaseItem on TransactionItem {
+    id
+    name
+    actions
+    events {
+      ...TransactionBaseEvent
+    }
+  }
+`;
+
+export const transactionItemFragment = gql`
+  fragment TransactionItem on TransactionItem {
+    ...TransactionBaseItem
+    pspReference
+    externalUrl
+    events {
+      ...TransactionEvent
+    }
+    authorizedAmount {
+      ...Money
+    }
+    chargedAmount {
+      ...Money
+    }
+    refundedAmount {
+      ...Money
+    }
+    canceledAmount {
+      ...Money
+    }
+    authorizePendingAmount {
+      ...Money
+    }
+    chargePendingAmount {
+      ...Money
+    }
+    refundPendingAmount {
+      ...Money
+    }
+    cancelPendingAmount {
+      ...Money
+    }
+  }
+`;
+
+export const fragmentPayment = gql`
+  fragment OrderPayment on Payment {
+    id
+    isActive
+    actions
+    gateway
+    paymentMethodType
+    availableCaptureAmount {
+      ...Money
+    }
+    capturedAmount {
+      ...Money
+    }
+    total {
+      ...Money
+    }
+    availableRefundAmount {
+      ...Money
+    }
+    modified
+    transactions {
+      id
+      token
+      created
+      kind
+      isSuccess
+    }
+  }
+`;
+
+export const fragmentOrderGiftcard = gql`
+  fragment OrderGiftCard on GiftCard {
+    id
+    last4CodeChars
+    events {
+      id
+      type
+      orderId
+      date
+      balance {
+        initialBalance {
+          ...Money
+        }
+        currentBalance {
+          ...Money
+        }
+        oldInitialBalance {
+          ...Money
+        }
+        oldCurrentBalance {
+          ...Money
+        }
+      }
+    }
+  }
+`;
+
+export const fragmentOrderGrantedRefunds = gql`
+  fragment OrderGrantedRefund on OrderGrantedRefund {
+    id
+    createdAt
+    shippingCostsIncluded
+    status
+    amount {
+      currency
+      amount
+    }
+    transactionEvents {
+      id
+    }
+    reason
+    user {
+      ...UserBaseAvatar
+    }
+    app {
+      id
+      name
+    }
+  }
+`;
+
+export const orderLineGrantRefund = gql`
+  fragment OrderLineGrantRefund on OrderLine {
+    id
+    thumbnail {
+      url
+    }
+    productName
+    quantity
+    quantityToFulfill
+    variantName
+    productName
+    unitPrice {
+      gross {
+        ...Money
+      }
+    }
+  }
+`;
+
+export const orderDetailsGrantedRefund = gql`
+  fragment OrderDetailsGrantedRefund on OrderGrantedRefund {
+    id
+    reason
+    amount {
+      ...Money
+    }
+    shippingCostsIncluded
+    transaction {
+      id
+    }
+    status
+    lines {
+      id
+      quantity
+      reason
+      orderLine {
+        ...OrderLine
+      }
+    }
+  }
+`;
+
+export const grantRefundFulfillment = gql`
+  fragment OrderFulfillmentGrantRefund on Fulfillment {
+    id
+    fulfillmentOrder
+    status
+    lines {
+      id
+      quantity
+      orderLine {
+        ...OrderLineGrantRefund
+      }
+    }
+  }
+`;
+
+export const fragmentOrderDetailsGrantRefund = gql`
+  fragment OrderDetailsGrantRefund on Order {
+    id
+    number
+    lines {
+      ...OrderLineGrantRefund
+    }
+    fulfillments {
+      ...OrderFulfillmentGrantRefund
+    }
+    shippingPrice {
+      gross {
+        ...Money
+      }
+    }
+    total {
+      gross {
+        ...Money
+      }
+    }
+    grantedRefunds {
+      ...OrderDetailsGrantedRefund
+    }
+    transactions {
+      ...TransactionItem
     }
   }
 `;

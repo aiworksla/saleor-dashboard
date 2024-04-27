@@ -3,26 +3,26 @@
 
 import faker from "faker";
 
-import { GIFT_CARD_UPDATE } from "../../../elements/catalog/giftCard/giftCardUpdate";
+import {
+  GIFT_CARD_UPDATE,
+} from "../../../elements/catalog/giftCard/giftCardUpdate";
 import { BUTTON_SELECTORS } from "../../../elements/shared/button-selectors";
-import { giftCardDetailsUrl } from "../../../fixtures/urlList";
+import { MESSAGES } from "../../../fixtures";
+import {
+  giftCardDetailsUrl,
+  urlList,
+} from "../../../fixtures/urlList";
 import {
   createGiftCard,
   getGiftCardWithId,
 } from "../../../support/api/requests/GiftCard";
-import { deleteGiftCardsWithTagStartsWith } from "../../../support/api/utils/catalog/giftCardUtils";
 import { formatDate } from "../../../support/formatData/formatDate";
+import { giftCardsPage } from "../../../support/pages";
 
 describe("As an admin I want to update gift card", () => {
   const startsWith = "updateGCard";
-
-  before(() => {
-    cy.clearSessionData().loginUserViaRequest();
-    deleteGiftCardsWithTagStartsWith(startsWith);
-  });
-
   beforeEach(() => {
-    cy.clearSessionData().loginUserViaRequest();
+    cy.loginUserViaRequest();
   });
 
   it(
@@ -89,6 +89,52 @@ describe("As an admin I want to update gift card", () => {
             updatedName.toLowerCase(),
           );
           expect(giftCard.expiryDate).to.eq(date);
+        });
+    },
+  );
+
+  it(
+    "should be able to delete several gift cards. TC: SALEOR_1011",
+    { tags: ["@giftCard", "@allEnv", "@stable"] },
+    () => {
+      const firstGiftCardTag = faker.datatype.number();
+      const secondGiftCardTag = faker.datatype.number();
+      let firstGiftCardId;
+      let secondGiftCardId;
+      let firstGiftCardCode;
+      let secondGiftCardCode;
+      cy.addAliasToGraphRequest("BulkDeleteGiftCard");
+
+      createGiftCard({
+        tag: firstGiftCardTag,
+        amount: 3,
+        currency: "THB",
+      })
+        .then(firstGiftCard => {
+          firstGiftCardId = firstGiftCard.id;
+          firstGiftCardCode = firstGiftCard.code;
+          createGiftCard({
+            tag: secondGiftCardTag,
+            amount: 7,
+            currency: "THB",
+          });
+        })
+        .then(secondGiftCard => {
+          secondGiftCardCode = secondGiftCard.code;
+          secondGiftCardId = secondGiftCard.id;
+          cy.visit(
+            giftCardsPage.getUrlWithFilteredTags(urlList.giftCards, [
+              firstGiftCardTag,
+              secondGiftCardTag,
+            ]),
+          );
+          giftCardsPage.selectGiftCardOnListView(secondGiftCardCode);
+          giftCardsPage.selectGiftCardOnListView(firstGiftCardCode);
+          giftCardsPage.bulkDeleteRecords();
+          cy.waitForRequestAndCheckIfNoErrors("@BulkDeleteGiftCard");
+          cy.contains(MESSAGES.noGiftCardsFound).should("be.visible");
+          getGiftCardWithId(firstGiftCardId).should("be.null");
+          getGiftCardWithId(secondGiftCardId).should("be.null");
         });
     },
   );

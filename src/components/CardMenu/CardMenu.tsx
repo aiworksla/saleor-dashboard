@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
   CircularProgress,
   ClickAwayListener,
@@ -9,7 +10,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import { IconButtonProps, makeStyles, SettingsIcon } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -17,14 +18,16 @@ import { IconButton } from "../IconButton";
 import { cardMenuMessages as messages } from "./messages";
 
 const ITEM_HEIGHT = 48;
+
 export interface CardMenuItem {
   disabled?: boolean;
   label: string;
   testId?: string;
-  onSelect: () => void;
+  onSelect: <T>(params?: T) => void;
   loading?: boolean;
   withLoading?: boolean;
   hasError?: boolean;
+  Icon?: React.ReactElement;
 }
 
 export interface CardMenuProps {
@@ -34,6 +37,8 @@ export interface CardMenuProps {
   outlined?: boolean;
   Icon?: React.ElementType<{}>;
   IconButtonProps?: IconButtonProps;
+  autoFocusItem?: boolean;
+  showMenuIcon?: boolean;
 }
 
 const useStyles = makeStyles(
@@ -64,7 +69,9 @@ const useStyles = makeStyles(
   }),
   { name: "CardMenu" },
 );
-
+/**
+ * @deprecated use [`TopNav.Menu`](https://github.com/saleor/saleor-dashboard/blob/main/src/components/AppLayout/TopNav/Menu.tsx) instead
+ */
 const CardMenu: React.FC<CardMenuProps> = props => {
   const {
     className,
@@ -73,42 +80,36 @@ const CardMenu: React.FC<CardMenuProps> = props => {
     outlined,
     Icon: icon,
     IconButtonProps = {},
+    autoFocusItem = true,
+    showMenuIcon = false,
     ...rest
   } = props;
   const classes = useStyles(props);
-
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
-
   const handleToggle = () => setOpen(prevOpen => !prevOpen);
-
   const handleClose = (event: React.MouseEvent<EventTarget>) => {
-    if (
-      anchorRef.current &&
-      anchorRef.current.contains(event.target as HTMLElement)
-    ) {
+    if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
       return;
     }
 
     setOpen(false);
   };
-
   const handleListKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Tab") {
       event.preventDefault();
       setOpen(false);
     }
   };
-
   const prevOpen = useRef(open);
+
   useEffect(() => {
-    if (prevOpen.current === true && open === false) {
+    if (prevOpen.current && !open) {
       anchorRef.current!.focus();
     }
 
     prevOpen.current = open;
   }, [open]);
-
   useEffect(() => {
     const hasAnyItemsLoadingOrWithError = menuItems
       ?.filter(({ withLoading }) => withLoading)
@@ -121,15 +122,14 @@ const CardMenu: React.FC<CardMenuProps> = props => {
 
   const handleMenuClick = (index: number) => {
     const selectedItem = menuItems[index];
+
     selectedItem.onSelect();
 
     if (!selectedItem.withLoading) {
       setOpen(false);
     }
   };
-
   const isWithLoading = menuItems.some(({ withLoading }) => withLoading);
-
   const Icon = icon ?? SettingsIcon;
 
   return (
@@ -139,7 +139,6 @@ const CardMenu: React.FC<CardMenuProps> = props => {
         aria-label="More"
         aria-owns={open ? "long-menu" : null}
         aria-haspopup="true"
-        color="primary"
         disabled={disabled}
         ref={anchorRef}
         onClick={handleToggle}
@@ -160,15 +159,14 @@ const CardMenu: React.FC<CardMenuProps> = props => {
           <Grow
             {...TransitionProps}
             style={{
-              transformOrigin:
-                placement === "bottom" ? "right top" : "right bottom",
+              transformOrigin: placement === "bottom" ? "right top" : "right bottom",
               overflowY: "auto",
             }}
           >
             <Paper className={classes.paper} elevation={8}>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList
-                  autoFocusItem={open}
+                  autoFocusItem={autoFocusItem && open}
                   id="menu-list-grow"
                   onKeyDown={handleListKeyDown}
                 >
@@ -181,21 +179,21 @@ const CardMenu: React.FC<CardMenuProps> = props => {
                       button
                     >
                       <div
-                        className={classNames(className, {
+                        className={clsx(className, {
                           [classes.loadingContent]: isWithLoading,
                         })}
                       >
                         {menuItem.loading ? (
                           <>
                             <Typography variant="subtitle1">
-                              <FormattedMessage
-                                {...messages.cardMenuItemLoading}
-                              />
+                              <FormattedMessage {...messages.cardMenuItemLoading} />
                             </Typography>
                             <CircularProgress size={24} />
                           </>
                         ) : (
-                          <Typography>{menuItem.label}</Typography>
+                          <Typography>
+                            {showMenuIcon && menuItem.Icon} {menuItem.label}
+                          </Typography>
                         )}
                       </div>
                     </MenuItem>
@@ -209,5 +207,6 @@ const CardMenu: React.FC<CardMenuProps> = props => {
     </div>
   );
 };
+
 CardMenu.displayName = "CardMenu";
 export default CardMenu;

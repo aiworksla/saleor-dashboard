@@ -1,17 +1,18 @@
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardTitle from "@dashboard/components/CardTitle";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import Grid from "@dashboard/components/Grid";
+import Savebar from "@dashboard/components/Savebar";
+import Skeleton from "@dashboard/components/Skeleton";
+import { ProductMediaType } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { commonMessages } from "@dashboard/intl";
+import { productUrl } from "@dashboard/products/urls";
 import { Card, CardContent, TextField } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import CardTitle from "@saleor/components/CardTitle";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import Skeleton from "@saleor/components/Skeleton";
-import { ProductMediaType } from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { commonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState, makeStyles } from "@saleor/macaw-ui";
-import { productUrl } from "@saleor/products/urls";
+import { makeStyles } from "@saleor/macaw-ui";
+import { vars } from "@saleor/macaw-ui-next";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
 
@@ -39,7 +40,6 @@ const messages = defineMessages({
     description: "field is optional",
   },
 });
-
 const useStyles = makeStyles(
   theme => ({
     image: {
@@ -52,7 +52,7 @@ const useStyles = makeStyles(
         width: "100%",
         maxHeight: 420,
       },
-      border: "1px solid #eaeaea",
+      border: `1px solid ${vars.colors.border.default1}`,
       borderRadius: theme.spacing(),
       margin: `0 auto ${theme.spacing(2)}px`,
       width: "100%",
@@ -89,27 +89,20 @@ const ProductMediaPage: React.FC<ProductMediaPageProps> = props => {
     disabled,
     mediaObj,
     media,
-    product,
     saveButtonBarState,
     onDelete,
     onRowClick,
     onSubmit,
   } = props;
-
   const classes = useStyles(props);
   const intl = useIntl();
   const navigate = useNavigator();
 
   return (
-    <Form
-      initial={{ description: mediaObj ? mediaObj.alt : "" }}
-      onSubmit={onSubmit}
-      confirmLeave
-    >
+    <Form initial={{ description: mediaObj ? mediaObj.alt : "" }} onSubmit={onSubmit} confirmLeave>
       {({ change, data, submit }) => (
-        <Container>
-          <Backlink href={productUrl(productId)}>{product}</Backlink>
-          <PageHeader title={intl.formatMessage(messages.editMedia)} />
+        <>
+          <TopNav href={productUrl(productId)} title={intl.formatMessage(messages.editMedia)} />
           <Grid variant="inverted">
             <div>
               <ProductMediaNavigation
@@ -119,9 +112,7 @@ const ProductMediaPage: React.FC<ProductMediaPageProps> = props => {
                 onRowClick={onRowClick}
               />
               <Card>
-                <CardTitle
-                  title={intl.formatMessage(messages.mediaInformation)}
-                />
+                <CardTitle title={intl.formatMessage(messages.mediaInformation)} />
                 <CardContent>
                   <TextField
                     name="description"
@@ -140,14 +131,10 @@ const ProductMediaPage: React.FC<ProductMediaPageProps> = props => {
               <Card>
                 <CardTitle title={intl.formatMessage(messages.mediaView)} />
                 <CardContent>
-                  {!!mediaObj ? (
+                  {mediaObj ? (
                     mediaObj?.type === ProductMediaType.IMAGE ? (
                       <div className={classes.imageContainer}>
-                        <img
-                          className={classes.image}
-                          src={mediaObj.url}
-                          alt={mediaObj.alt}
-                        />
+                        <img className={classes.image} src={mediaObj.url} alt={mediaObj.alt} />
                       </div>
                     ) : (
                       <div
@@ -171,10 +158,11 @@ const ProductMediaPage: React.FC<ProductMediaPageProps> = props => {
             onDelete={onDelete}
             onSubmit={submit}
           />
-        </Container>
+        </>
       )}
     </Form>
   );
 };
+
 ProductMediaPage.displayName = "ProductMediaPage";
 export default ProductMediaPage;

@@ -1,5 +1,5 @@
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
-import { FormChange } from "@saleor/hooks/useForm";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
+import { FormChange } from "@dashboard/hooks/useForm";
 
 export interface SingleAutocompleteSelectedChangeHandlerProps {
   change: FormChange;
@@ -12,11 +12,12 @@ function createSingleAutocompleteSelectHandler(
   setSelected: (value: string) => void,
   choices: SingleAutocompleteChoiceType[],
 ): FormChange {
-  return (event: React.ChangeEvent<any>) => {
+  return event => {
     change(event);
 
     const value = event.target.value;
     const choice = choices.find(category => category.value === value);
+
     setSelected(choice ? choice.label : value);
   };
 }

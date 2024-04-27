@@ -1,6 +1,6 @@
 import { TableCell } from "@material-ui/core";
 import { IconButton, ICONBUTTON_SIZE, makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 import { stopPropagation } from "../../misc";
@@ -26,12 +26,12 @@ const useStyles = makeStyles(
 );
 const IconButtonTableCell: React.FC<IconButtonTableCellProps> = props => {
   const { children, className, disabled, onClick } = props;
-
   const classes = useStyles(props);
 
   return (
-    <TableCell className={classNames(classes.root, className)}>
+    <TableCell className={clsx(classes.root, className)}>
       <IconButton
+        data-test-id="delete-button"
         variant="secondary"
         color="primary"
         disabled={disabled}
@@ -42,5 +42,6 @@ const IconButtonTableCell: React.FC<IconButtonTableCellProps> = props => {
     </TableCell>
   );
 };
+
 IconButtonTableCell.displayName = "IconButtonTableCell";
 export default IconButtonTableCell;

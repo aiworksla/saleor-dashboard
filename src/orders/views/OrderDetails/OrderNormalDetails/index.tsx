@@ -1,34 +1,51 @@
-import { WindowTitle } from "@saleor/components/WindowTitle";
+// @ts-strict-ignore
+import { FetchResult } from "@apollo/client";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
 import {
+  CreateManualTransactionCaptureMutation,
+  CreateManualTransactionCaptureMutationVariables,
   FulfillmentFragment,
   FulfillmentStatus,
-  OrderDetailsQueryResult,
+  OrderDetailsWithMetadataQueryResult,
   OrderFulfillmentApproveMutation,
   OrderFulfillmentApproveMutationVariables,
+  OrderTransactionRequestActionMutation,
+  OrderTransactionRequestActionMutationVariables,
   OrderUpdateMutation,
   OrderUpdateMutationVariables,
   useCustomerAddressesQuery,
   useWarehouseListQuery,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import OrderCannotCancelOrderDialog from "@saleor/orders/components/OrderCannotCancelOrderDialog";
-import { OrderCustomerAddressesEditDialogOutput } from "@saleor/orders/components/OrderCustomerAddressesEditDialog/types";
-import OrderFulfillmentApproveDialog from "@saleor/orders/components/OrderFulfillmentApproveDialog";
-import OrderFulfillStockExceededDialog from "@saleor/orders/components/OrderFulfillStockExceededDialog";
-import OrderInvoiceEmailSendDialog from "@saleor/orders/components/OrderInvoiceEmailSendDialog";
-import { getById } from "@saleor/orders/components/OrderReturnPage/utils";
-import { transformFuflillmentLinesToStockFormsetData } from "@saleor/orders/utils/data";
-import { PartialMutationProviderOutput } from "@saleor/types";
-import { mapEdgesToItems } from "@saleor/utils/maps";
+} from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import {
+  extractMutationErrors,
+  getById,
+  getMutationState,
+  getStringOrPlaceholder,
+} from "@dashboard/misc";
+import OrderCannotCancelOrderDialog from "@dashboard/orders/components/OrderCannotCancelOrderDialog";
+import { OrderCustomerAddressesEditDialogOutput } from "@dashboard/orders/components/OrderCustomerAddressesEditDialog/types";
+import OrderFulfillmentApproveDialog from "@dashboard/orders/components/OrderFulfillmentApproveDialog";
+import OrderFulfillStockExceededDialog from "@dashboard/orders/components/OrderFulfillStockExceededDialog";
+import OrderInvoiceEmailSendDialog from "@dashboard/orders/components/OrderInvoiceEmailSendDialog";
+import { OrderManualTransactionDialog } from "@dashboard/orders/components/OrderManualTransactionDialog";
+import { OrderMetadataDialog } from "@dashboard/orders/components/OrderMetadataDialog";
+import { OrderRefundDialog } from "@dashboard/orders/components/OrderRefundDialog/OrderRefundDialog";
+import { OrderTransactionActionDialog } from "@dashboard/orders/components/OrderTransactionActionDialog/OrderTransactionActionDialog";
+import {
+  isAnyAddressEditModalOpen,
+  transformFuflillmentLinesToStockFormsetData,
+} from "@dashboard/orders/utils/data";
+import { PartialMutationProviderOutput } from "@dashboard/types";
+import {
+  CloseModalFunction,
+  OpenModalFunction,
+} from "@dashboard/utils/handlers/dialogActionHandlers";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import React from "react";
 import { useIntl } from "react-intl";
 
 import { customerUrl } from "../../../../customers/urls";
-import {
-  extractMutationErrors,
-  getMutationState,
-  getStringOrPlaceholder,
-} from "../../../../misc";
 import { productUrl } from "../../../../products/urls";
 import OrderAddressFields from "../../../components/OrderAddressFields/OrderAddressFields";
 import OrderCancelDialog from "../../../components/OrderCancelDialog";
@@ -40,24 +57,24 @@ import OrderPaymentDialog from "../../../components/OrderPaymentDialog";
 import OrderPaymentVoidDialog from "../../../components/OrderPaymentVoidDialog";
 import {
   orderFulfillUrl,
-  orderRefundUrl,
+  orderManualTransationRefundUrl,
+  orderPaymentRefundUrl,
   orderReturnUrl,
+  orderTransactionRefundUrl,
   orderUrl,
+  OrderUrlDialog,
   OrderUrlQueryParams,
 } from "../../../urls";
-import { isAnyAddressEditModalOpen } from "../OrderDraftDetails";
 
 interface OrderNormalDetailsProps {
   id: string;
   params: OrderUrlQueryParams;
-  data: OrderDetailsQueryResult["data"];
+  data: OrderDetailsWithMetadataQueryResult["data"];
+  loading: boolean;
   orderAddNote: any;
   orderInvoiceRequest: any;
   handleSubmit: any;
-  orderUpdate: PartialMutationProviderOutput<
-    OrderUpdateMutation,
-    OrderUpdateMutationVariables
-  >;
+  orderUpdate: PartialMutationProviderOutput<OrderUpdateMutation, OrderUpdateMutationVariables>;
   orderCancel: any;
   orderPaymentMarkAsPaid: any;
   orderVoid: any;
@@ -69,10 +86,18 @@ interface OrderNormalDetailsProps {
   orderFulfillmentCancel: any;
   orderFulfillmentUpdateTracking: any;
   orderInvoiceSend: any;
+  orderTransactionAction: PartialMutationProviderOutput<
+    OrderTransactionRequestActionMutation,
+    OrderTransactionRequestActionMutationVariables
+  >;
+  orderAddManualTransaction: PartialMutationProviderOutput<
+    CreateManualTransactionCaptureMutation,
+    CreateManualTransactionCaptureMutationVariables
+  >;
   updateMetadataOpts: any;
   updatePrivateMetadataOpts: any;
-  openModal: any;
-  closeModal: any;
+  openModal: OpenModalFunction<OrderUrlDialog, OrderUrlQueryParams>;
+  closeModal: CloseModalFunction;
 }
 interface ApprovalState {
   fulfillment: FulfillmentFragment;
@@ -83,6 +108,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
   id,
   params,
   data,
+  loading,
   orderAddNote,
   orderInvoiceRequest,
   handleSubmit,
@@ -95,6 +121,8 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
   orderFulfillmentCancel,
   orderFulfillmentUpdateTracking,
   orderInvoiceSend,
+  orderTransactionAction,
+  orderAddManualTransaction,
   updateMetadataOpts,
   updatePrivateMetadataOpts,
   openModal,
@@ -103,20 +131,14 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
   const order = data?.order;
   const shop = data?.shop;
   const navigate = useNavigator();
-
   const { data: warehousesData } = useWarehouseListQuery({
     displayLoader: true,
     variables: {
       first: 30,
     },
   });
-
   const warehouses = mapEdgesToItems(warehousesData?.warehouses);
-
-  const {
-    data: customerAddresses,
-    loading: customerAddressesLoading,
-  } = useCustomerAddressesQuery({
+  const { data: customerAddresses, loading: customerAddressesLoading } = useCustomerAddressesQuery({
     variables: {
       id: order?.user?.id,
     },
@@ -124,27 +146,19 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
   });
   const handleCustomerChangeAddresses = async (
     data: Partial<OrderCustomerAddressesEditDialogOutput>,
-  ): Promise<any> =>
+  ): Promise<FetchResult<OrderUpdateMutation>> =>
     orderUpdate.mutate({
       id,
       input: data,
     });
-
   const intl = useIntl();
   const [transactionReference, setTransactionReference] = React.useState("");
-
-  const [
-    currentApproval,
-    setCurrentApproval,
-  ] = React.useState<ApprovalState | null>(null);
+  const [currentApproval, setCurrentApproval] = React.useState<ApprovalState | null>(null);
   const [stockExceeded, setStockExceeded] = React.useState(false);
-  const approvalErrors =
-    orderFulfillmentApprove.opts.data?.orderFulfillmentApprove.errors || [];
+  const approvalErrors = orderFulfillmentApprove.opts.data?.orderFulfillmentApprove.errors || [];
+
   React.useEffect(() => {
-    if (
-      approvalErrors.length &&
-      approvalErrors.every(err => err.code === "INSUFFICIENT_STOCK")
-    ) {
+    if (approvalErrors.length && approvalErrors.every(err => err.code === "INSUFFICIENT_STOCK")) {
       setStockExceeded(true);
     }
   }, [approvalErrors]);
@@ -167,9 +181,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
       />
       <OrderDetailsPage
         onOrderReturn={() => navigate(orderReturnUrl(id))}
-        disabled={
-          updateMetadataOpts.loading || updatePrivateMetadataOpts.loading
-        }
+        loading={loading || updateMetadataOpts.loading || updatePrivateMetadataOpts.loading}
         errors={errors}
         onNoteAdd={variables =>
           extractMutationErrors(
@@ -187,14 +199,20 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
           [
             ...(updateMetadataOpts.data?.deleteMetadata.errors || []),
             ...(updateMetadataOpts.data?.updateMetadata.errors || []),
-            ...(updatePrivateMetadataOpts.data?.deletePrivateMetadata.errors ||
-              []),
-            ...(updatePrivateMetadataOpts.data?.updatePrivateMetadata.errors ||
-              []),
+            ...(updatePrivateMetadataOpts.data?.deletePrivateMetadata.errors || []),
+            ...(updatePrivateMetadataOpts.data?.updatePrivateMetadata.errors || []),
           ],
         )}
         shippingMethods={data?.order?.shippingMethods || []}
         onOrderCancel={() => openModal("cancel")}
+        onShowMetadata={id => openModal("view-metadata", { id })}
+        onTransactionAction={(id, action) =>
+          openModal("transaction-action", {
+            type: action,
+            id,
+            action: "transaction-action",
+          })
+        }
         onOrderFulfill={() => navigate(orderFulfillUrl(id))}
         onFulfillmentApprove={fulfillmentId =>
           navigate(
@@ -222,12 +240,13 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
         }
         onPaymentCapture={() => openModal("capture")}
         onPaymentVoid={() => openModal("void")}
-        onPaymentRefund={() => navigate(orderRefundUrl(id))}
+        onPaymentRefund={() => navigate(orderPaymentRefundUrl(id))}
         onProductClick={id => () => navigate(productUrl(id))}
         onBillingAddressEdit={() => openModal("edit-billing-address")}
         onShippingAddressEdit={() => openModal("edit-shipping-address")}
-        onPaymentPaid={() => openModal("mark-paid")}
+        onMarkAsPaid={() => openModal("mark-paid")}
         onProfileView={() => navigate(customerUrl(order.user.id))}
+        onAddManualTransaction={() => openModal("add-manual-transaction")}
         onInvoiceClick={id =>
           window.open(
             order.invoices.find(invoice => invoice.id === id)?.url,
@@ -241,6 +260,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
           })
         }
         onInvoiceSend={id => openModal("invoice-send", { id })}
+        onRefundAdd={() => openModal("add-refund")}
         onSubmit={handleSubmit}
       />
       <OrderCannotCancelOrderDialog
@@ -264,6 +284,23 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
           })
         }
       />
+      <OrderTransactionActionDialog
+        confirmButtonState={orderTransactionAction.opts.status}
+        onClose={closeModal}
+        open={params.action === "transaction-action"}
+        action={params.type}
+        onSubmit={() =>
+          orderTransactionAction.mutate({
+            action: params.type,
+            transactionId: params.id,
+          })
+        }
+      />
+      <OrderMetadataDialog
+        open={params.action === "view-metadata"}
+        onClose={closeModal}
+        data={order?.lines?.find(orderLine => orderLine.id === params.id)}
+      />
       <OrderMarkAsPaidDialog
         confirmButtonState={orderPaymentMarkAsPaid.opts.status}
         errors={orderPaymentMarkAsPaid.opts.data?.orderMarkAsPaid.errors || []}
@@ -276,9 +313,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
         }
         open={params.action === "mark-paid"}
         transactionReference={transactionReference}
-        handleTransactionReference={({ target }) =>
-          setTransactionReference(target.value)
-        }
+        handleTransactionReference={({ target }) => setTransactionReference(target.value)}
       />
       <OrderPaymentVoidDialog
         confirmButtonState={orderVoid.opts.status}
@@ -302,16 +337,14 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
       />
       <OrderFulfillmentApproveDialog
         confirmButtonState={orderFulfillmentApprove.opts.status}
-        errors={
-          orderFulfillmentApprove.opts.data?.orderFulfillmentApprove.errors ||
-          []
-        }
+        errors={orderFulfillmentApprove.opts.data?.orderFulfillmentApprove.errors || []}
         open={params.action === "approve-fulfillment"}
         onConfirm={({ notifyCustomer }) => {
           setCurrentApproval({
             fulfillment: order?.fulfillments.find(getById(params.id)),
             notifyCustomer,
           });
+
           return orderFulfillmentApprove.mutate({
             id: params.id,
             notifyCustomer,
@@ -330,6 +363,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
         confirmButtonState="default"
         onSubmit={() => {
           setStockExceeded(false);
+
           return orderFulfillmentApprove.mutate({
             id: params.id,
             notifyCustomer: currentApproval?.notifyCustomer,
@@ -339,9 +373,7 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
       />
       <OrderFulfillmentCancelDialog
         confirmButtonState={orderFulfillmentCancel.opts.status}
-        errors={
-          orderFulfillmentCancel.opts.data?.orderFulfillmentCancel.errors || []
-        }
+        errors={orderFulfillmentCancel.opts.data?.orderFulfillmentCancel.errors || []}
         open={params.action === "cancel-fulfillment"}
         warehouses={warehouses || []}
         onConfirm={variables =>
@@ -355,14 +387,12 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
       <OrderFulfillmentTrackingDialog
         confirmButtonState={orderFulfillmentUpdateTracking.opts.status}
         errors={
-          orderFulfillmentUpdateTracking.opts.data
-            ?.orderFulfillmentUpdateTracking.errors || []
+          orderFulfillmentUpdateTracking.opts.data?.orderFulfillmentUpdateTracking.errors || []
         }
         open={params.action === "edit-fulfillment"}
         trackingNumber={
-          data?.order?.fulfillments.find(
-            fulfillment => fulfillment.id === params.id,
-          )?.trackingNumber
+          data?.order?.fulfillments.find(fulfillment => fulfillment.id === params.id)
+            ?.trackingNumber
         }
         onConfirm={variables =>
           orderFulfillmentUpdateTracking.mutate({
@@ -377,12 +407,40 @@ export const OrderNormalDetails: React.FC<OrderNormalDetailsProps> = ({
       />
       <OrderInvoiceEmailSendDialog
         confirmButtonState={orderInvoiceSend.opts.status}
-        errors={orderInvoiceSend.opts.data?.invoiceSendEmail.errors || []}
+        errors={orderInvoiceSend.opts.data?.invoiceSendEmail?.errors || []}
         open={params.action === "invoice-send"}
         invoice={order?.invoices?.find(invoice => invoice.id === params.id)}
         onClose={closeModal}
         onSend={() => orderInvoiceSend.mutate({ id: params.id })}
       />
+      <OrderManualTransactionDialog
+        dialogProps={{
+          open: params.action === "add-manual-transaction",
+          onClose: closeModal,
+        }}
+        submitState={orderAddManualTransaction.opts.status}
+        error={
+          orderAddManualTransaction.opts?.error?.message ||
+          orderAddManualTransaction.opts?.data?.transactionCreate?.errors?.[0]?.message
+        }
+        currency={data?.order?.totalBalance?.currency}
+        onAddTransaction={({ amount, description, pspReference }) =>
+          orderAddManualTransaction.mutate({
+            currency: data?.order?.totalBalance?.currency,
+            orderId: id,
+            amount,
+            description,
+            pspReference,
+          })
+        }
+      />
+      <OrderRefundDialog
+        open={params.action === "add-refund"}
+        onClose={closeModal}
+        onStandardRefund={() => navigate(orderTransactionRefundUrl(id))}
+        onManualRefund={() => navigate(orderManualTransationRefundUrl(id))}
+      />
+
       <OrderAddressFields
         action={params?.action}
         orderShippingAddress={order?.shippingAddress}

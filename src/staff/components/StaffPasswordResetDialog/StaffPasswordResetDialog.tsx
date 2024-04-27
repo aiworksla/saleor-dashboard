@@ -1,22 +1,16 @@
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@material-ui/core";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import Form from "@saleor/components/Form";
-import FormSpacer from "@saleor/components/FormSpacer";
-import { AccountErrorFragment } from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import { buttonMessages } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { DialogProps } from "@saleor/types";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
+// @ts-strict-ignore
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import { AccountErrorFragment } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import { buttonMessages } from "@dashboard/intl";
+import { DialogProps } from "@dashboard/types";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAccountErrorMessage from "@dashboard/utils/errors/account";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -34,7 +28,6 @@ const initialForm: StaffPasswordResetDialogFormData = {
   newPassword: "",
   oldPassword: "",
 };
-
 const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
   confirmButtonState,
   errors,
@@ -44,15 +37,11 @@ const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
 }) => {
   const intl = useIntl();
   const dialogErrors = useModalDialogErrors(errors, open);
-
-  const formErrors = getFormErrors(
-    ["oldPassword", "newPassword"],
-    dialogErrors,
-  );
+  const formErrors = getFormErrors(["oldPassword", "newPassword"], dialogErrors);
 
   return (
     <Dialog onClose={onClose} open={open} fullWidth maxWidth="sm">
-      <DialogTitle>
+      <DialogTitle disableTypography>
         <FormattedMessage
           id="+kb2lM"
           defaultMessage="Change Password"
@@ -60,22 +49,20 @@ const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
         />
       </DialogTitle>
       <Form initial={initialForm} onSubmit={onSubmit}>
-        {({ change, data, submit }) => (
+        {({ change, data }) => (
           <>
             <DialogContent>
               <TextField
                 error={!!formErrors.oldPassword}
                 fullWidth
-                helperText={getAccountErrorMessage(
-                  formErrors.oldPassword,
-                  intl,
-                )}
+                helperText={getAccountErrorMessage(formErrors.oldPassword, intl)}
                 label={intl.formatMessage({
                   id: "GXdwyR",
                   defaultMessage: "Previous Password",
                   description: "input label",
                 })}
                 name="oldPassword"
+                data-test-id="old-password-input"
                 type="password"
                 onChange={change}
                 inputProps={{
@@ -90,8 +77,7 @@ const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
                   getAccountErrorMessage(formErrors.newPassword, intl) ||
                   intl.formatMessage({
                     id: "qEJT8e",
-                    defaultMessage:
-                      "New password must be at least 8 characters long",
+                    defaultMessage: "New password must be at least 8 characters long",
                   })
                 }
                 label={intl.formatMessage({
@@ -100,6 +86,7 @@ const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
                   description: "input label",
                 })}
                 name="newPassword"
+                data-test-id="new-password-input"
                 type="password"
                 onChange={change}
                 inputProps={{
@@ -110,10 +97,10 @@ const StaffPasswordResetDialog: React.FC<StaffPasswordResetDialogProps> = ({
             <DialogActions>
               <BackButton onClick={onClose} />
               <ConfirmButton
+                data-test-id="submit"
                 disabled={data.newPassword.length < 8}
                 transitionState={confirmButtonState}
                 type="submit"
-                onClick={submit}
               >
                 <FormattedMessage {...buttonMessages.save} />
               </ConfirmButton>

@@ -1,14 +1,10 @@
-import {
-  Popper,
-  PopperPlacementType,
-  TextField,
-  Typography,
-} from "@material-ui/core";
+// @ts-strict-ignore
+import Debounce, { DebounceProps } from "@dashboard/components/Debounce";
+import { FetchMoreProps } from "@dashboard/types";
+import { Popper, PopperPlacementType, TextField, Typography } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
-import Debounce, { DebounceProps } from "@saleor/components/Debounce";
 import { ChevronIcon, IconButton } from "@saleor/macaw-ui";
-import { FetchMoreProps } from "@saleor/types";
-import classNames from "classnames";
+import clsx from "clsx";
 import Downshift, { ControllerStateAndHelpers } from "downshift";
 import { filter } from "fuzzaldrin";
 import React from "react";
@@ -19,8 +15,7 @@ import MultiAutocompleteSelectFieldContent, {
 } from "./MultiAutocompleteSelectFieldContent";
 import { useStyles } from "./styles";
 
-export interface MultiAutocompleteSelectFieldProps
-  extends Partial<FetchMoreProps> {
+export interface MultiAutocompleteSelectFieldProps extends Partial<FetchMoreProps> {
   add?: MultiAutocompleteActionType;
   allowCustomValues?: boolean;
   displayValues: MultiAutocompleteChoiceType[];
@@ -42,11 +37,10 @@ export interface MultiAutocompleteSelectFieldProps
   popperPlacement?: PopperPlacementType;
 }
 
-const DebounceAutocomplete: React.ComponentType<DebounceProps<
-  string
->> = Debounce;
-
-const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFieldProps> = props => {
+const DebounceAutocomplete: React.ComponentType<DebounceProps<string>> = Debounce;
+const MultiAutocompleteSelectFieldComponent: React.FC<
+  MultiAutocompleteSelectFieldProps
+> = props => {
   const {
     add,
     allowCustomValues,
@@ -74,19 +68,15 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
   const classes = useStyles(props);
   const anchor = React.useRef<HTMLDivElement | null>(null);
   const input = React.useRef<HTMLInputElement | null>(null);
-
   const [inputValue, setInputValue] = React.useState("");
-
-  const handleSelect = (
-    item: string,
-    downshiftOpts?: ControllerStateAndHelpers<string>,
-  ) => {
+  const handleSelect = (item: string, downshiftOpts?: ControllerStateAndHelpers<string>) => {
     if (downshiftOpts) {
       downshiftOpts.reset({
         inputValue: downshiftOpts.inputValue,
         isOpen: true,
       });
     }
+
     onChange({
       target: { name, value: item },
     } as any);
@@ -108,9 +98,10 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
             // this is to prevent unwanted state updates when the dropdown is closed with an empty value,
             // which downshift interprets as the value being updated with an empty string, causing side-effects
             stateReducer={(state, changes) => {
-              if (changes.isOpen === false && state.inputValue === "") {
+              if (!changes.isOpen && state.inputValue === "") {
                 delete changes.inputValue;
               }
+
               return changes;
             }}
           >
@@ -128,22 +119,21 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
                 inputValue &&
                 inputValue.length > 0 &&
                 allowCustomValues &&
-                !choices.find(
-                  choice =>
-                    choice.label.toLowerCase() === inputValue.toLowerCase(),
-                );
-
+                !choices.find(choice => choice.label.toLowerCase() === inputValue.toLowerCase());
               const handleFocus = () => {
                 if (fetchOnFocus) {
                   fetchChoices(inputValue);
                 }
-                input?.current?.select();
-              };
 
+                if (input.current) {
+                  input.current.select();
+                }
+              };
               const handleToggleMenu = () => {
                 if (disabled) {
                   return;
                 }
+
                 toggleMenu();
               };
 
@@ -157,7 +147,7 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
                             handleToggleMenu();
                             handleFocus();
                           }}
-                          className={classNames(classes.adornment, {
+                          className={clsx(classes.adornment, {
                             [classes.adornmentRotate]: isOpen,
                           })}
                         >
@@ -206,9 +196,7 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
                             },
                           }
                         }
-                        choices={choices?.filter(
-                          choice => !value.includes(choice.value),
-                        )}
+                        choices={choices?.filter(choice => !value.includes(choice.value))}
                         displayCustomValue={displayCustomValue}
                         displayValues={displayValues}
                         getItemProps={getItemProps}
@@ -226,21 +214,16 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
           </Downshift>
         )}
       </DebounceAutocomplete>
-      <div className={classes.chipContainer}>
+      <div className={classes.chipContainer} data-test-id="selected-options">
         {displayValues.map(value => (
           <div
             className={classes.chip}
             key={value.value}
+            data-test-id="assigned-permission-group"
             id={`selected-option-${value.label}`}
           >
-            <div
-              className={
-                !value.disabled ? classes.chipInner : classes.disabledChipInner
-              }
-            >
-              <Typography className={classes.chipLabel}>
-                {value.label}
-              </Typography>
+            <div className={!value.disabled ? classes.chipInner : classes.disabledChipInner}>
+              <Typography className={classes.chipLabel}>{value.label}</Typography>
 
               <IconButton
                 hoverOutline={false}
@@ -259,7 +242,6 @@ const MultiAutocompleteSelectFieldComponent: React.FC<MultiAutocompleteSelectFie
     </>
   );
 };
-
 const MultiAutocompleteSelectField: React.FC<MultiAutocompleteSelectFieldProps> = ({
   choices,
   fetchChoices,

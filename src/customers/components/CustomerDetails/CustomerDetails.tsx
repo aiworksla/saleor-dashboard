@@ -1,12 +1,13 @@
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import { ControlledCheckbox } from "@dashboard/components/ControlledCheckbox";
+import Skeleton from "@dashboard/components/Skeleton";
+import { AccountErrorFragment, CustomerDetailsQuery } from "@dashboard/graphql";
+import { maybe } from "@dashboard/misc";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getAccountErrorMessage from "@dashboard/utils/errors/account";
 import { Card, CardContent, TextField, Typography } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import { ControlledCheckbox } from "@saleor/components/ControlledCheckbox";
-import Skeleton from "@saleor/components/Skeleton";
-import { AccountErrorFragment, CustomerDetailsQuery } from "@saleor/graphql";
 import { makeStyles } from "@saleor/macaw-ui";
-import { maybe } from "@saleor/misc";
-import { getFormErrors } from "@saleor/utils/errors";
-import getAccountErrorMessage from "@saleor/utils/errors/account";
 import moment from "moment-timezone";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -56,11 +57,7 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = props => {
           <>
             {maybe<React.ReactNode>(() => customer.email, <Skeleton />)}
             {customer && customer.dateJoined ? (
-              <Typography
-                className={classes.subtitle}
-                variant="caption"
-                component="div"
-              >
+              <Typography className={classes.subtitle} variant="caption" component="div">
                 <FormattedMessage
                   id="MjUyhA"
                   defaultMessage="Active member since {date}"
@@ -78,6 +75,7 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = props => {
       />
       <CardContent className={classes.content}>
         <ControlledCheckbox
+          data-test-id="customer-active-checkbox"
           checked={data.isActive}
           className={classes.checkbox}
           disabled={disabled}
@@ -90,6 +88,7 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = props => {
           onChange={onChange}
         />
         <TextField
+          data-test-id="customer-note"
           disabled={disabled}
           error={!!formErrors.note}
           fullWidth
@@ -108,5 +107,6 @@ const CustomerDetails: React.FC<CustomerDetailsProps> = props => {
     </Card>
   );
 };
+
 CustomerDetails.displayName = "CustomerDetails";
 export default CustomerDetails;

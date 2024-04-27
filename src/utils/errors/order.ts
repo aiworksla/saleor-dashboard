@@ -1,4 +1,4 @@
-import { OrderErrorCode, OrderErrorFragment } from "@saleor/graphql";
+import { OrderErrorCode, OrderErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -46,8 +46,7 @@ const messages = defineMessages({
   },
   noShippingAddress: {
     id: "Wlc67M",
-    defaultMessage:
-      "Cannot choose a shipping method for an order without the shipping address",
+    defaultMessage: "Cannot choose a shipping method for an order without the shipping address",
     description: "error message",
   },
   notEditable: {
@@ -70,12 +69,13 @@ const messages = defineMessages({
     defaultMessage: "Shipping method is required for this order",
     description: "error message",
   },
+  noZeroValue: {
+    defaultMessage: "Ensure this value is greater than 0.",
+    id: "YzLUXA",
+  },
 });
 
-function getOrderErrorMessage(
-  err: OrderErrorFragment,
-  intl: IntlShape,
-): string {
+function getOrderErrorMessage(err: OrderErrorFragment, intl: IntlShape): string | undefined {
   if (err) {
     switch (err.code) {
       case OrderErrorCode.BILLING_ADDRESS_NOT_SET:
@@ -104,6 +104,8 @@ function getOrderErrorMessage(
         return intl.formatMessage(messages.shippingRequired);
       case OrderErrorCode.VOID_INACTIVE_PAYMENT:
         return intl.formatMessage(messages.cannotVoid);
+      case OrderErrorCode.ZERO_QUANTITY:
+        return intl.formatMessage(messages.noZeroValue);
     }
   }
 

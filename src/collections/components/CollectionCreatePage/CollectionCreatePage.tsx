@@ -1,23 +1,21 @@
-import { ChannelCollectionData } from "@saleor/channels/utils";
-import { collectionListUrl } from "@saleor/collections/urls";
-import { Backlink } from "@saleor/components/Backlink";
-import { CardSpacer } from "@saleor/components/CardSpacer";
-import ChannelsAvailabilityCard from "@saleor/components/ChannelsAvailabilityCard";
-import { Container } from "@saleor/components/Container";
-import Grid from "@saleor/components/Grid";
-import Metadata from "@saleor/components/Metadata";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import SeoForm from "@saleor/components/SeoForm";
+// @ts-strict-ignore
+import { ChannelCollectionData } from "@dashboard/channels/utils";
+import { collectionListUrl } from "@dashboard/collections/urls";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { CardSpacer } from "@dashboard/components/CardSpacer";
+import ChannelsAvailabilityCard from "@dashboard/components/ChannelsAvailabilityCard";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata } from "@dashboard/components/Metadata";
+import Savebar from "@dashboard/components/Savebar";
+import { SeoForm } from "@dashboard/components/SeoForm";
 import {
   CollectionChannelListingErrorFragment,
   CollectionErrorFragment,
   PermissionEnum,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -59,116 +57,108 @@ const CollectionCreatePage: React.FC<CollectionCreatePageProps> = ({
       disabled={disabled}
     >
       {({ change, data, handlers, submit, isSaveDisabled }) => (
-        <Container>
-          <Backlink href={collectionListUrl()}>
-            {intl.formatMessage(sectionNames.collections)}
-          </Backlink>
-          <PageHeader
+        <DetailPageLayout>
+          <TopNav
+            href={collectionListUrl()}
             title={intl.formatMessage({
               id: "Fxa6xp",
               defaultMessage: "Add Collection",
               description: "page header",
             })}
           />
-          <Grid>
-            <div>
-              <CollectionDetails
-                data={data}
-                disabled={disabled}
-                errors={errors}
-                onChange={change}
-              />
-              <CardSpacer />
-              <CollectionImage
-                image={
-                  data.backgroundImage.url
-                    ? {
-                        __typename: "Image",
-                        alt: data.backgroundImageAlt,
-                        url: data.backgroundImage.url,
-                      }
-                    : null
-                }
-                onImageDelete={() =>
-                  change({
-                    target: {
-                      name: "backgroundImage",
-                      value: {
-                        url: null,
-                        value: null,
-                      },
+          <DetailPageLayout.Content>
+            <CollectionDetails data={data} disabled={disabled} errors={errors} onChange={change} />
+            <CardSpacer />
+            <CollectionImage
+              image={
+                data.backgroundImage.url
+                  ? {
+                      __typename: "Image",
+                      alt: data.backgroundImageAlt,
+                      url: data.backgroundImage.url,
+                    }
+                  : null
+              }
+              onImageDelete={() =>
+                change({
+                  target: {
+                    name: "backgroundImage",
+                    value: {
+                      url: null,
+                      value: null,
                     },
-                  } as any)
-                }
-                onImageUpload={file =>
-                  change({
-                    target: {
-                      name: "backgroundImage",
-                      value: {
-                        url: URL.createObjectURL(file),
-                        value: file,
-                      },
+                  },
+                } as any)
+              }
+              onImageUpload={file =>
+                change({
+                  target: {
+                    name: "backgroundImage",
+                    value: {
+                      url: URL.createObjectURL(file),
+                      value: file,
                     },
-                  } as any)
-                }
-                onChange={change}
-                data={data}
-              />
-              <CardSpacer />
-              <SeoForm
-                allowEmptySlug={true}
-                description={data.seoDescription}
-                disabled={disabled}
-                descriptionPlaceholder=""
-                helperText={intl.formatMessage({
-                  id: "Rj8LxK",
-                  defaultMessage:
-                    "Add search engine title and description to make this collection easier to find",
-                })}
-                slug={data.slug}
-                slugPlaceholder={data.name}
-                title={data.seoTitle}
-                titlePlaceholder={data.name}
-                onChange={change}
-              />
-              <CardSpacer />
-              <Metadata data={data} onChange={handlers.changeMetadata} />
-            </div>
-            <div>
-              <ChannelsAvailabilityCard
-                messages={{
-                  hiddenLabel: intl.formatMessage({
-                    id: "V8FhTt",
-                    defaultMessage: "Hidden",
-                    description: "collection label",
-                  }),
+                  },
+                } as any)
+              }
+              onChange={change}
+              data={data}
+            />
+            <CardSpacer />
+            <SeoForm
+              allowEmptySlug={true}
+              description={data.seoDescription}
+              disabled={disabled}
+              descriptionPlaceholder=""
+              helperText={intl.formatMessage({
+                id: "Rj8LxK",
+                defaultMessage:
+                  "Add search engine title and description to make this collection easier to find",
+              })}
+              slug={data.slug}
+              slugPlaceholder={data.name}
+              title={data.seoTitle}
+              titlePlaceholder={data.name}
+              onChange={change}
+            />
+            <CardSpacer />
+            <Metadata data={data} onChange={handlers.changeMetadata} />
+          </DetailPageLayout.Content>
+          <DetailPageLayout.RightSidebar>
+            <ChannelsAvailabilityCard
+              messages={{
+                hiddenLabel: intl.formatMessage({
+                  id: "V8FhTt",
+                  defaultMessage: "Hidden",
+                  description: "collection label",
+                }),
 
-                  visibleLabel: intl.formatMessage({
-                    id: "9vQR6c",
-                    defaultMessage: "Visible",
-                    description: "collection label",
-                  }),
-                }}
-                managePermissions={[PermissionEnum.MANAGE_PRODUCTS]}
-                errors={channelsErrors}
-                allChannelsCount={channelsCount}
-                channels={data.channelListings}
-                disabled={disabled}
-                onChange={handlers.changeChannels}
-                openModal={openChannelsModal}
-              />
-            </div>
-          </Grid>
+                visibleLabel: intl.formatMessage({
+                  id: "9vQR6c",
+                  defaultMessage: "Visible",
+                  description: "collection label",
+                }),
+              }}
+              managePermissions={[PermissionEnum.MANAGE_PRODUCTS]}
+              errors={channelsErrors}
+              allChannelsCount={channelsCount}
+              channels={data.channelListings}
+              disabled={disabled}
+              onChange={handlers.changeChannels}
+              openModal={openChannelsModal}
+            />
+          </DetailPageLayout.RightSidebar>
           <Savebar
             state={saveButtonBarState}
             disabled={isSaveDisabled}
             onCancel={() => navigate(collectionListUrl())}
             onSubmit={submit}
           />
-        </Container>
+        </DetailPageLayout>
       )}
     </CollectionCreateForm>
   );
 };
+
 CollectionCreatePage.displayName = "CollectionCreatePage";
 export default CollectionCreatePage;

@@ -1,11 +1,8 @@
-import { useGiftCardList } from "@saleor/giftCards/GiftCardsList/providers/GiftCardListProvider";
-import {
-  BulkDeleteGiftCardMutation,
-  useBulkDeleteGiftCardMutation,
-} from "@saleor/graphql";
-import { MutationResultWithOpts } from "@saleor/hooks/makeMutation";
-import useNotifier from "@saleor/hooks/useNotifier";
-import commonErrorMessages from "@saleor/utils/errors/common";
+import { useGiftCardList } from "@dashboard/giftCards/GiftCardsList/providers/GiftCardListProvider";
+import { BulkDeleteGiftCardMutation, useBulkDeleteGiftCardMutation } from "@dashboard/graphql";
+import { MutationResultWithOpts } from "@dashboard/hooks/makeMutation";
+import useNotifier from "@dashboard/hooks/useNotifier";
+import commonErrorMessages from "@dashboard/utils/errors/common";
 import { useIntl } from "react-intl";
 
 import { giftCardDeleteDialogMessages as messages } from "./messages";
@@ -24,30 +21,21 @@ const useGiftCardBulkDelete = ({
 }): UseGiftCardBulkDeleteProps => {
   const notify = useNotifier();
   const intl = useIntl();
-
-  const {
-    listElements,
-    selectedItemsCount,
-    reset: resetSelectedItems,
-  } = useGiftCardList();
-
-  const [
-    bulkDeleteGiftCard,
-    bulkDeleteGiftCardOpts,
-  ] = useBulkDeleteGiftCardMutation({
+  const { selectedRowIds, clearRowSelection } = useGiftCardList();
+  const [bulkDeleteGiftCard, bulkDeleteGiftCardOpts] = useBulkDeleteGiftCardMutation({
     onCompleted: data => {
       const errors = data?.giftCardBulkDelete?.errors;
 
-      if (!errors.length) {
+      if (!errors?.length) {
         notify({
           status: "success",
           text: intl.formatMessage(messages.deleteSuccessAlertText, {
-            selectedItemsCount,
+            selectedItemsCount: selectedRowIds.length,
           }),
         });
-
         onClose();
-        resetSelectedItems();
+        clearRowSelection();
+
         return;
       }
 
@@ -58,9 +46,7 @@ const useGiftCardBulkDelete = ({
     },
     refetchQueries,
   });
-
-  const onBulkDeleteGiftCards = () =>
-    bulkDeleteGiftCard({ variables: { ids: listElements } });
+  const onBulkDeleteGiftCards = () => bulkDeleteGiftCard({ variables: { ids: selectedRowIds } });
 
   return {
     onBulkDeleteGiftCards,

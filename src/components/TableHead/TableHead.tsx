@@ -1,12 +1,9 @@
-import {
-  TableCell,
-  TableHead as MuiTableHead,
-  Typography,
-} from "@material-ui/core";
+// @ts-strict-ignore
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { TableCell, TableHead as MuiTableHead, Typography } from "@material-ui/core";
 import { TableHeadProps as MuiTableHeadProps } from "@material-ui/core/TableHead";
-import TableRowLink from "@saleor/components/TableRowLink";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -89,13 +86,14 @@ const TableHead: React.FC<TableHeadProps> = props => {
         {(items === undefined || items.length > 0) && (
           <TableCell
             padding="checkbox"
-            className={classNames(classes.cell, {
+            className={clsx(classes.cell, {
               [classes.dragRows]: dragRows,
             })}
           >
             <Checkbox
+              data-test-id="select-all-checkbox"
               indeterminate={items && items.length > selected && selected > 0}
-              checked={selected === 0 ? false : true}
+              checked={selected !== 0}
               disabled={disabled}
               onChange={() => toggleAll(items, selected)}
             />
@@ -104,12 +102,12 @@ const TableHead: React.FC<TableHeadProps> = props => {
         {selected ? (
           <>
             <TableCell
-              className={classNames(classes.cell, classes.root)}
+              className={clsx(classes.cell, classes.root)}
               colSpan={getColSpan(colSpan, dragRows)}
             >
               <div className={classes.container}>
                 {selected && (
-                  <Typography>
+                  <Typography data-test-id="SelectedText">
                     <FormattedMessage
                       id="qu/hXD"
                       defaultMessage="Selected {number} items"
@@ -120,7 +118,11 @@ const TableHead: React.FC<TableHeadProps> = props => {
                   </Typography>
                 )}
                 <div className={classes.spacer} />
-                {toolbar && <div className={classes.toolbar}>{toolbar}</div>}
+                {toolbar && (
+                  <div data-test-id="bulk-delete-button" className={classes.toolbar}>
+                    {toolbar}
+                  </div>
+                )}
               </div>
             </TableCell>
           </>
@@ -131,5 +133,6 @@ const TableHead: React.FC<TableHeadProps> = props => {
     </MuiTableHead>
   );
 };
+
 TableHead.displayName = "TableHead";
 export default TableHead;

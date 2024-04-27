@@ -1,4 +1,5 @@
-import { GiftCardDetailsQuery, useGiftCardDetailsQuery } from "@saleor/graphql";
+// @ts-strict-ignore
+import { GiftCardDetailsQuery, useGiftCardDetailsQuery } from "@dashboard/graphql";
 import React, { createContext } from "react";
 
 import { ExtendedGiftCard } from "./types";
@@ -14,19 +15,13 @@ export interface GiftCardDetailsConsumerProps {
   loading: boolean;
 }
 
-export const GiftCardDetailsContext = createContext<
-  GiftCardDetailsConsumerProps
->(null);
+export const GiftCardDetailsContext = createContext<GiftCardDetailsConsumerProps>(null);
 
-const GiftCardDetailsProvider: React.FC<GiftCardDetailsProviderProps> = ({
-  children,
-  id,
-}) => {
+const GiftCardDetailsProvider: React.FC<GiftCardDetailsProviderProps> = ({ children, id }) => {
   const { data, loading } = useGiftCardDetailsQuery({
     displayLoader: true,
     variables: { id },
   });
-
   const providerValues: GiftCardDetailsConsumerProps = {
     giftCard: getExtendedGiftCard(data?.giftCard),
     loading,

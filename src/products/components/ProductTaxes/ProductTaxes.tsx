@@ -1,112 +1,55 @@
-import { Card, CardContent } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import Hr from "@saleor/components/Hr";
-import SingleAutocompleteSelectField from "@saleor/components/SingleAutocompleteSelectField";
-import { TaxTypeFragment } from "@saleor/graphql";
-import { FormChange } from "@saleor/hooks/useForm";
-import { sectionNames } from "@saleor/intl";
-import { makeStyles } from "@saleor/macaw-ui";
+import { DashboardCard } from "@dashboard/components/Card";
+import { Combobox } from "@dashboard/components/Combobox";
+import { TaxClassBaseFragment } from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import { sectionNames } from "@dashboard/intl";
+import { taxesMessages } from "@dashboard/taxes/messages";
+import { FetchMoreProps } from "@dashboard/types";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
-export interface ProductTaxesProps {
-  data: {
-    changeTaxCode: boolean;
-    chargeTaxes: boolean;
-    taxCode: string;
-  };
+interface ProductTaxesProps {
+  value: string;
+  taxClassDisplayName: string;
+  taxClasses: TaxClassBaseFragment[];
   disabled: boolean;
-  selectedTaxTypeDisplayName: string;
-  taxTypes: TaxTypeFragment[];
-  onChange: FormChange;
-  onTaxTypeChange: FormChange;
+  onChange: (event: ChangeEvent) => void;
+  onFetchMore: FetchMoreProps;
 }
 
-const useStyles = makeStyles(
-  theme => ({
-    content: {
-      paddingTop: theme.spacing(2),
-    },
-    hr: {
-      margin: theme.spacing(2, 0),
-    },
-    select: {
-      margin: theme.spacing(2, 0),
-    },
-  }),
-  {
-    name: "ProductTaxes",
-  },
-);
-
-const ProductTaxes: React.FC<ProductTaxesProps> = ({
-  data,
-  disabled,
-  selectedTaxTypeDisplayName,
-  taxTypes,
-  onChange,
-  onTaxTypeChange,
-}) => {
+const ProductTaxes: React.FC<ProductTaxesProps> = props => {
+  const { value, disabled, taxClasses, taxClassDisplayName, onChange, onFetchMore } = props;
   const intl = useIntl();
-  const classes = useStyles({});
 
   return (
-    <Card>
-      <CardTitle title={intl.formatMessage(sectionNames.taxes)} />
-      <CardContent className={classes.content}>
-        <ControlledCheckbox
-          checked={data.changeTaxCode}
-          disabled={disabled}
-          data-test-id="override-tax-type"
-          label={intl.formatMessage({
-            id: "iYH3Y7",
-            defaultMessage: "Override the product type's tax rate",
-            description: "checkbox",
-          })}
-          name="changeTaxCode"
-          onChange={onChange}
-        />
-        <Hr className={classes.hr} />
-        <ControlledCheckbox
-          checked={data.chargeTaxes}
-          disabled={disabled}
-          data-test-id="charge-taxes"
-          label={intl.formatMessage({
-            id: "TfY/Pi",
-            defaultMessage: "Charge taxes on this product",
-            description: "checkbox",
-          })}
-          name="chargeTaxes"
-          onChange={onChange}
-        />
-        {data.changeTaxCode && (
-          <SingleAutocompleteSelectField
-            className={classes.select}
+    <DashboardCard>
+      <DashboardCard.Title>{intl.formatMessage(sectionNames.taxes)}</DashboardCard.Title>
+      <DashboardCard.Content>
+        <Box data-test-id="taxes">
+          <Combobox
             disabled={disabled}
-            displayValue={selectedTaxTypeDisplayName}
-            data-test-id="select-tax-type"
-            label={intl.formatMessage({
-              id: "CdIHMu",
-              defaultMessage: "Tax Rate",
-              description: "select tax ratte",
-            })}
-            name="taxCode"
-            onChange={onTaxTypeChange}
-            value={data.taxCode}
-            choices={
-              taxTypes?.map(taxType => ({
-                label: taxType.description,
-                value: taxType.taxCode,
-              })) || []
+            options={taxClasses.map(choice => ({
+              label: choice.name,
+              value: choice.id,
+            }))}
+            fetchOptions={() => undefined}
+            value={
+              value
+                ? {
+                    value,
+                    label: taxClassDisplayName,
+                  }
+                : null
             }
-            InputProps={{
-              autoComplete: "off",
-            }}
+            name="taxClassId"
+            label={intl.formatMessage(taxesMessages.taxClass)}
+            onChange={onChange}
+            fetchMore={onFetchMore}
           />
-        )}
-      </CardContent>
-    </Card>
+        </Box>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
 

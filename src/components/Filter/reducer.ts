@@ -1,12 +1,9 @@
-import { update } from "@saleor/utils/lists";
+// @ts-strict-ignore
+import { update } from "@dashboard/utils/lists";
 
 import { FieldType, IFilter, IFilterElementMutableDataGeneric } from "./types";
 
-export type FilterReducerActionType =
-  | "clear"
-  | "merge"
-  | "reset"
-  | "set-property";
+export type FilterReducerActionType = "clear" | "merge" | "reset" | "set-property";
 export interface FilterReducerAction<K extends string, T extends FieldType> {
   type: FilterReducerActionType;
   payload: Partial<{
@@ -15,31 +12,9 @@ export interface FilterReducerAction<K extends string, T extends FieldType> {
     new: IFilter<K, T>;
   }>;
 }
-export type UpdateStateFunction<K extends string = string> = <
-  T extends FieldType
->(
+export type UpdateStateFunction<K extends string = string> = <T extends FieldType>(
   value: FilterReducerAction<K, T>,
 ) => void;
-
-function merge<T extends string>(
-  prevState: IFilter<T>,
-  newState: IFilter<T>,
-): IFilter<T> {
-  return newState.map(newFilter => {
-    const prevFilter = prevState.find(
-      prevFilter => prevFilter.name === newFilter.name,
-    );
-    if (!!prevFilter) {
-      return {
-        ...newFilter,
-        active: prevFilter.active,
-        value: prevFilter.value,
-      };
-    }
-
-    return newFilter;
-  });
-}
 
 function setProperty<K extends string, T extends FieldType>(
   prevState: IFilter<K, T>,
@@ -61,13 +36,7 @@ function reduceFilter<K extends string, T extends FieldType>(
 ): IFilter<K> {
   switch (action.type) {
     case "set-property":
-      return setProperty<K, T>(
-        prevState,
-        action.payload.name,
-        action.payload.update,
-      );
-    case "merge":
-      return merge(prevState, action.payload.new);
+      return setProperty<K, T>(prevState, action.payload.name, action.payload.update);
     case "reset":
       return action.payload.new;
 

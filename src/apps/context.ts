@@ -2,13 +2,11 @@
 import React from "react";
 
 export interface AppListContextValues {
-  activateApp: (appId: string) => void;
-  deactivateApp: (appId: string) => void;
+  removeAppInstallation: (installationId: string) => void;
+  retryAppInstallation: (installationId: string) => void;
 }
 
-export const AppListContext = React.createContext<
-  AppListContextValues | undefined
->(undefined);
+export const AppListContext = React.createContext<AppListContextValues | undefined>(undefined);
 
 export const useAppListContext = () => {
   const context = React.useContext(AppListContext);

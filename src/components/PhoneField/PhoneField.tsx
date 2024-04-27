@@ -1,5 +1,6 @@
+// @ts-strict-ignore
+import SingleSelectField from "@dashboard/components/SingleSelectField";
 import { TextField } from "@material-ui/core";
-import SingleSelectField from "@saleor/components/SingleSelectField";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 
@@ -20,19 +21,11 @@ interface PhoneFieldProps {
   number: string;
   prefixes: string[];
   label?: string;
-  onChange(event: React.ChangeEvent<any>);
+  onChange: (event: React.ChangeEvent<any>) => any;
 }
 
 const PhoneField: React.FC<PhoneFieldProps> = props => {
-  const {
-    name,
-    number: phoneNumber,
-    prefix,
-    prefixes,
-    label,
-    onChange,
-  } = props;
-
+  const { name, number: phoneNumber, prefix, prefixes, label, onChange } = props;
   const classes = useStyles(props);
 
   return (
@@ -44,14 +37,10 @@ const PhoneField: React.FC<PhoneFieldProps> = props => {
         value={prefix}
         label={label}
       />
-      <TextField
-        name={name + "_number"}
-        onChange={onChange}
-        value={phoneNumber}
-        label="&nbsp;"
-      />
+      <TextField name={name + "_number"} onChange={onChange} value={phoneNumber} label="&nbsp;" />
     </div>
   );
 };
+
 PhoneField.displayName = "PhoneField";
 export default PhoneField;

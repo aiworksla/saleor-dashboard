@@ -59,6 +59,56 @@ export const discountErrorFragment = gql`
   }
 `;
 
+export const promotionCreateErrorFragment = gql`
+  fragment PromotionCreateError on PromotionCreateError {
+    field
+    message
+    code
+    index
+  }
+`;
+
+export const promotionUpdateErrorFragment = gql`
+  fragment PromotionUpdateError on PromotionUpdateError {
+    field
+    message
+    code
+  }
+`;
+
+export const promotionDeleteErrorFragment = gql`
+  fragment PromotionDeleteError on PromotionDeleteError {
+    field
+    message
+    code
+  }
+`;
+
+export const promotionRuleUpdateErrorFragment = gql`
+  fragment PromotionRuleUpdateError on PromotionRuleUpdateError {
+    field
+    message
+    code
+    channels
+  }
+`;
+
+export const promotionRuleCreateErrorFragment = gql`
+  fragment PromotionRuleCreateError on PromotionRuleCreateError {
+    field
+    message
+    code
+  }
+`;
+
+export const promotionRuleDeleteErrorFragment = gql`
+  fragment PromotionRuleDeleteError on PromotionRuleDeleteError {
+    field
+    message
+    code
+  }
+`;
+
 export const menuErrorFragment = gql`
   fragment MenuError on MenuError {
     code
@@ -115,6 +165,17 @@ export const bulkProductErrorFragment = gql`
     index
     channels
     message
+  }
+`;
+export const productVariantBulkError = gql`
+  fragment ProductVariantBulkError on ProductVariantBulkError {
+    field
+    code
+    message
+    attributes
+    values
+    warehouses
+    channels
   }
 `;
 export const bulkStockErrorFragment = gql`
@@ -485,5 +546,108 @@ export const shippingPriceTranslateErrorFragment = gql`
     code
     field
     message
+  }
+`;
+
+export const taxConfigurationUpdateError = gql`
+  fragment TaxConfigurationUpdateError on TaxConfigurationUpdateError {
+    field
+    code
+    message
+  }
+`;
+
+export const taxCountryConfigurationUpdateError = gql`
+  fragment TaxCountryConfigurationUpdateError on TaxCountryConfigurationUpdateError {
+    field
+    code
+    message
+  }
+`;
+export const taxCountryConfigurationDeleteError = gql`
+  fragment TaxCountryConfigurationDeleteError on TaxCountryConfigurationDeleteError {
+    field
+    code
+    message
+  }
+`;
+
+export const taxClassUpdateError = gql`
+  fragment TaxClassUpdateError on TaxClassUpdateError {
+    field
+    code
+    message
+  }
+`;
+export const taxClassCreateError = gql`
+  fragment TaxClassCreateError on TaxClassCreateError {
+    field
+    code
+    message
+  }
+`;
+export const taxClassDeleteError = gql`
+  fragment TaxClassDeleteError on TaxClassDeleteError {
+    field
+    code
+    message
+  }
+`;
+
+export const transactionRequestActionErrorFragment = gql`
+  fragment TransactionRequestActionError on TransactionRequestActionError {
+    field
+    message
+    code
+  }
+`;
+
+export const transactionCreateErrorFragment = gql`
+  fragment TransactionCreateError on TransactionCreateError {
+    field
+    message
+    code
+  }
+`;
+
+export const orderGrantRefundCreateErrorFragment = gql`
+  fragment OrderGrantRefundCreateError on OrderGrantRefundCreateError {
+    field
+    message
+    code
+    lines {
+      field
+      message
+      code
+      lineId
+    }
+  }
+`;
+
+export const orderGrantRefundUpdateErrorFragment = gql`
+  fragment OrderGrantRefundUpdateError on OrderGrantRefundUpdateError {
+    field
+    message
+    code
+    addLines {
+      field
+      message
+      code
+      lineId
+    }
+    removeLines {
+      field
+      message
+      code
+      lineId
+    }
+  }
+`;
+
+export const transactionRequestRefundForGrantedRefundErrorFragment = gql`
+  fragment TransactionRequestRefundForGrantedRefundError on TransactionRequestRefundForGrantedRefundError {
+    field
+    message
+    code
   }
 `;

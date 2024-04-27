@@ -1,15 +1,13 @@
+// @ts-strict-ignore
+import { DashboardCard } from "@dashboard/components/Card";
+import RichTextEditor from "@dashboard/components/RichTextEditor";
+import { RichTextEditorLoading } from "@dashboard/components/RichTextEditor/RichTextEditorLoading";
+import { ProductErrorFragment } from "@dashboard/graphql";
+import { commonMessages } from "@dashboard/intl";
+import { getFormErrors, getProductErrorMessage } from "@dashboard/utils/errors";
+import { useRichTextContext } from "@dashboard/utils/richText/context";
 import { OutputData } from "@editorjs/editorjs";
-import { Card, CardContent, TextField } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import FormSpacer from "@saleor/components/FormSpacer";
-import Grid from "@saleor/components/Grid";
-import Hr from "@saleor/components/Hr";
-import RichTextEditor from "@saleor/components/RichTextEditor";
-import { RichTextEditorLoading } from "@saleor/components/RichTextEditor/RichTextEditorLoading";
-import { ProductErrorFragment } from "@saleor/graphql";
-import { commonMessages } from "@saleor/intl";
-import { getFormErrors, getProductErrorMessage } from "@saleor/utils/errors";
-import { useRichTextContext } from "@saleor/utils/richText/context";
+import { Box, Input } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -22,46 +20,40 @@ interface ProductDetailsFormProps {
   disabled?: boolean;
   errors: ProductErrorFragment[];
 
-  onChange(event: any);
+  onChange: (event: any) => any;
 }
 
 export const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
   data,
-  disabled,
-  errors,
   onChange,
+  errors,
+  disabled,
 }) => {
   const intl = useIntl();
-  const {
-    editorRef,
-    defaultValue,
-    isReadyForMount,
-    handleChange,
-  } = useRichTextContext();
-
   const formErrors = getFormErrors(["name", "description", "rating"], errors);
+  const { editorRef, defaultValue, isReadyForMount, handleChange } = useRichTextContext();
 
   return (
-    <Card>
-      <CardTitle
-        title={intl.formatMessage(commonMessages.generalInformations)}
-      />
-      <CardContent>
-        <TextField
-          error={!!formErrors.name}
-          helperText={getProductErrorMessage(formErrors.name, intl)}
-          disabled={disabled}
-          fullWidth
+    <DashboardCard>
+      <DashboardCard.Title>
+        {intl.formatMessage(commonMessages.generalInformations)}
+      </DashboardCard.Title>
+      <DashboardCard.Content display="grid" gap={2}>
+        <Input
           label={intl.formatMessage({
             id: "6AMFki",
             defaultMessage: "Name",
             description: "product name",
           })}
-          name="name"
-          value={data.name}
+          size="small"
+          value={data.name || ""}
           onChange={onChange}
+          error={!!formErrors.name}
+          name="name"
+          disabled={disabled}
+          helperText={getProductErrorMessage(formErrors.name, intl)}
         />
-        <FormSpacer />
+
         {isReadyForMount ? (
           <RichTextEditor
             editorRef={editorRef}
@@ -79,27 +71,24 @@ export const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
             name="description"
           />
         )}
-        <FormSpacer />
-        <Hr />
-        <FormSpacer />
-        <Grid variant="uniform">
-          <TextField
-            type="number"
-            error={!!formErrors.rating}
-            helperText={getProductErrorMessage(formErrors.rating, intl)}
-            disabled={disabled}
+        <Box __width="25%">
+          <Input
             label={intl.formatMessage({
               id: "L7N+0y",
               defaultMessage: "Product Rating",
               description: "product rating",
             })}
-            name="rating"
+            size="small"
             value={data.rating || ""}
             onChange={onChange}
+            error={!!formErrors.rating}
+            name="rating"
+            type="number"
+            disabled={disabled}
+            helperText={getProductErrorMessage(formErrors.rating, intl)}
           />
-        </Grid>
-      </CardContent>
-    </Card>
+        </Box>
+      </DashboardCard.Content>
+    </DashboardCard>
   );
 };
-export default ProductDetailsForm;

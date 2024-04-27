@@ -1,8 +1,8 @@
-import { ProductTypeConfigurable, ProductTypeEnum } from "@saleor/graphql";
-import { createFilterStructure } from "@saleor/productTypes/components/ProductTypeListPage";
-import { ProductTypeListUrlFilters } from "@saleor/productTypes/urls";
-import { getFilterQueryParams } from "@saleor/utils/filters";
-import { stringifyQs } from "@saleor/utils/urls";
+import { ProductTypeConfigurable, ProductTypeEnum } from "@dashboard/graphql";
+import { createFilterStructure } from "@dashboard/productTypes/components/ProductTypeListPage";
+import { ProductTypeListUrlFilters } from "@dashboard/productTypes/urls";
+import { getFilterQueryParams } from "@dashboard/utils/filters";
+import { stringifyQs } from "@dashboard/utils/urls";
 import { getExistingKeys, setFilterOptsStatus } from "@test/filters";
 import { config } from "@test/intl";
 import { createIntl } from "react-intl";
@@ -16,7 +16,6 @@ describe("Filtering query params", () => {
 
     expect(getExistingKeys(filterVariables)).toHaveLength(0);
   });
-
   it("should not be empty object if params given", () => {
     const params: ProductTypeListUrlFilters = {
       configurable: ProductTypeConfigurable.CONFIGURABLE,
@@ -27,10 +26,8 @@ describe("Filtering query params", () => {
     expect(getExistingKeys(filterVariables)).toHaveLength(2);
   });
 });
-
 describe("Filtering URL params", () => {
   const intl = createIntl(config);
-
   const filters = createFilterStructure(intl, {
     configurable: {
       active: false,
@@ -43,14 +40,10 @@ describe("Filtering URL params", () => {
   });
 
   it("should be empty if no active filters", () => {
-    const filterQueryParams = getFilterQueryParams(
-      filters,
-      getFilterQueryParam,
-    );
+    const filterQueryParams = getFilterQueryParams(filters, getFilterQueryParam);
 
     expect(getExistingKeys(filterQueryParams)).toHaveLength(0);
   });
-
   it("should not be empty if active filters are present", () => {
     const filterQueryParams = getFilterQueryParams(
       setFilterOptsStatus(filters, true),

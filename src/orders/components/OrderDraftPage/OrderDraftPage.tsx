@@ -1,27 +1,26 @@
-import { Typography } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import CardMenu from "@saleor/components/CardMenu";
-import CardSpacer from "@saleor/components/CardSpacer";
-import { Container } from "@saleor/components/Container";
-import { DateTime } from "@saleor/components/Date";
-import Grid from "@saleor/components/Grid";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
-import Skeleton from "@saleor/components/Skeleton";
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardMenu from "@dashboard/components/CardMenu";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import { DateTime } from "@dashboard/components/Date";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import Savebar from "@dashboard/components/Savebar";
+import Skeleton from "@dashboard/components/Skeleton";
 import {
   ChannelUsabilityDataQuery,
   OrderDetailsFragment,
   OrderErrorFragment,
   OrderLineInput,
   SearchCustomersQuery,
-} from "@saleor/graphql";
-import { SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import OrderChannelSectionCard from "@saleor/orders/components/OrderChannelSectionCard";
-import { orderDraftListUrl } from "@saleor/orders/urls";
-import { FetchMoreProps, RelayToFlat } from "@saleor/types";
+} from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import OrderChannelSectionCard from "@dashboard/orders/components/OrderChannelSectionCard";
+import { orderDraftListUrl } from "@dashboard/orders/urls";
+import { FetchMoreProps, RelayToFlat } from "@dashboard/types";
+import { Typography } from "@material-ui/core";
+import { Box } from "@saleor/macaw-ui-next";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -29,7 +28,6 @@ import OrderCustomer, { CustomerEditData } from "../OrderCustomer";
 import OrderDraftDetails from "../OrderDraftDetails/OrderDraftDetails";
 import OrderHistory, { FormData as HistoryFormData } from "../OrderHistory";
 import OrderDraftAlert from "./OrderDraftAlert";
-import { usePageStyles } from "./styles";
 
 export interface OrderDraftPageProps extends FetchMoreProps {
   disabled: boolean;
@@ -52,11 +50,12 @@ export interface OrderDraftPageProps extends FetchMoreProps {
   onShippingAddressEdit: () => void;
   onShippingMethodEdit: () => void;
   onProfileView: () => void;
+  onShowMetadata: (id: string) => void;
 }
 
 const OrderDraftPage: React.FC<OrderDraftPageProps> = props => {
   const {
-    disabled,
+    loading,
     fetchUsers,
     hasMore,
     saveButtonBarState,
@@ -72,26 +71,34 @@ const OrderDraftPage: React.FC<OrderDraftPageProps> = props => {
     onShippingAddressEdit,
     onShippingMethodEdit,
     onProfileView,
+    onShowMetadata,
     order,
     channelUsabilityData,
     users,
     usersLoading,
     errors,
   } = props;
-  const classes = usePageStyles(props);
   const navigate = useNavigator();
-
   const intl = useIntl();
 
   return (
-    <Container>
-      <Backlink href={orderDraftListUrl()}>
-        {intl.formatMessage(sectionNames.draftOrders)}
-      </Backlink>
-      <PageHeader
-        className={classes.header}
-        inline
-        title={order?.number ? "#" + order?.number : undefined}
+    <DetailPageLayout>
+      <TopNav
+        href={orderDraftListUrl()}
+        title={
+          <Box display="flex" alignItems="center" gap={3}>
+            <span>{order?.number ? "#" + order?.number : undefined}</span>
+            <div>
+              {order && order.created ? (
+                <Typography variant="body2">
+                  <DateTime date={order.created} plain />
+                </Typography>
+              ) : (
+                <Skeleton style={{ width: "10em" }} />
+              )}
+            </div>
+          </Box>
+        }
       >
         <CardMenu
           menuItems={[
@@ -105,60 +112,51 @@ const OrderDraftPage: React.FC<OrderDraftPageProps> = props => {
             },
           ]}
         />
-      </PageHeader>
-      <div className={classes.date}>
-        {order && order.created ? (
-          <Typography variant="body2">
-            <DateTime date={order.created} />
-          </Typography>
-        ) : (
-          <Skeleton style={{ width: "10em" }} />
-        )}
-      </div>
-      <Grid>
-        <div>
-          <OrderDraftAlert
-            order={order}
-            channelUsabilityData={channelUsabilityData}
-          />
-          <OrderDraftDetails
-            order={order}
-            channelUsabilityData={channelUsabilityData}
-            errors={errors}
-            onOrderLineAdd={onOrderLineAdd}
-            onOrderLineChange={onOrderLineChange}
-            onOrderLineRemove={onOrderLineRemove}
-            onShippingMethodEdit={onShippingMethodEdit}
-          />
-          <OrderHistory
-            history={order?.events}
-            orderCurrency={order?.total?.gross.currency}
-            onNoteAdd={onNoteAdd}
-          />
-        </div>
-        <div>
-          <OrderChannelSectionCard channel={order?.channel} />
-          <CardSpacer />
-          <OrderCustomer
-            canEditAddresses={!!order?.user}
-            canEditCustomer={true}
-            fetchUsers={fetchUsers}
-            hasMore={hasMore}
-            loading={usersLoading}
-            errors={errors}
-            order={order}
-            users={users}
-            onBillingAddressEdit={onBillingAddressEdit}
-            onCustomerEdit={onCustomerEdit}
-            onFetchMore={onFetchMore}
-            onProfileView={onProfileView}
-            onShippingAddressEdit={onShippingAddressEdit}
-          />
-        </div>
-      </Grid>
+      </TopNav>
+      <DetailPageLayout.Content>
+        <OrderDraftAlert
+          order={order as OrderDetailsFragment}
+          channelUsabilityData={channelUsabilityData}
+        />
+        <OrderDraftDetails
+          order={order as OrderDetailsFragment}
+          channelUsabilityData={channelUsabilityData}
+          errors={errors}
+          loading={loading}
+          onOrderLineAdd={onOrderLineAdd}
+          onOrderLineChange={onOrderLineChange}
+          onOrderLineRemove={onOrderLineRemove}
+          onShippingMethodEdit={onShippingMethodEdit}
+          onShowMetadata={onShowMetadata}
+        />
+        <OrderHistory
+          history={order?.events}
+          orderCurrency={order?.total?.gross.currency}
+          onNoteAdd={onNoteAdd}
+        />
+      </DetailPageLayout.Content>
+      <DetailPageLayout.RightSidebar>
+        <OrderChannelSectionCard channel={order?.channel} />
+        <CardSpacer />
+        <OrderCustomer
+          canEditAddresses={!!order?.user}
+          canEditCustomer={true}
+          fetchUsers={fetchUsers}
+          hasMore={hasMore}
+          loading={usersLoading}
+          errors={errors}
+          order={order as OrderDetailsFragment}
+          users={users}
+          onBillingAddressEdit={onBillingAddressEdit}
+          onCustomerEdit={onCustomerEdit}
+          onFetchMore={onFetchMore}
+          onProfileView={onProfileView}
+          onShippingAddressEdit={onShippingAddressEdit}
+        />
+      </DetailPageLayout.RightSidebar>
       <Savebar
         state={saveButtonBarState}
-        disabled={disabled}
+        disabled={loading}
         onCancel={() => navigate(orderDraftListUrl())}
         onSubmit={onDraftFinalize}
         labels={{
@@ -169,8 +167,9 @@ const OrderDraftPage: React.FC<OrderDraftPageProps> = props => {
           }),
         }}
       />
-    </Container>
+    </DetailPageLayout>
   );
 };
+
 OrderDraftPage.displayName = "OrderDraftPage";
 export default OrderDraftPage;

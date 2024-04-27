@@ -1,3 +1,22 @@
+// @ts-strict-ignore
+import AutocompleteSelectMenu from "@dashboard/components/AutocompleteSelectMenu";
+import BackButton from "@dashboard/components/BackButton";
+import { ConfirmButton, ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import FormSpacer from "@dashboard/components/FormSpacer";
+import {
+  MenuErrorFragment,
+  SearchCategoriesQuery,
+  SearchCollectionsQuery,
+  SearchPagesQuery,
+} from "@dashboard/graphql";
+import useModalDialogErrors from "@dashboard/hooks/useModalDialogErrors";
+import useModalDialogOpen from "@dashboard/hooks/useModalDialogOpen";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
+import { buttonMessages, sectionNames } from "@dashboard/intl";
+import { RelayToFlat } from "@dashboard/types";
+import { getFieldError, getFormErrors } from "@dashboard/utils/errors";
+import getMenuErrorMessage from "@dashboard/utils/errors/menu";
+import { getMenuItemByValue, IMenu } from "@dashboard/utils/menu";
 import {
   Dialog,
   DialogActions,
@@ -6,25 +25,6 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import AutocompleteSelectMenu from "@saleor/components/AutocompleteSelectMenu";
-import BackButton from "@saleor/components/BackButton";
-import ConfirmButton from "@saleor/components/ConfirmButton";
-import FormSpacer from "@saleor/components/FormSpacer";
-import {
-  MenuErrorFragment,
-  SearchCategoriesQuery,
-  SearchCollectionsQuery,
-  SearchPagesQuery,
-} from "@saleor/graphql";
-import useModalDialogErrors from "@saleor/hooks/useModalDialogErrors";
-import useModalDialogOpen from "@saleor/hooks/useModalDialogOpen";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { buttonMessages, sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { RelayToFlat } from "@saleor/types";
-import { getFieldError, getFormErrors } from "@saleor/utils/errors";
-import getMenuErrorMessage from "@saleor/utils/errors/menu";
-import { getMenuItemByValue, IMenu } from "@saleor/utils/menu";
 import isUrl from "is-url";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -63,6 +63,7 @@ const defaultInitial: MenuItemDialogFormData = {
 
 function getMenuItemData(value: string): MenuItemData {
   const [type, ...idParts] = value.split(":");
+
   return {
     id: idParts.join(":"),
     type: type as MenuItemType,
@@ -71,9 +72,11 @@ function getMenuItemData(value: string): MenuItemData {
 
 function getDisplayValue(menu: IMenu, value: string): string {
   const menuItemData = getMenuItemData(value);
+
   if (menuItemData.type === "link") {
     return menuItemData.id;
   }
+
   return getMenuItemByValue(menu, value).label.toString();
 }
 
@@ -94,12 +97,8 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
 }) => {
   const intl = useIntl();
   const errors = useModalDialogErrors(apiErrors, open);
-  const [displayValue, setDisplayValue] = React.useState(
-    initialDisplayValue || "",
-  );
-  const [data, setData] = useStateFromProps<MenuItemDialogFormData>(
-    initial || defaultInitial,
-  );
+  const [displayValue, setDisplayValue] = React.useState(initialDisplayValue || "");
+  const [data, setData] = useStateFromProps<MenuItemDialogFormData>(initial || defaultInitial);
   const [url, setUrl] = React.useState<string>(undefined);
 
   // Reset input state after closing dialog
@@ -110,11 +109,8 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
       setUrl(undefined);
     },
   });
-
   // Refresh initial display value if changed
-  React.useEffect(() => setDisplayValue(initialDisplayValue), [
-    initialDisplayValue,
-  ]);
+  React.useEffect(() => setDisplayValue(initialDisplayValue), [initialDisplayValue]);
 
   const mutationErrors = errors.filter(err => err.field === null);
   const formErrors = getFormErrors(["name"], errors);
@@ -201,10 +197,10 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
     } else if (url) {
       setUrl(undefined);
     }
+
     onQueryChange(query);
   };
-
-  const handleSelectChange = (event: React.ChangeEvent<any>) => {
+  const handleSelectChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const menuItemData = getMenuItemData(value);
 
@@ -214,7 +210,6 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
     }));
     setDisplayValue(getDisplayValue(options, value));
   };
-
   const handleSubmit = () => onSubmit(data);
 
   return (
@@ -227,8 +222,8 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         style: { overflowY: "visible" },
       }}
     >
-      <DialogTitle>
-        {!!initial
+      <DialogTitle disableTypography data-test-id="add-menu-item-dialog-title">
+        {initial
           ? intl.formatMessage({
               id: "KKQUMK",
               defaultMessage: "Edit Item",
@@ -242,6 +237,7 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
       </DialogTitle>
       <DialogContent style={{ overflow: "visible" }}>
         <TextField
+          data-test-id="menu-item-name-input"
           disabled={disabled}
           label={intl.formatMessage({
             id: "0Vyr8h",
@@ -306,5 +302,6 @@ const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
     </Dialog>
   );
 };
+
 MenuItemDialog.displayName = "MenuItemDialog";
 export default MenuItemDialog;

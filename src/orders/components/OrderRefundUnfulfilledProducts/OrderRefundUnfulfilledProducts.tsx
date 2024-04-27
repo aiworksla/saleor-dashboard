@@ -1,3 +1,13 @@
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Money from "@dashboard/components/Money";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableCellAvatar from "@dashboard/components/TableCellAvatar";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { OrderRefundDataQuery } from "@dashboard/graphql";
+import { FormsetChange } from "@dashboard/hooks/useFormset";
+import { renderCollection } from "@dashboard/misc";
 import {
   Card,
   CardContent,
@@ -8,16 +18,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Money from "@saleor/components/Money";
-import Skeleton from "@saleor/components/Skeleton";
-import TableCellAvatar from "@saleor/components/TableCellAvatar";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { OrderRefundDataQuery } from "@saleor/graphql";
-import { FormsetChange } from "@saleor/hooks/useFormset";
 import { makeStyles } from "@saleor/macaw-ui";
-import { renderCollection } from "@saleor/misc";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -91,11 +92,7 @@ const OrderRefundUnfulfilledProducts: React.FC<OrderRefundUnfulfilledProductsPro
         })}
       />
       <CardContent className={classes.cartContent}>
-        <Typography
-          variant="caption"
-          color="textSecondary"
-          className={classes.notice}
-        >
+        <Typography variant="caption" color="textSecondary" className={classes.notice}>
           <FormattedMessage
             id="iUIn50"
             defaultMessage="Unfulfilled products will be restocked"
@@ -165,11 +162,7 @@ const OrderRefundUnfulfilledProducts: React.FC<OrderRefundUnfulfilledProductsPro
                     {line?.productName ? line?.productName : <Skeleton />}
                   </TableCellAvatar>
                   <TableCell>
-                    {line?.unitPrice ? (
-                      <Money money={line?.unitPrice.gross} />
-                    ) : (
-                      <Skeleton />
-                    )}
+                    {line?.unitPrice ? <Money money={line?.unitPrice.gross} /> : <Skeleton />}
                   </TableCell>
                   <TableCell className={classes.colQuantity}>
                     {lineQuantity || lineQuantity === 0 ? (
@@ -186,16 +179,11 @@ const OrderRefundUnfulfilledProducts: React.FC<OrderRefundUnfulfilledProductsPro
                         fullWidth
                         value={selectedLineQuantity?.value}
                         onChange={event =>
-                          onRefundedProductQuantityChange(
-                            line.id,
-                            event.target.value,
-                          )
+                          onRefundedProductQuantityChange(line.id, event.target.value)
                         }
                         InputProps={{
                           endAdornment: lineQuantity && (
-                            <div className={classes.remainingQuantity}>
-                              / {lineQuantity}
-                            </div>
+                            <div className={classes.remainingQuantity}>/ {lineQuantity}</div>
                           ),
                         }}
                         error={isError}
@@ -230,10 +218,7 @@ const OrderRefundUnfulfilledProducts: React.FC<OrderRefundUnfulfilledProductsPro
             () => (
               <TableRowLink>
                 <TableCell colSpan={4}>
-                  <FormattedMessage
-                    id="Q1Uzbb"
-                    defaultMessage="No products found"
-                  />
+                  <FormattedMessage id="Q1Uzbb" defaultMessage="No products found" />
                 </TableCell>
               </TableRowLink>
             ),
@@ -243,5 +228,6 @@ const OrderRefundUnfulfilledProducts: React.FC<OrderRefundUnfulfilledProductsPro
     </Card>
   );
 };
+
 OrderRefundUnfulfilledProducts.displayName = "OrderRefundUnfulfilledProducts";
 export default OrderRefundUnfulfilledProducts;

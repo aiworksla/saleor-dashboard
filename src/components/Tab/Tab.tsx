@@ -1,7 +1,7 @@
 import { Typography } from "@material-ui/core";
-import { fade } from "@material-ui/core/styles/colorManipulator";
+import { alpha } from "@material-ui/core/styles";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import clsx from "clsx";
 import React from "react";
 
 const useStyles = makeStyles(
@@ -21,7 +21,7 @@ const useStyles = makeStyles(
         color: theme.palette.primary.main,
       },
       borderBottom: "1px solid transparent",
-      color: fade(theme.palette.text.secondary, 0.6),
+      color: alpha(theme.palette.text.secondary, 0.6),
       cursor: "pointer",
       display: "inline-block",
       fontWeight: theme.typography.fontWeightRegular,
@@ -44,14 +44,13 @@ interface TabProps<T> {
 export function Tab<T>(value: T) {
   const Component: React.FC<TabProps<T>> = props => {
     const { children, isActive, changeTab, testId } = props;
-
     const classes = useStyles(props);
 
     return (
       <Typography
         component="span"
         data-test-id={testId}
-        className={classNames({
+        className={clsx({
           [classes.root]: true,
           [classes.active]: isActive,
         })}

@@ -1,26 +1,18 @@
-import {
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-} from "@material-ui/core";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import { TableButtonWrapper } from "@dashboard/components/TableButtonWrapper/TableButtonWrapper";
+import TableCellHeader from "@dashboard/components/TableCellHeader";
+import { TablePaginationWithContext } from "@dashboard/components/TablePagination";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { WarehouseWithShippingFragment } from "@dashboard/graphql";
+import { renderCollection, stopPropagation } from "@dashboard/misc";
+import { ListProps, SortPage } from "@dashboard/types";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
+import { getArrowDirection } from "@dashboard/utils/sort";
+import { WarehouseListUrlSortField, warehouseUrl } from "@dashboard/warehouses/urls";
+import { TableBody, TableCell, TableFooter, TableHead } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import { TableButtonWrapper } from "@saleor/components/TableButtonWrapper/TableButtonWrapper";
-import TableCellHeader from "@saleor/components/TableCellHeader";
-import { TablePaginationWithContext } from "@saleor/components/TablePagination";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { WarehouseWithShippingFragment } from "@saleor/graphql";
 import { DeleteIcon, IconButton, makeStyles } from "@saleor/macaw-ui";
-import { maybe, renderCollection, stopPropagation } from "@saleor/misc";
-import { ListProps, SortPage } from "@saleor/types";
-import { mapEdgesToItems } from "@saleor/utils/maps";
-import { getArrowDirection } from "@saleor/utils/sort";
-import {
-  WarehouseListUrlSortField,
-  warehouseUrl,
-} from "@saleor/warehouses/urls";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
@@ -43,6 +35,7 @@ const useStyles = makeStyles(
       justifyContent: "flex-end",
       position: "relative",
       right: theme.spacing(-1.5),
+      gap: theme.spacing(1),
     },
     colActions: {
       textAlign: "right",
@@ -60,26 +53,14 @@ const useStyles = makeStyles(
   { name: "WarehouseList" },
 );
 
-interface WarehouseListProps
-  extends ListProps,
-    SortPage<WarehouseListUrlSortField> {
-  warehouses: WarehouseWithShippingFragment[];
-  onRemove: (id: string) => void;
+interface WarehouseListProps extends ListProps, SortPage<WarehouseListUrlSortField> {
+  warehouses: WarehouseWithShippingFragment[] | undefined;
+  onRemove: (id: string | undefined) => void;
 }
 
 const numberOfColumns = 3;
-
 const WarehouseList: React.FC<WarehouseListProps> = props => {
-  const {
-    warehouses,
-    disabled,
-    settings,
-    sort,
-    onUpdateListSettings,
-    onRemove,
-    onSort,
-  } = props;
-
+  const { warehouses, disabled, settings, sort, onUpdateListSettings, onRemove, onSort } = props;
   const classes = useStyles(props);
 
   return (
@@ -89,18 +70,14 @@ const WarehouseList: React.FC<WarehouseListProps> = props => {
           <TableCellHeader
             direction={
               sort.sort === WarehouseListUrlSortField.name
-                ? getArrowDirection(sort.asc)
+                ? getArrowDirection(!!sort.asc)
                 : undefined
             }
             arrowPosition="right"
             className={classes.colName}
             onClick={() => onSort(WarehouseListUrlSortField.name)}
           >
-            <FormattedMessage
-              id="aCJwVq"
-              defaultMessage="Name"
-              description="warehouse"
-            />
+            <FormattedMessage id="aCJwVq" defaultMessage="Name" description="warehouse" />
           </TableCellHeader>
           <TableCell className={classes.colZones}>
             <FormattedMessage id="PFXGaR" defaultMessage="Shipping Zones" />
@@ -120,7 +97,7 @@ const WarehouseList: React.FC<WarehouseListProps> = props => {
           />
         </TableRowLink>
       </TableFooter>
-      <TableBody>
+      <TableBody data-test-id="warehouses-list">
         {renderCollection(
           warehouses,
           warehouse => (
@@ -129,13 +106,10 @@ const WarehouseList: React.FC<WarehouseListProps> = props => {
               className={classes.tableRow}
               hover={!!warehouse}
               key={warehouse ? warehouse.id : "skeleton"}
-              data-test-id={
-                "warehouse-entry-" +
-                warehouse?.name.toLowerCase().replace(" ", "")
-              }
+              data-test-id={"warehouse-entry-" + warehouse?.name.toLowerCase().replace(" ", "")}
             >
               <TableCell className={classes.colName} data-test-id="name">
-                {maybe<React.ReactNode>(() => warehouse.name, <Skeleton />)}
+                {warehouse?.name ?? <Skeleton />}
               </TableCell>
               <TableCell className={classes.colZones} data-test-id="zones">
                 {warehouse?.shippingZones === undefined ? (
@@ -148,18 +122,15 @@ const WarehouseList: React.FC<WarehouseListProps> = props => {
               </TableCell>
               <TableCell className={classes.colActions}>
                 <div className={classes.actions}>
-                  <IconButton
-                    variant="secondary"
-                    color="primary"
-                    data-test-id="edit-button"
-                  >
+                  <IconButton variant="secondary" color="primary" data-test-id="edit-button">
                     <EditIcon />
                   </IconButton>
                   <TableButtonWrapper>
                     <IconButton
+                      data-test-id="delete-button"
                       variant="secondary"
                       color="primary"
-                      onClick={stopPropagation(() => onRemove(warehouse.id))}
+                      onClick={stopPropagation(() => onRemove(warehouse?.id))}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -171,10 +142,7 @@ const WarehouseList: React.FC<WarehouseListProps> = props => {
           () => (
             <TableRowLink data-test-id="empty-list-message">
               <TableCell colSpan={numberOfColumns}>
-                <FormattedMessage
-                  id="2gsiR1"
-                  defaultMessage="No warehouses found"
-                />
+                <FormattedMessage id="2gsiR1" defaultMessage="No warehouses found" />
               </TableCell>
             </TableRowLink>
           ),

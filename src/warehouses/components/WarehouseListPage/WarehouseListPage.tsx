@@ -1,27 +1,17 @@
+import { LimitsInfo } from "@dashboard/components/AppLayout/LimitsInfo";
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import { Backlink } from "@dashboard/components/Backlink";
+import { Button } from "@dashboard/components/Button";
+import { ListPageLayout } from "@dashboard/components/Layouts";
+import LimitReachedAlert from "@dashboard/components/LimitReachedAlert";
+import SearchBar from "@dashboard/components/SearchBar";
+import { configurationMenuUrl } from "@dashboard/configuration";
+import { RefreshLimitsQuery, WarehouseWithShippingFragment } from "@dashboard/graphql";
+import { sectionNames } from "@dashboard/intl";
+import { PageListProps, SearchPageProps, SortPage, TabPageProps } from "@dashboard/types";
+import { hasLimits, isLimitReached } from "@dashboard/utils/limits";
+import { warehouseAddUrl, WarehouseListUrlSortField } from "@dashboard/warehouses/urls";
 import { Card } from "@material-ui/core";
-import { Backlink } from "@saleor/components/Backlink";
-import { Button } from "@saleor/components/Button";
-import Container from "@saleor/components/Container";
-import LimitReachedAlert from "@saleor/components/LimitReachedAlert";
-import PageHeader from "@saleor/components/PageHeader";
-import SearchBar from "@saleor/components/SearchBar";
-import { configurationMenuUrl } from "@saleor/configuration";
-import {
-  RefreshLimitsQuery,
-  WarehouseWithShippingFragment,
-} from "@saleor/graphql";
-import { sectionNames } from "@saleor/intl";
-import {
-  PageListProps,
-  SearchPageProps,
-  SortPage,
-  TabPageProps,
-} from "@saleor/types";
-import { hasLimits, isLimitReached } from "@saleor/utils/limits";
-import {
-  warehouseAddUrl,
-  WarehouseListUrlSortField,
-} from "@saleor/warehouses/urls";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -32,9 +22,9 @@ export interface WarehouseListPageProps
     SearchPageProps,
     SortPage<WarehouseListUrlSortField>,
     TabPageProps {
-  limits: RefreshLimitsQuery["shop"]["limits"];
-  warehouses: WarehouseWithShippingFragment[];
-  onRemove: (id: string) => void;
+  limits: RefreshLimitsQuery["shop"]["limits"] | undefined;
+  warehouses: WarehouseWithShippingFragment[] | undefined;
+  onRemove: (id: string | undefined) => void;
 }
 
 export const WarehouseListPage: React.FC<WarehouseListPageProps> = ({
@@ -55,44 +45,38 @@ export const WarehouseListPage: React.FC<WarehouseListPageProps> = ({
   ...listProps
 }) => {
   const intl = useIntl();
-
   const limitReached = isLimitReached(limits, "warehouses");
 
   return (
-    <Container>
+    <ListPageLayout>
       <Backlink href={configurationMenuUrl}>
         <FormattedMessage {...sectionNames.configuration} />
       </Backlink>
-      <PageHeader
-        title={intl.formatMessage(sectionNames.warehouses)}
-        limitText={
-          hasLimits(limits, "warehouses") &&
-          intl.formatMessage(
-            {
-              id: "YkOzse",
-              defaultMessage: "{count}/{max} warehouses used",
-              description: "used warehouses counter",
-            },
-            {
-              count: limits.currentUsage.warehouses,
-              max: limits.allowedUsage.warehouses,
-            },
-          )
-        }
-      >
+      <TopNav href={configurationMenuUrl} title={intl.formatMessage(sectionNames.warehouses)}>
         <Button
           data-test-id="create-warehouse"
           disabled={limitReached}
           variant="primary"
           href={warehouseAddUrl}
         >
-          <FormattedMessage
-            id="wmdHhD"
-            defaultMessage="Create Warehouse"
-            description="button"
-          />
+          <FormattedMessage id="wmdHhD" defaultMessage="Create Warehouse" description="button" />
         </Button>
-      </PageHeader>
+        {hasLimits(limits, "warehouses") && (
+          <LimitsInfo
+            text={intl.formatMessage(
+              {
+                id: "YkOzse",
+                defaultMessage: "{count}/{max} warehouses used",
+                description: "used warehouses counter",
+              },
+              {
+                count: limits?.currentUsage.warehouses,
+                max: limits?.allowedUsage.warehouses,
+              },
+            )}
+          />
+        )}
+      </TopNav>
       {limitReached && (
         <LimitReachedAlert
           title={intl.formatMessage({
@@ -136,7 +120,7 @@ export const WarehouseListPage: React.FC<WarehouseListPageProps> = ({
           {...listProps}
         />
       </Card>
-    </Container>
+    </ListPageLayout>
   );
 };
 WarehouseListPage.displayName = "WarehouseListPage";

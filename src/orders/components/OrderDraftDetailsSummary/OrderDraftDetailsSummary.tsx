@@ -1,18 +1,20 @@
-import { Typography } from "@material-ui/core";
-import HorizontalSpacer from "@saleor/apps/components/HorizontalSpacer";
-import Link from "@saleor/components/Link";
-import Money from "@saleor/components/Money";
+// @ts-strict-ignore
+import HorizontalSpacer from "@dashboard/components/HorizontalSpacer";
+import Link from "@dashboard/components/Link";
+import Money from "@dashboard/components/Money";
 import {
   DiscountValueTypeEnum,
   OrderDetailsFragment,
   OrderErrorFragment,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
+import { OrderDiscountContextConsumerProps } from "@dashboard/products/components/OrderDiscountProviders/OrderDiscountProvider";
+import { OrderDiscountData } from "@dashboard/products/components/OrderDiscountProviders/types";
+import { getFormErrors } from "@dashboard/utils/errors";
+import getOrderErrorMessage from "@dashboard/utils/errors/order";
+import { Typography } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import { OrderDiscountContextConsumerProps } from "@saleor/products/components/OrderDiscountProviders/OrderDiscountProvider";
-import { OrderDiscountData } from "@saleor/products/components/OrderDiscountProviders/types";
-import { getFormErrors } from "@saleor/utils/errors";
-import getOrderErrorMessage from "@saleor/utils/errors/order";
-import React, { useRef } from "react";
+import { Box, Button, Popover, sprinkles } from "@saleor/macaw-ui-next";
+import React from "react";
 import { useIntl } from "react-intl";
 
 import OrderDiscountCommonModal from "../OrderDiscountCommonModal";
@@ -55,11 +57,9 @@ const useStyles = makeStyles(
   }),
   { name: "OrderDraftDetailsSummary" },
 );
-
 const PRICE_PLACEHOLDER = "---";
 
-interface OrderDraftDetailsSummaryProps
-  extends OrderDiscountContextConsumerProps {
+interface OrderDraftDetailsSummaryProps extends OrderDiscountContextConsumerProps {
   disabled?: boolean;
   order: OrderDetailsFragment;
   errors: OrderErrorFragment[];
@@ -81,11 +81,8 @@ const OrderDraftDetailsSummary: React.FC<OrderDraftDetailsSummaryProps> = props 
     orderDiscountRemoveStatus,
     undiscountedPrice,
   } = props;
-
   const intl = useIntl();
   const classes = useStyles(props);
-
-  const popperAnchorRef = useRef<HTMLTableRowElement | null>(null);
 
   if (!order) {
     return null;
@@ -101,36 +98,22 @@ const OrderDraftDetailsSummary: React.FC<OrderDraftDetailsSummaryProps> = props 
     shippingAddress,
     isShippingRequired,
   } = order;
-
   const formErrors = getFormErrors(["shipping"], errors);
-
-  const hasChosenShippingMethod =
-    shippingMethod !== null && shippingMethodName !== null;
-
+  const hasChosenShippingMethod = shippingMethod !== null && shippingMethodName !== null;
   const hasShippingMethods = !!shippingMethods?.length || isShippingRequired;
-
-  const discountTitle = orderDiscount
-    ? messages.discount
-    : messages.addDiscount;
-
+  const discountTitle = orderDiscount ? messages.discount : messages.addDiscount;
   const getOrderDiscountLabel = (orderDiscountData: OrderDiscountData) => {
     if (!orderDiscountData) {
       return PRICE_PLACEHOLDER;
     }
 
-    const {
-      value: discountValue,
-      calculationMode,
-      amount: discountAmount,
-    } = orderDiscountData;
+    const { value: discountValue, calculationMode, amount: discountAmount } = orderDiscountData;
     const currency = total.gross.currency;
 
     if (calculationMode === DiscountValueTypeEnum.PERCENTAGE) {
       return (
         <div className={classes.percentDiscountLabelContainer}>
-          <Typography
-            className={classes.subtitle}
-          >{`(${discountValue}%)`}</Typography>
+          <Typography className={classes.subtitle}>{`(${discountValue}%)`}</Typography>
           <Money money={discountAmount} />
         </div>
       );
@@ -138,30 +121,22 @@ const OrderDraftDetailsSummary: React.FC<OrderDraftDetailsSummaryProps> = props 
 
     return <Money money={{ amount: discountValue, currency }} />;
   };
-
   const getShippingMethodComponent = () => {
     if (hasChosenShippingMethod) {
-      return (
-        <Link onClick={onShippingMethodEdit}>{`${shippingMethodName}`}</Link>
-      );
+      return <Link onClick={onShippingMethodEdit}>{`${shippingMethodName}`}</Link>;
     }
 
     const shippingCarrierBase = intl.formatMessage(messages.addShippingCarrier);
 
-    if (!!shippingAddress) {
+    if (shippingAddress) {
       return (
-        <Link
-          onClick={onShippingMethodEdit}
-          data-test-id="add-shipping-carrier"
-        >
+        <Link onClick={onShippingMethodEdit} data-test-id="add-shipping-carrier">
           {shippingCarrierBase}
         </Link>
       );
     }
 
-    const addShippingAddressInfo = intl.formatMessage(
-      messages.addShippingAddressInfo,
-    );
+    const addShippingAddressInfo = intl.formatMessage(messages.addShippingAddressInfo);
 
     return (
       <div className={classes.shippingMethodContainer}>
@@ -177,41 +152,43 @@ const OrderDraftDetailsSummary: React.FC<OrderDraftDetailsSummaryProps> = props 
   return (
     <table className={classes.root}>
       <tbody>
-        <tr className={classes.relativeRow} ref={popperAnchorRef}>
+        <tr className={classes.relativeRow}>
           <td>
-            <Link onClick={openDialog}>
-              {intl.formatMessage(discountTitle)}
-            </Link>
-            <OrderDiscountCommonModal
-              dialogPlacement="bottom-start"
-              modalType={ORDER_DISCOUNT}
-              anchorRef={popperAnchorRef}
-              existingDiscount={orderDiscount}
-              maxPrice={undiscountedPrice}
-              isOpen={isDialogOpen}
-              onConfirm={addOrderDiscount}
-              onClose={closeDialog}
-              onRemove={removeOrderDiscount}
-              confirmStatus={orderDiscountAddStatus}
-              removeStatus={orderDiscountRemoveStatus}
-            />
+            <Popover open={isDialogOpen}>
+              <Popover.Trigger>
+                <Button variant="tertiary" onClick={isDialogOpen ? closeDialog : openDialog}>
+                  <Link>{intl.formatMessage(discountTitle)}</Link>
+                </Button>
+              </Popover.Trigger>
+              <Popover.Content align="start" className={sprinkles({ zIndex: "3" })}>
+                <Box boxShadow="defaultOverlay">
+                  <OrderDiscountCommonModal
+                    modalType={ORDER_DISCOUNT}
+                    existingDiscount={orderDiscount}
+                    maxPrice={undiscountedPrice}
+                    onConfirm={addOrderDiscount}
+                    onClose={closeDialog}
+                    onRemove={removeOrderDiscount}
+                    confirmStatus={orderDiscountAddStatus}
+                    removeStatus={orderDiscountRemoveStatus}
+                  />
+                </Box>
+              </Popover.Content>
+            </Popover>
           </td>
-          <td className={classes.textRight}>
-            {getOrderDiscountLabel(orderDiscount)}
-          </td>
+          <td className={classes.textRight}>{getOrderDiscountLabel(orderDiscount)}</td>
         </tr>
-        <tr>
+        <tr data-test-id="order-subtotal-price">
           <td>{intl.formatMessage(messages.subtotal)}</td>
           <td className={classes.textRight}>
             <Money money={subtotal.gross} />
           </td>
         </tr>
-        <tr>
+        <tr data-test-id="order-add-shipping-line">
           <td>
             {hasShippingMethods && getShippingMethodComponent()}
 
-            {!hasShippingMethods &&
-              intl.formatMessage(messages.noShippingCarriers)}
+            {!hasShippingMethods && intl.formatMessage(messages.noShippingCarriers)}
 
             {formErrors.shipping && (
               <Typography variant="body2" className={classes.textError}>
@@ -221,20 +198,16 @@ const OrderDraftDetailsSummary: React.FC<OrderDraftDetailsSummaryProps> = props 
           </td>
 
           <td className={classes.textRight}>
-            {hasChosenShippingMethod ? (
-              <Money money={shippingPrice.gross} />
-            ) : (
-              PRICE_PLACEHOLDER
-            )}
+            {hasChosenShippingMethod ? <Money money={shippingPrice.gross} /> : PRICE_PLACEHOLDER}
           </td>
         </tr>
-        <tr>
+        <tr data-test-id="order-taxes-price">
           <td>{intl.formatMessage(messages.taxes)}</td>
           <td className={classes.textRight}>
             <Money money={order.total.tax} />
           </td>
         </tr>
-        <tr>
+        <tr data-test-id="order-total-price">
           <td>{intl.formatMessage(messages.total)}</td>
           <td className={classes.textRight}>
             <Money money={total.gross} />

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import React, { useRef } from "react";
 
 /**
@@ -14,7 +15,6 @@ export const usePreventHistoryBack = (
 ) => {
   const enabled = useRef(options?.defaultEnabled ?? true);
   const offsetY = useRef(0);
-
   const wheelHandler = evt => {
     if (!enabled.current) {
       return;
@@ -44,7 +44,6 @@ export const usePreventHistoryBack = (
   const enable = () => {
     enabled.current = true;
   };
-
   const disable = () => {
     enabled.current = false;
   };

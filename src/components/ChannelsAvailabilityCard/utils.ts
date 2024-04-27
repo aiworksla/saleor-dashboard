@@ -1,5 +1,6 @@
-import { ChannelData } from "@saleor/channels/utils";
-import { LocalizeDate } from "@saleor/hooks/useDateLocalize";
+// @ts-strict-ignore
+import { ChannelData } from "@dashboard/channels/utils";
+import { LocalizeDate } from "@dashboard/hooks/useDateLocalize";
 import { IntlShape } from "react-intl";
 
 import { publicationMessages } from "./messages";
@@ -27,33 +28,21 @@ export const getChannelsAvailabilityMessages = ({
                 date: localizeDate(currVal.publicationDate),
               })
             : currVal.publicationDate
-            ? intl.formatMessage(publicationMessages.publishedSince, {
-                date: localizeDate(currVal.publicationDate),
-              })
-            : currVal.isPublished
-            ? intl.formatMessage(publicationMessages.published)
-            : intl.formatMessage(publicationMessages.notPublished),
-        availableLabel: intl.formatMessage(
-          publicationMessages.availableForPurchase,
-        ),
-        availableSecondLabel: intl.formatMessage(
-          publicationMessages.willBecomeAvailableOn,
-          {
-            date: localizeDate(currVal.availableForPurchase),
-          },
-        ),
-        hiddenSecondLabel: intl.formatMessage(
-          publicationMessages.willBecomePublishedOn,
-          {
-            date: localizeDate(currVal.publicationDate),
-          },
-        ),
-        setAvailabilityDateLabel: intl.formatMessage(
-          publicationMessages.setAvailabilityDate,
-        ),
-        unavailableLabel: intl.formatMessage(
-          publicationMessages.unavailableForPurchase,
-        ),
+              ? intl.formatMessage(publicationMessages.publishedSince, {
+                  date: localizeDate(currVal.publicationDate),
+                })
+              : currVal.isPublished
+                ? intl.formatMessage(publicationMessages.published)
+                : intl.formatMessage(publicationMessages.notPublished),
+        availableLabel: intl.formatMessage(publicationMessages.availableForPurchase),
+        availableSecondLabel: intl.formatMessage(publicationMessages.willBecomeAvailableOn, {
+          date: localizeDate(currVal.availableForPurchase),
+        }),
+        hiddenSecondLabel: intl.formatMessage(publicationMessages.willBecomePublishedOn, {
+          date: localizeDate(currVal.publicationDate),
+        }),
+        setAvailabilityDateLabel: intl.formatMessage(publicationMessages.setAvailabilityDate),
+        unavailableLabel: intl.formatMessage(publicationMessages.unavailableForPurchase),
       },
     }),
     {} as Messages,

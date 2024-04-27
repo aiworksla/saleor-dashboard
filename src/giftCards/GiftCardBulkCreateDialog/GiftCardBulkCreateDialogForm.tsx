@@ -1,20 +1,16 @@
-import {
-  DialogContent,
-  Divider,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import DialogButtons from "@saleor/components/ActionDialog/DialogButtons";
-import CardSpacer from "@saleor/components/CardSpacer";
-import GiftCardTagInput from "@saleor/giftCards/components/GiftCardTagInput";
+// @ts-strict-ignore
+import DialogButtons from "@dashboard/components/ActionDialog/DialogButtons";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import GiftCardTagInput from "@dashboard/giftCards/components/GiftCardTagInput";
 import {
   GiftCardSettingsExpiryTypeEnum,
   TimePeriodTypeEnum,
   useGiftCardSettingsQuery,
-} from "@saleor/graphql";
-import useForm from "@saleor/hooks/useForm";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+} from "@dashboard/graphql";
+import useForm from "@dashboard/hooks/useForm";
+import { DialogContent, Divider, TextField, Typography } from "@material-ui/core";
 import React from "react";
 import { useIntl } from "react-intl";
 
@@ -58,18 +54,13 @@ const GiftCardBulkCreateDialogForm: React.FC<GiftCardBulkCreateDialogFormProps> 
 }) => {
   const intl = useIntl();
   const classes = useStyles({});
-
-  const {
-    data: settingsData,
-    loading: loadingSettings,
-  } = useGiftCardSettingsQuery();
-
+  const { data: settingsData, loading: loadingSettings } = useGiftCardSettingsQuery();
   const getInitialExpirySettingsData = (): Partial<GiftCardBulkCreateFormData> => {
     if (loadingSettings) {
       return {};
     }
 
-    const { expiryType, expiryPeriod } = settingsData?.giftCardSettings;
+    const { expiryType, expiryPeriod } = settingsData?.giftCardSettings ?? {};
 
     if (expiryType === GiftCardSettingsExpiryTypeEnum.NEVER_EXPIRE) {
       return {};
@@ -81,7 +72,6 @@ const GiftCardBulkCreateDialogForm: React.FC<GiftCardBulkCreateDialogFormProps> 
       expiryPeriodAmount: expiryPeriod?.amount,
     };
   };
-
   const { submit, toggleValue, change, data, set } = useForm(
     {
       ...initialData,
@@ -90,9 +80,7 @@ const GiftCardBulkCreateDialogForm: React.FC<GiftCardBulkCreateDialogFormProps> 
     },
     onSubmit,
   );
-
   const { tags, requiresActivation, cardsAmount } = data;
-
   const commonFormProps: GiftCardBulkCreateFormCommonProps = {
     data,
     errors: formErrors,
@@ -129,14 +117,9 @@ const GiftCardBulkCreateDialogForm: React.FC<GiftCardBulkCreateDialogFormProps> 
         <VerticalSpacer />
         <Divider />
         <VerticalSpacer spacing={2} />
-        <GiftCardCreateRequiresActivationSection
-          onChange={change}
-          checked={requiresActivation}
-        />
+        <GiftCardCreateRequiresActivationSection onChange={change} checked={requiresActivation} />
         <VerticalSpacer spacing={2} />
-        <Typography>
-          {intl.formatMessage(messages.bulkCreateExplanation)}
-        </Typography>
+        <Typography>{intl.formatMessage(messages.bulkCreateExplanation)}</Typography>
       </DialogContent>
       <DialogButtons
         onConfirm={submit}

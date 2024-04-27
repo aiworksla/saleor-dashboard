@@ -1,10 +1,11 @@
-import { FilterElement } from "@saleor/components/Filter";
-import { OrderDraftFilterInput } from "@saleor/graphql";
-import { maybe } from "@saleor/misc";
+// @ts-strict-ignore
+import { FilterElement } from "@dashboard/components/Filter";
+import { OrderDraftFilterInput } from "@dashboard/graphql";
+import { maybe } from "@dashboard/misc";
 import {
   OrderDraftFilterKeys,
   OrderDraftListFilterOpts,
-} from "@saleor/orders/components/OrderDraftListPage";
+} from "@dashboard/orders/components/OrderDraftListPage";
 
 import {
   createFilterTabUtils,
@@ -21,16 +22,11 @@ import {
 
 export const ORDER_DRAFT_FILTERS_KEY = "orderDraftFilters";
 
-export function getFilterOpts(
-  params: OrderDraftListUrlFilters,
-): OrderDraftListFilterOpts {
+export function getFilterOpts(params: OrderDraftListUrlFilters): OrderDraftListFilterOpts {
   return {
     created: {
       active: maybe(
-        () =>
-          [params.createdFrom, params.createdTo].some(
-            field => field !== undefined,
-          ),
+        () => [params.createdFrom, params.createdTo].some(field => field !== undefined),
         false,
       ),
       value: {
@@ -45,9 +41,7 @@ export function getFilterOpts(
   };
 }
 
-export function getFilterVariables(
-  params: OrderDraftListUrlFilters,
-): OrderDraftFilterInput {
+export function getFilterVariables(params: OrderDraftListUrlFilters): OrderDraftFilterInput {
   return {
     created: getGteLteVariables({
       gte: params.createdFrom,
@@ -72,23 +66,13 @@ export function getFilterQueryParam(
       );
 
     case OrderDraftFilterKeys.customer:
-      return getSingleValueQueryParam(
-        filter,
-        OrderDraftListUrlFiltersEnum.customer,
-      );
+      return getSingleValueQueryParam(filter, OrderDraftListUrlFiltersEnum.customer);
   }
 }
 
-export const {
-  deleteFilterTab,
-  getFilterTabs,
-  saveFilterTab,
-} = createFilterTabUtils<OrderDraftListUrlFilters>(ORDER_DRAFT_FILTERS_KEY);
+export const storageUtils = createFilterTabUtils<string>(ORDER_DRAFT_FILTERS_KEY);
 
-export const {
-  areFiltersApplied,
-  getActiveFilters,
-  getFiltersCurrentTab,
-} = createFilterUtils<OrderDraftListUrlQueryParams, OrderDraftListUrlFilters>(
-  OrderDraftListUrlFiltersEnum,
-);
+export const { areFiltersApplied, getActiveFilters, getFiltersCurrentTab } = createFilterUtils<
+  OrderDraftListUrlQueryParams,
+  OrderDraftListUrlFilters
+>(OrderDraftListUrlFiltersEnum);

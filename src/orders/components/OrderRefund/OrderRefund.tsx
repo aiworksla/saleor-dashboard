@@ -1,6 +1,6 @@
+import CardTitle from "@dashboard/components/CardTitle";
+import RadioGroupField from "@dashboard/components/RadioGroupField";
 import { Card, CardContent } from "@material-ui/core";
-import CardTitle from "@saleor/components/CardTitle";
-import RadioGroupField from "@saleor/components/RadioGroupField";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import { defineMessages, useIntl } from "react-intl";
@@ -32,7 +32,6 @@ const messages = defineMessages({
     description: "refund type",
   },
 });
-
 const OrderRefund: React.FC<OrderRefundProps> = props => {
   const { data, disabled, onChange } = props;
   const classes = useStyles(props);
@@ -69,5 +68,6 @@ const OrderRefund: React.FC<OrderRefundProps> = props => {
     </Card>
   );
 };
+
 OrderRefund.displayName = "OrderRefund";
 export default OrderRefund;

@@ -1,4 +1,4 @@
-import { WarehouseErrorCode, WarehouseErrorFragment } from "@saleor/graphql";
+import { WarehouseErrorCode, WarehouseErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -14,14 +14,14 @@ const messages = defineMessages({
 function getWarehouseErrorMessage(
   err: Omit<WarehouseErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   return getCommonFormFieldErrorMessage(err, intl);
 }
 
 export function getWarehouseSlugErrorMessage(
   err: Omit<WarehouseErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case WarehouseErrorCode.UNIQUE:

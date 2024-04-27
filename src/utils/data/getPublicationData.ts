@@ -1,12 +1,9 @@
 interface PublicationData {
-  publicationDate: string;
+  publicationDate: string | null;
   isPublished: boolean;
 }
 
-function getPublicationData({
-  publicationDate,
-  isPublished,
-}: PublicationData): PublicationData {
+function getPublicationData({ publicationDate, isPublished }: PublicationData): PublicationData {
   return {
     isPublished,
     publicationDate: publicationDate || null,

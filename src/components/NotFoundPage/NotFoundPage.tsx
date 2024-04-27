@@ -1,6 +1,6 @@
 import notFoundImage from "@assets/images/not-found-404.svg";
+import { Button } from "@dashboard/components/Button";
 import { Typography } from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
 import { makeStyles } from "@saleor/macaw-ui";
 import React from "react";
 import SVG from "react-inlinesvg";
@@ -24,7 +24,7 @@ const useStyles = makeStyles(
       width: 830,
     },
     header: {
-      fontWeight: 600 as 600,
+      fontWeight: 600 as const,
     },
     innerContainer: {
       [theme.breakpoints.down("sm")]: {
@@ -43,7 +43,7 @@ const useStyles = makeStyles(
     root: {
       alignItems: "center",
       display: "flex",
-      height: "calc(100vh - 180px)",
+      height: "100vh",
     },
   }),
   { name: "NotFoundPage" },
@@ -61,7 +61,6 @@ type NotFoundPageProps =
 
 const NotFoundPage: React.FC<NotFoundPageProps> = props => {
   const { onBack, backHref } = props;
-
   const classes = useStyles(props);
 
   return (
@@ -73,25 +72,14 @@ const NotFoundPage: React.FC<NotFoundPageProps> = props => {
               <FormattedMessage id="yH56V+" defaultMessage="Ooops!..." />
             </Typography>
             <Typography className={classes.header} variant="h4">
-              <FormattedMessage
-                id="bj6pTd"
-                defaultMessage="Something's missing"
-              />
+              <FormattedMessage id="bj6pTd" defaultMessage="Something's missing" />
             </Typography>
             <Typography>
-              <FormattedMessage
-                id="nRiOg+"
-                defaultMessage="Sorry, the page was not found"
-              />
+              <FormattedMessage id="nRiOg+" defaultMessage="Sorry, the page was not found" />
             </Typography>
           </div>
           <div>
-            <Button
-              className={classes.button}
-              variant="primary"
-              onClick={onBack}
-              href={backHref}
-            >
+            <Button className={classes.button} variant="primary" onClick={onBack} href={backHref}>
               <FormattedMessage
                 id="95oJ5d"
                 defaultMessage="Go back to dashboard"
@@ -107,5 +95,6 @@ const NotFoundPage: React.FC<NotFoundPageProps> = props => {
     </div>
   );
 };
+
 NotFoundPage.displayName = "NotFoundPage";
 export default NotFoundPage;

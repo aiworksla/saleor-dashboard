@@ -1,15 +1,19 @@
-import { channelsList } from "@saleor/channels/fixtures";
+// @ts-strict-ignore
+import { channelsList } from "@dashboard/channels/fixtures";
 import {
+  AttributeEntityTypeEnum,
   AttributeInputTypeEnum,
+  GridAttributesQuery,
   ProductFragment,
   ProductListQuery,
   ProductMediaType,
   ProductVariantCreateDataQuery,
   ProductVariantFragment,
+  VariantAttributeFragment,
   WeightUnitsEnum,
-} from "@saleor/graphql";
+} from "@dashboard/graphql";
+import { RelayToFlat } from "@dashboard/types";
 import { ProductType } from "@saleor/sdk/dist/apollo/types";
-import { RelayToFlat } from "@saleor/types";
 
 import * as richTextEditorFixtures from "../components/RichTextEditor/fixtures.json";
 
@@ -17,14 +21,13 @@ const content = richTextEditorFixtures.richTextEditor;
 
 export const product: (
   placeholderImage: string,
-) => ProductFragment &
-  ProductVariantCreateDataQuery["product"] = placeholderImage => ({
-  __typename: "Product" as "Product",
+) => ProductFragment & ProductVariantCreateDataQuery["product"] = placeholderImage => ({
+  __typename: "Product" as const,
   attributes: [
     {
       __typename: "SelectedAttribute",
       attribute: {
-        __typename: "Attribute" as "Attribute",
+        __typename: "Attribute" as const,
         entityType: null,
         id: "pta18161",
         inputType: AttributeInputTypeEnum.DROPDOWN,
@@ -101,7 +104,7 @@ export const product: (
     {
       __typename: "SelectedAttribute",
       attribute: {
-        __typename: "Attribute" as "Attribute",
+        __typename: "Attribute" as const,
         entityType: null,
         id: "pta22785",
         inputType: AttributeInputTypeEnum.MULTISELECT,
@@ -464,10 +467,10 @@ export const product: (
         },
       },
     ],
-    taxType: {
-      __typename: "TaxType",
-      description: "standard",
-      taxCode: "standard",
+    taxClass: {
+      __typename: "TaxClass",
+      name: "standard",
+      id: "standard",
     },
     variantAttributes: [
       {
@@ -477,6 +480,8 @@ export const product: (
         inputType: AttributeInputTypeEnum.DROPDOWN,
         valueRequired: false,
         unit: null,
+        slug: "attachment",
+        entityType: AttributeEntityTypeEnum.PRODUCT,
         choices: {
           __typename: "AttributeValueCountableConnection",
           pageInfo: {
@@ -516,6 +521,8 @@ export const product: (
         __typename: "Attribute",
         id: "pta18161",
         name: "Color",
+        slug: "color",
+        entityType: AttributeEntityTypeEnum.PRODUCT,
         inputType: AttributeInputTypeEnum.DROPDOWN,
         valueRequired: false,
         unit: null,
@@ -591,12 +598,12 @@ export const product: (
   seoTitle: "Seo title",
   sku: "59661-34207",
   slug: "Borders",
-  taxType: {
-    __typename: "TaxType",
-    description: "standard",
-    taxCode: "standard",
+  taxClass: {
+    __typename: "TaxClass",
+    name: "standard",
+    id: "standard",
   },
-  thumbnail: { __typename: "Image" as "Image", url: placeholderImage },
+  thumbnail: { __typename: "Image" as const, url: placeholderImage },
   url: "/example-url",
   variants: [
     {
@@ -615,6 +622,19 @@ export const product: (
             {
               id: "QXR0cmlidXRlVmFsdWU6NDc=",
               name: "1l",
+              plainText: "",
+              richText: "",
+              slug: "",
+              reference: "",
+              boolean: false,
+              date: "",
+              dateTime: "",
+              value: "",
+              file: {
+                __typename: "File",
+                url: "",
+                contentType: "",
+              },
               __typename: "AttributeValue",
             },
           ],
@@ -635,8 +655,7 @@ export const product: (
           quantity: 272,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjI2NDNiNmIwLWExMTQtNGRiMC1hM2U4LTFkZGY3ZGM3NDVkMg==",
+            id: "V2FyZWhvdXNlOjI2NDNiNmIwLWExMTQtNGRiMC1hM2U4LTFkZGY3ZGM3NDVkMg==",
             name: "Europe for click and collect",
             __typename: "Warehouse",
           },
@@ -647,8 +666,7 @@ export const product: (
           quantity: 272,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOmFmZDA4YjY4LWQwYmMtNGQ1My1iNjJkLTg1YWMxOWI3MjliYg==",
+            id: "V2FyZWhvdXNlOmFmZDA4YjY4LWQwYmMtNGQ1My1iNjJkLTg1YWMxOWI3MjliYg==",
             name: "Europe",
             __typename: "Warehouse",
           },
@@ -659,8 +677,7 @@ export const product: (
           quantity: 274,
           quantityAllocated: 2,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjMxOTRjNjY5LTY1YjItNDBjYy04ZDI5LWI3M2Q0YTUwODBmMQ==",
+            id: "V2FyZWhvdXNlOjMxOTRjNjY5LTY1YjItNDBjYy04ZDI5LWI3M2Q0YTUwODBmMQ==",
             name: "Asia",
             __typename: "Warehouse",
           },
@@ -671,8 +688,7 @@ export const product: (
           quantity: 272,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjI5YzBlYmYwLWVkNzktNDlmOS1hYmQ0LWQwNDBlOGNlZmI3Mg==",
+            id: "V2FyZWhvdXNlOjI5YzBlYmYwLWVkNzktNDlmOS1hYmQ0LWQwNDBlOGNlZmI3Mg==",
             name: "Oceania",
             __typename: "Warehouse",
           },
@@ -683,8 +699,7 @@ export const product: (
           quantity: 272,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjRiNjc1ZmVlLTE3OWYtNGMwNS04YmJlLWE0ZDJjOTc0OWQzMA==",
+            id: "V2FyZWhvdXNlOjRiNjc1ZmVlLTE3OWYtNGMwNS04YmJlLWE0ZDJjOTc0OWQzMA==",
             name: "Africa",
             __typename: "Warehouse",
           },
@@ -695,8 +710,7 @@ export const product: (
           quantity: 274,
           quantityAllocated: 2,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOmQwODA2MzM5LTVhNjAtNDAxNi1hNGUwLTRjNDYxNTZlY2IzMQ==",
+            id: "V2FyZWhvdXNlOmQwODA2MzM5LTVhNjAtNDAxNi1hNGUwLTRjNDYxNTZlY2IzMQ==",
             name: "Americas",
             __typename: "Warehouse",
           },
@@ -707,6 +721,7 @@ export const product: (
       preorder: null,
       channelListings: [
         {
+          id: "UHJvZHVjdFZhcmlhbnRDaGFubmVsTGlzdGluZzoyNTM=",
           channel: {
             id: "Q2hhbm5lbDox",
             name: "Channel-USD",
@@ -731,6 +746,7 @@ export const product: (
           __typename: "ProductVariantChannelListing",
         },
         {
+          id: "UHJvZHVjdFZhcmlhbnRDaGFubmVsTGlzdGluZzoyNDM=",
           channel: {
             id: "Q2hhbm5lbDoy",
             name: "Channel-PLN",
@@ -774,6 +790,19 @@ export const product: (
             {
               id: "QXR0cmlidXRlVmFsdWU6NDg=",
               name: "2l",
+              plainText: "",
+              richText: "",
+              slug: "",
+              reference: "",
+              boolean: false,
+              date: "",
+              dateTime: "",
+              value: "",
+              file: {
+                __typename: "File",
+                url: "",
+                contentType: "",
+              },
               __typename: "AttributeValue",
             },
           ],
@@ -793,6 +822,7 @@ export const product: (
       preorder: null,
       channelListings: [
         {
+          id: "UHJvZHVjdFZhcmlhbnRDaGFubmVsTGlzdGluZzoyNEM=",
           channel: {
             id: "Q2hhbm5lbDox",
             name: "Channel-USD",
@@ -817,6 +847,7 @@ export const product: (
           __typename: "ProductVariantChannelListing",
         },
         {
+          id: "UHJvZHVjdFZhcmlhbnRDaGFubmVsTGlzdGluZzoreNTM=",
           channel: {
             id: "Q2hhbm5lbDoy",
             name: "Channel-PLN",
@@ -860,6 +891,19 @@ export const product: (
             {
               id: "QXR0cmlidXRlVmFsdWU6NDY=",
               name: "500ml",
+              plainText: "",
+              richText: "",
+              slug: "",
+              reference: "",
+              boolean: false,
+              date: "",
+              dateTime: "",
+              value: "",
+              file: {
+                __typename: "File",
+                url: "",
+                contentType: "",
+              },
               __typename: "AttributeValue",
             },
           ],
@@ -880,8 +924,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOmFmZDA4YjY4LWQwYmMtNGQ1My1iNjJkLTg1YWMxOWI3MjliYg==",
+            id: "V2FyZWhvdXNlOmFmZDA4YjY4LWQwYmMtNGQ1My1iNjJkLTg1YWMxOWI3MjliYg==",
             name: "Europe",
             __typename: "Warehouse",
           },
@@ -892,8 +935,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjMxOTRjNjY5LTY1YjItNDBjYy04ZDI5LWI3M2Q0YTUwODBmMQ==",
+            id: "V2FyZWhvdXNlOjMxOTRjNjY5LTY1YjItNDBjYy04ZDI5LWI3M2Q0YTUwODBmMQ==",
             name: "Asia",
             __typename: "Warehouse",
           },
@@ -904,8 +946,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOmQwODA2MzM5LTVhNjAtNDAxNi1hNGUwLTRjNDYxNTZlY2IzMQ==",
+            id: "V2FyZWhvdXNlOmQwODA2MzM5LTVhNjAtNDAxNi1hNGUwLTRjNDYxNTZlY2IzMQ==",
             name: "Americas",
             __typename: "Warehouse",
           },
@@ -916,8 +957,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjI5YzBlYmYwLWVkNzktNDlmOS1hYmQ0LWQwNDBlOGNlZmI3Mg==",
+            id: "V2FyZWhvdXNlOjI5YzBlYmYwLWVkNzktNDlmOS1hYmQ0LWQwNDBlOGNlZmI3Mg==",
             name: "Oceania",
             __typename: "Warehouse",
           },
@@ -928,8 +968,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjI2NDNiNmIwLWExMTQtNGRiMC1hM2U4LTFkZGY3ZGM3NDVkMg==",
+            id: "V2FyZWhvdXNlOjI2NDNiNmIwLWExMTQtNGRiMC1hM2U4LTFkZGY3ZGM3NDVkMg==",
             name: "Europe for click and collect",
             __typename: "Warehouse",
           },
@@ -940,8 +979,7 @@ export const product: (
           quantity: 418,
           quantityAllocated: 0,
           warehouse: {
-            id:
-              "V2FyZWhvdXNlOjRiNjc1ZmVlLTE3OWYtNGMwNS04YmJlLWE0ZDJjOTc0OWQzMA==",
+            id: "V2FyZWhvdXNlOjRiNjc1ZmVlLTE3OWYtNGMwNS04YmJlLWE0ZDJjOTc0OWQzMA==",
             name: "Africa",
             __typename: "Warehouse",
           },
@@ -952,6 +990,7 @@ export const product: (
       preorder: null,
       channelListings: [
         {
+          id: "UHJvZHVjdFZhcmlhbnRDaSAD3w2FubmVsTGlzdGluZzoyNTM=",
           channel: {
             id: "Q2hhbm5lbDox",
             name: "Channel-USD",
@@ -976,6 +1015,7 @@ export const product: (
           __typename: "ProductVariantChannelListing",
         },
         {
+          id: "UHJvZHVjdFZhcmlhdwxDaGFubmVsTGlzdGluZzoyNTM=",
           channel: {
             id: "Q2hhbm5lbDoy",
             name: "Channel-PLN",
@@ -1003,6 +1043,182 @@ export const product: (
       quantityLimitPerCustomer: null,
       __typename: "ProductVariant",
     },
+    {
+      id: "UHJvZHVjdFZhcmlhbnQ6MjA0",
+      sku: "76432981",
+      name: "750ml",
+      margin: 0.25,
+      attributes: [
+        {
+          attribute: {
+            id: "QXR0cmlidXRlOjE2",
+            name: "Bottle Size",
+            __typename: "Attribute",
+          },
+          values: [
+            {
+              id: "QXR0cmlidXRlVmFsdWU6NTU=",
+              name: "750ml",
+              plainText: "",
+              richText: "",
+              slug: "",
+              reference: "",
+              boolean: false,
+              date: "",
+              dateTime: "",
+              value: "",
+              file: {
+                __typename: "File",
+                url: "",
+                contentType: "",
+              },
+              __typename: "AttributeValue",
+            },
+          ],
+          __typename: "SelectedAttribute",
+        },
+      ],
+      media: [
+        {
+          id: "2",
+          type: ProductMediaType.VIDEO,
+          url: "randomVideoUrl",
+          __typename: "ProductMedia",
+        },
+      ],
+      stocks: [
+        {
+          id: "U3RvY2s6MTYz",
+          quantity: 600,
+          quantityAllocated: 50,
+          warehouse: {
+            id: "V2FyZWhvdXNlOjEwM2VjNzY2LTA1NmItNDU2My05YjQzLTUxYmU5ZGJmNGEzYQ==",
+            name: "Warehouse-123",
+            __typename: "Warehouse",
+          },
+          __typename: "Stock",
+        },
+      ],
+      trackInventory: true,
+      preorder: null,
+      channelListings: [
+        {
+          id: "UHJvZHVjdFZhcmlhbnRDaSAD3w2FubmVsTGlzdGluZzoyNzU=",
+          channel: {
+            id: "Q2hhbm5lbDox",
+            name: "Channel-EUR",
+            currencyCode: "EUR",
+            __typename: "Channel",
+          },
+          price: {
+            amount: 7.5,
+            currency: "EUR",
+            __typename: "Money",
+          },
+          costPrice: {
+            amount: 2.5,
+            currency: "EUR",
+            __typename: "Money",
+          },
+          preorderThreshold: {
+            quantity: null,
+            soldUnits: 0,
+            __typename: "PreorderThreshold",
+          },
+          __typename: "ProductVariantChannelListing",
+        },
+      ],
+      quantityLimitPerCustomer: 5,
+      __typename: "ProductVariant",
+    },
+    {
+      id: "UHJvZHVjdFZhcmlhbnQ6MjA1",
+      sku: "12345678",
+      name: "1 Liter",
+      margin: 0.15,
+      attributes: [
+        {
+          attribute: {
+            id: "QXR0cmlidXRlOjE3",
+            name: "Bottle Size",
+            __typename: "Attribute",
+          },
+          values: [
+            {
+              id: "QXR0cmlidXRlVmFsdWU6NjU=",
+              name: "1 Liter",
+              plainText: "",
+              richText: "",
+              slug: "",
+              reference: "",
+              boolean: false,
+              date: "",
+              dateTime: "",
+              value: "",
+              file: {
+                __typename: "File",
+                url: "",
+                contentType: "",
+              },
+              __typename: "AttributeValue",
+            },
+          ],
+          __typename: "SelectedAttribute",
+        },
+      ],
+      media: [
+        {
+          id: "3",
+          type: ProductMediaType.IMAGE,
+          url: "randomImageUrl",
+          __typename: "ProductMedia",
+        },
+      ],
+      stocks: [
+        {
+          id: "U3RvY2s6MTY0",
+          quantity: 800,
+          quantityAllocated: 100,
+          warehouse: {
+            id: "V2FyZWhvdXNlOjExNmQ2NGYyLTZhOGYtNGE4MC1iNmJkLTk1MDg4YTliZDEwYQ==",
+            name: "Warehouse-456",
+            __typename: "Warehouse",
+          },
+          __typename: "Stock",
+        },
+      ],
+      trackInventory: true,
+      preorder: null,
+      channelListings: [
+        {
+          id: "UHJvZHVjdFZhcmlhbnRDaSAD3w2FubmVsTGlzdGluZzoyNzY=",
+          channel: {
+            id: "Q2hhbm5lbDoy",
+            name: "Channel-GBP",
+            currencyCode: "GBP",
+            __typename: "Channel",
+          },
+          price: {
+            amount: 10.0,
+            currency: "GBP",
+            __typename: "Money",
+          },
+          costPrice: {
+            amount: 2.0,
+            currency: "GBP",
+            __typename: "Money",
+          },
+          preorderThreshold: {
+            quantity: null,
+            soldUnits: 0,
+            __typename: "PreorderThreshold",
+          },
+          __typename: "ProductVariantChannelListing",
+        },
+      ],
+      quantityLimitPerCustomer: null,
+      __typename: "ProductVariant",
+    },
   ],
   visibleInListings: true,
   weight: {
@@ -1011,11 +1227,11 @@ export const product: (
     value: 5,
   },
 });
-export const products = (
-  placeholderImage: string,
-): RelayToFlat<ProductListQuery["products"]> => [
+export const products = (placeholderImage: string): RelayToFlat<ProductListQuery["products"]> => [
   {
     __typename: "Product",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
     attributes: [],
     channelListings: [
@@ -1104,11 +1320,15 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
     attributes: [],
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     channelListings: [
       {
         __typename: "ProductChannelListing",
@@ -1195,11 +1415,15 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
     attributes: [],
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     channelListings: [
       {
         __typename: "ProductChannelListing",
@@ -1286,10 +1510,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1399,10 +1627,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1512,10 +1744,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1626,10 +1862,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1739,10 +1979,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1852,10 +2096,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -1965,9 +2213,13 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
     attributes: [
       {
@@ -2078,10 +2330,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2191,10 +2447,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2304,10 +2564,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2417,10 +2681,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2530,10 +2798,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2643,10 +2915,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2756,10 +3032,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2869,10 +3149,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -2982,10 +3266,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -3095,10 +3383,14 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
   {
     __typename: "Product",
     updatedAt: "2020-06-22T13:52:05.094636+00:00",
+    description:
+      "Fell straight from the tree, on to Newton's head, then into the bottle. The autumn taste of English apples. Brought to you by gravity.",
     attributes: [
       {
         __typename: "SelectedAttribute",
@@ -3208,6 +3500,8 @@ export const products = (
       __typename: "Image",
       url: placeholderImage,
     },
+    category: null,
+    collections: [],
   },
 ];
 
@@ -3215,6 +3509,7 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
   __typename: "ProductVariant",
   channelListings: [
     {
+      id: "UHJvZHVjdFZhcasdasdASDDaGFubmVsTGlzdGluZzoyNTM=",
       __typename: "ProductVariantChannelListing",
       channel: {
         __typename: "Channel",
@@ -3239,6 +3534,7 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
       },
     },
     {
+      id: "UHJvZHVjdFZhcmlhbnRDaGGSAEdsWsTGlzdGluZzoyNTM=",
       __typename: "ProductVariantChannelListing",
       channel: {
         __typename: "Channel",
@@ -3374,11 +3670,11 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
   ],
   privateMetadata: [],
   product: {
-    __typename: "Product" as "Product",
+    __typename: "Product" as const,
     channelListings: [
       {
+        id: "2",
         __typename: "ProductChannelListing",
-        id: "11",
         isPublished: false,
         publicationDate: null,
         channel: {
@@ -3389,8 +3685,8 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
         },
       },
       {
+        id: "2",
         __typename: "ProductChannelListing",
-        id: "12",
         isPublished: true,
         publicationDate: "2022-01-21",
         channel: {
@@ -3490,7 +3786,7 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
       },
     ],
     name: "Our Awesome Book",
-    thumbnail: { __typename: "Image" as "Image", url: placeholderImage },
+    thumbnail: { __typename: "Image" as const, url: placeholderImage },
     variants: [
       {
         __typename: "ProductVariant",
@@ -3558,7 +3854,7 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
     {
       __typename: "SelectedAttribute",
       attribute: {
-        __typename: "Attribute" as "Attribute",
+        __typename: "Attribute" as const,
         entityType: null,
         id: "pta18161",
         inputType: AttributeInputTypeEnum.DROPDOWN,
@@ -3635,7 +3931,7 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
     {
       __typename: "SelectedAttribute",
       attribute: {
-        __typename: "Attribute" as "Attribute",
+        __typename: "Attribute" as const,
         entityType: null,
         id: "pta22785",
         inputType: AttributeInputTypeEnum.DROPDOWN,
@@ -3784,17 +4080,13 @@ export const variant = (placeholderImage: string): ProductVariantFragment => ({
     value: 6,
   },
 });
-export const variantMedia = (placeholderImage: string) =>
-  variant(placeholderImage).media;
+export const variantMedia = (placeholderImage: string) => variant(placeholderImage).media;
 export const variantProductImages = (placeholderImage: string) =>
   variant(placeholderImage).product.media;
 export const variantSiblings = (placeholderImage: string) =>
   variant(placeholderImage).product.variants;
 
-export const productTypesList: Array<Pick<
-  ProductType,
-  "id" | "name" | "hasVariants"
->> = [
+export const productTypesList: Array<Pick<ProductType, "id" | "name" | "hasVariants">> = [
   {
     hasVariants: true,
     id: "UHJvZHVjdFR5cGU6Nw==",
@@ -3809,5 +4101,199 @@ export const productTypesList: Array<Pick<
     hasVariants: true,
     id: "UHJvZHVjdFR5cGU6Nw==",
     name: "Mushroom",
+  },
+];
+
+export const gridAttributesResult: GridAttributesQuery = {
+  __typename: "Query",
+  availableAttributes: {
+    __typename: "AttributeCountableConnection",
+    edges: [
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjIx",
+          name: "ABV",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjI3",
+          name: "Author",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjE1",
+          name: "Bottle Size",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjE4",
+          name: "Bucket Size",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjE0",
+          name: "Color",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjIy",
+          name: "Cushion Size",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjY3Nw==",
+          name: "CyCreateProduct-33370",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjY3Ng==",
+          name: "CyCreateProduct-66614",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjY3OQ==",
+          name: "CyCreateVariants-18905",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjY4MA==",
+          name: "CyCreateVariants-9040",
+        },
+      },
+    ],
+    pageInfo: {
+      __typename: "PageInfo",
+      endCursor: "WyIwIiwgImN5Y3JlYXRldmFyaWFudHMtOTA0MCJd",
+      hasNextPage: true,
+      hasPreviousPage: false,
+      startCursor: "WyIwIiwgImFidiJd",
+    },
+  },
+  selectedAttributes: {
+    __typename: "AttributeCountableConnection",
+    edges: [
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjIx",
+          name: "ABV",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjI3",
+          name: "Author",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjE1",
+          name: "Bottle Size",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjMw",
+          name: "Details",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjI1",
+          name: "Format",
+        },
+      },
+      {
+        __typename: "AttributeCountableEdge",
+        node: {
+          __typename: "Attribute",
+          id: "QXR0cmlidXRlOjI2",
+          name: "Publisher",
+        },
+      },
+    ],
+  },
+};
+
+export const variantAttributes: VariantAttributeFragment[] = [
+  {
+    __typename: "Attribute",
+    id: "QXR0cmlidXRlOjE1",
+    name: "Bottle size",
+    slug: "bottle-size",
+    inputType: AttributeInputTypeEnum.DROPDOWN,
+    entityType: null,
+    valueRequired: false,
+    unit: null,
+    choices: {
+      __typename: "AttributeValueCountableConnection",
+      pageInfo: {
+        __typename: "PageInfo",
+        endCursor: "WyI1IiwgIjg1Il0=",
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: "WyIwIiwgIjYzIl0=",
+      },
+      edges: [],
+    },
+  },
+  {
+    __typename: "Attribute",
+    id: "QXR0cmlidXRlOjY4MQ==",
+    name: "Plain text",
+    slug: "plain-text",
+    inputType: AttributeInputTypeEnum.PLAIN_TEXT,
+    entityType: null,
+    valueRequired: false,
+    unit: null,
+    choices: {
+      __typename: "AttributeValueCountableConnection",
+      pageInfo: {
+        __typename: "PageInfo",
+        endCursor: "WyI1IiwgIjg1Il0=",
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: "WyIwIiwgIjYzIl0=",
+      },
+      edges: [],
+    },
   },
 ];

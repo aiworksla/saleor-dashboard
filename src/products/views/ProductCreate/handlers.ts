@@ -1,13 +1,14 @@
+// @ts-strict-ignore
 import { FetchResult } from "@apollo/client";
 import {
   getAttributesAfterFileAttributesUpdate,
   mergeFileUploadErrors,
-} from "@saleor/attributes/utils/data";
+} from "@dashboard/attributes/utils/data";
 import {
   handleUploadMultipleFiles,
   prepareAttributesInput,
-} from "@saleor/attributes/utils/handlers";
-import { ChannelData } from "@saleor/channels/utils";
+} from "@dashboard/attributes/utils/handlers";
+import { ChannelData } from "@dashboard/channels/utils";
 import {
   AttributeErrorFragment,
   FileUploadMutation,
@@ -26,11 +27,11 @@ import {
   UploadErrorFragment,
   VariantCreateMutation,
   VariantCreateMutationVariables,
-} from "@saleor/graphql";
-import { weight } from "@saleor/misc";
-import { ProductCreateData } from "@saleor/products/components/ProductCreatePage/form";
-import { getAvailabilityVariables } from "@saleor/products/utils/handlers";
-import { getParsedDataForJsonStringField } from "@saleor/utils/richText/misc";
+} from "@dashboard/graphql";
+import { weight } from "@dashboard/misc";
+import { ProductCreateData } from "@dashboard/products/components/ProductCreatePage/form";
+import { getAvailabilityVariables } from "@dashboard/products/utils/handlers";
+import { getParsedDataForJsonStringField } from "@dashboard/utils/richText/misc";
 
 const getChannelsVariables = (productId: string, channels: ChannelData[]) => ({
   variables: {
@@ -40,11 +41,7 @@ const getChannelsVariables = (productId: string, channels: ChannelData[]) => ({
     },
   },
 });
-
-const getSimpleProductVariables = (
-  formData: ProductCreateData,
-  productId: string,
-) => ({
+const getSimpleProductVariables = (formData: ProductCreateData, productId: string) => ({
   input: {
     attributes: [],
     product: productId,
@@ -55,9 +52,7 @@ const getSimpleProductVariables = (
     })),
     preorder: formData.isPreorder
       ? {
-          globalThreshold: formData.globalThreshold
-            ? parseInt(formData.globalThreshold, 10)
-            : null,
+          globalThreshold: formData.globalThreshold ? parseInt(formData.globalThreshold, 10) : null,
           endDate: formData.preorderEndDateTime || null,
         }
       : null,
@@ -67,9 +62,7 @@ const getSimpleProductVariables = (
 
 export function createHandler(
   productType: ProductTypeQuery["productType"],
-  uploadFile: (
-    variables: FileUploadMutationVariables,
-  ) => Promise<FetchResult<FileUploadMutation>>,
+  uploadFile: (variables: FileUploadMutationVariables) => Promise<FetchResult<FileUploadMutation>>,
   productCreate: (
     variables: ProductCreateMutationVariables,
   ) => Promise<FetchResult<ProductCreateMutation>>,
@@ -100,11 +93,11 @@ export function createHandler(
     );
 
     errors = [...errors, ...mergeFileUploadErrors(uploadFilesResult)];
+
     const updatedFileAttributes = getAttributesAfterFileAttributesUpdate(
       formData.attributesWithNewFileValue,
       uploadFilesResult,
     );
-
     const productVariables: ProductCreateMutationVariables = {
       input: {
         attributes: prepareAttributesInput({
@@ -113,8 +106,7 @@ export function createHandler(
           updatedFileAttributes,
         }),
         category: formData.category,
-        chargeTaxes: formData.chargeTaxes,
-        collections: formData.collections,
+        collections: formData.collections.map(collection => collection.value),
         description: getParsedDataForJsonStringField(formData.description),
         name: formData.name,
         productType: formData.productType?.id,
@@ -124,13 +116,12 @@ export function createHandler(
           title: formData.seoTitle,
         },
         slug: formData.slug,
-        taxCode: formData.changeTaxCode ? formData.taxCode : undefined,
+        taxClass: formData.taxClassId,
         weight: weight(formData.weight),
       },
     };
-
     const result = await productCreate(productVariables);
-    const productErrors = result.data.productCreate.errors || [];
+    const productErrors = result?.data?.productCreate?.errors ?? [];
 
     errors = [...errors, ...productErrors];
 
@@ -143,17 +134,16 @@ export function createHandler(
 
     if (!hasVariants) {
       const result = await Promise.all([
-        updateChannels(
-          getChannelsVariables(productId, formData.channelListings),
-        ),
+        updateChannels(getChannelsVariables(productId, formData.channelListings)),
         productVariantCreate(getSimpleProductVariables(formData, productId)),
       ]);
-      const channelErrors =
-        result[0].data?.productChannelListingUpdate?.errors || [];
+      const channelErrors = result[0].data?.productChannelListingUpdate?.errors || [];
       const variantErrors = result[1].data?.productVariantCreate?.errors || [];
+
       errors = [...errors, ...channelErrors, ...variantErrors];
 
       const variantId = result[1].data.productVariantCreate.productVariant?.id;
+
       if (variantErrors.length === 0 && variantId) {
         updateVariantChannels({
           variables: {
@@ -170,8 +160,7 @@ export function createHandler(
       const result = await updateChannels(
         getChannelsVariables(productId, formData.channelListings),
       );
-      const channelErrors =
-        result.data?.productChannelListingUpdate?.errors || [];
+      const channelErrors = result.data?.productChannelListingUpdate?.errors || [];
 
       errors = [...errors, ...channelErrors];
     }
@@ -185,6 +174,7 @@ export function createHandler(
 
       return { errors };
     }
+
     return { id: productId || null, errors };
   };
 }

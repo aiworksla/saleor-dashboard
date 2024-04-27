@@ -1,18 +1,13 @@
-import {
-  Card,
-  CardContent,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import VerticalSpacer from "@saleor/apps/components/VerticalSpacer";
-import CardTitle from "@saleor/components/CardTitle";
-import ControlledCheckbox from "@saleor/components/ControlledCheckbox";
-import { ShippingErrorFragment } from "@saleor/graphql";
-import { ChangeEvent } from "@saleor/hooks/useForm";
-import useShop from "@saleor/hooks/useShop";
-import { getShippingWeightRateErrorMessage } from "@saleor/shipping/errors";
-import { getFormErrors } from "@saleor/utils/errors";
+// @ts-strict-ignore
+import CardTitle from "@dashboard/components/CardTitle";
+import ControlledCheckbox from "@dashboard/components/ControlledCheckbox";
+import VerticalSpacer from "@dashboard/components/VerticalSpacer";
+import { ShippingErrorFragment } from "@dashboard/graphql";
+import { ChangeEvent } from "@dashboard/hooks/useForm";
+import useShop from "@dashboard/hooks/useShop";
+import { getShippingWeightRateErrorMessage } from "@dashboard/shipping/errors";
+import { getFormErrors } from "@dashboard/utils/errors";
+import { Card, CardContent, InputAdornment, TextField, Typography } from "@material-ui/core";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -38,7 +33,6 @@ export const OrderWeight: React.FC<OrderWeightProps> = ({
   const classes = useStyles({});
   const intl = useIntl();
   const shop = useShop();
-
   const formFields = ["minimumOrderWeight", "maximumOrderWeight"];
   const formErrors = getFormErrors(formFields, errors);
 
@@ -53,6 +47,7 @@ export const OrderWeight: React.FC<OrderWeightProps> = ({
       />
       <CardContent>
         <ControlledCheckbox
+          data-test-id="order-weight-checkbox"
           name="orderValueRestricted"
           label={
             <>
@@ -79,11 +74,9 @@ export const OrderWeight: React.FC<OrderWeightProps> = ({
             <VerticalSpacer spacing={2} />
             <div className={classes.grid}>
               <TextField
+                data-test-id="min-order-weight-input"
                 disabled={disabled}
-                helperText={getShippingWeightRateErrorMessage(
-                  formErrors.minimumOrderWeight,
-                  intl,
-                )}
+                helperText={getShippingWeightRateErrorMessage(formErrors.minimumOrderWeight, intl)}
                 error={!!formErrors.minimumOrderWeight}
                 fullWidth
                 label={intl.formatMessage({
@@ -108,11 +101,9 @@ export const OrderWeight: React.FC<OrderWeightProps> = ({
                 onChange={onChange}
               />
               <TextField
+                data-test-id="max-order-weight-input"
                 disabled={disabled}
-                helperText={getShippingWeightRateErrorMessage(
-                  formErrors.maximumOrderWeight,
-                  intl,
-                )}
+                helperText={getShippingWeightRateErrorMessage(formErrors.maximumOrderWeight, intl)}
                 error={!!formErrors.maximumOrderWeight}
                 fullWidth
                 label={intl.formatMessage({

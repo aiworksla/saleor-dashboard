@@ -1,20 +1,15 @@
-import {
-  Card,
-  CardContent,
-  TableBody,
-  TableCell,
-  Typography,
-} from "@material-ui/core";
-import { Button } from "@saleor/components/Button";
-import CardTitle from "@saleor/components/CardTitle";
-import Date from "@saleor/components/Date";
-import ResponsiveTable from "@saleor/components/ResponsiveTable";
-import Skeleton from "@saleor/components/Skeleton";
-import TableRowLink from "@saleor/components/TableRowLink";
-import { InvoiceFragment } from "@saleor/graphql";
-import { buttonMessages } from "@saleor/intl";
+// @ts-strict-ignore
+import { Button } from "@dashboard/components/Button";
+import CardTitle from "@dashboard/components/CardTitle";
+import Date from "@dashboard/components/Date";
+import ResponsiveTable from "@dashboard/components/ResponsiveTable";
+import Skeleton from "@dashboard/components/Skeleton";
+import TableRowLink from "@dashboard/components/TableRowLink";
+import { InvoiceFragment } from "@dashboard/graphql";
+import { buttonMessages } from "@dashboard/intl";
+import { Card, CardContent, TableBody, TableCell, Typography } from "@material-ui/core";
 import { makeStyles } from "@saleor/macaw-ui";
-import classNames from "classnames";
+import { sprinkles } from "@saleor/macaw-ui-next";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -22,12 +17,6 @@ const useStyles = makeStyles(
   () => ({
     card: {
       overflow: "hidden",
-    },
-    cardContentTable: {
-      "&:last-child": {
-        padding: 0,
-      },
-      padding: 0,
     },
     colAction: {
       button: {
@@ -60,14 +49,9 @@ export interface OrderInvoiceListProps {
 
 const OrderInvoiceList: React.FC<OrderInvoiceListProps> = props => {
   const { invoices, onInvoiceGenerate, onInvoiceClick, onInvoiceSend } = props;
-
   const classes = useStyles(props);
-
   const intl = useIntl();
-
-  const generatedInvoices = invoices?.filter(
-    invoice => invoice.status === "SUCCESS",
-  );
+  const generatedInvoices = invoices?.filter(invoice => invoice.status === "SUCCESS");
 
   return (
     <Card className={classes.card}>
@@ -79,7 +63,7 @@ const OrderInvoiceList: React.FC<OrderInvoiceListProps> = props => {
         })}
         toolbar={
           onInvoiceGenerate && (
-            <Button onClick={onInvoiceGenerate}>
+            <Button onClick={onInvoiceGenerate} className={sprinkles({ marginRight: 0.5 })}>
               <FormattedMessage
                 id="e0RKe+"
                 defaultMessage="Generate"
@@ -89,19 +73,12 @@ const OrderInvoiceList: React.FC<OrderInvoiceListProps> = props => {
           )
         }
       />
-      <CardContent
-        className={classNames({
-          [classes.cardContentTable]: generatedInvoices?.length,
-        })}
-      >
+      <CardContent>
         {!generatedInvoices ? (
           <Skeleton />
         ) : !generatedInvoices?.length ? (
           <Typography color="textSecondary">
-            <FormattedMessage
-              id="hPB89Y"
-              defaultMessage="No invoices to be shown"
-            />
+            <FormattedMessage id="hPB89Y" defaultMessage="No invoices to be shown" />
           </Typography>
         ) : (
           <ResponsiveTable className={classes.invoicesTable}>
@@ -109,11 +86,7 @@ const OrderInvoiceList: React.FC<OrderInvoiceListProps> = props => {
               {generatedInvoices.map(invoice => (
                 <TableRowLink key={invoice.id} hover={!!invoice}>
                   <TableCell
-                    className={
-                      onInvoiceClick
-                        ? classes.colNumberClickable
-                        : classes.colNumber
-                    }
+                    className={onInvoiceClick ? classes.colNumberClickable : classes.colNumber}
                     onClick={() => onInvoiceClick(invoice.id)}
                   >
                     <FormattedMessage

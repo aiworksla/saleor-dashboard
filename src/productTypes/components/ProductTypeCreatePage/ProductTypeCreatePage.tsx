@@ -1,27 +1,23 @@
-import { Backlink } from "@saleor/components/Backlink";
-import CardSpacer from "@saleor/components/CardSpacer";
-import Container from "@saleor/components/Container";
-import Form from "@saleor/components/Form";
-import Grid from "@saleor/components/Grid";
-import Metadata, { MetadataFormData } from "@saleor/components/Metadata";
-import PageHeader from "@saleor/components/PageHeader";
-import Savebar from "@saleor/components/Savebar";
+// @ts-strict-ignore
+import { TopNav } from "@dashboard/components/AppLayout/TopNav";
+import CardSpacer from "@dashboard/components/CardSpacer";
+import { ConfirmButtonTransitionState } from "@dashboard/components/ConfirmButton";
+import Form from "@dashboard/components/Form";
+import { DetailPageLayout } from "@dashboard/components/Layouts";
+import { Metadata, MetadataFormData } from "@dashboard/components/Metadata";
+import Savebar from "@dashboard/components/Savebar";
+import { ProductTypeKindEnum, TaxClassBaseFragment, WeightUnitsEnum } from "@dashboard/graphql";
+import { SubmitPromise } from "@dashboard/hooks/useForm";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import useStateFromProps from "@dashboard/hooks/useStateFromProps";
 import {
-  ProductTypeDetailsQuery,
-  ProductTypeKindEnum,
-  WeightUnitsEnum,
-} from "@saleor/graphql";
-import { ChangeEvent, FormChange, SubmitPromise } from "@saleor/hooks/useForm";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useStateFromProps from "@saleor/hooks/useStateFromProps";
-import { sectionNames } from "@saleor/intl";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import { makeProductTypeKindChangeHandler } from "@saleor/productTypes/handlers";
-import { productTypeListUrl } from "@saleor/productTypes/urls";
-import { UserError } from "@saleor/types";
-import useMetadataChangeTrigger from "@saleor/utils/metadata/useMetadataChangeTrigger";
+  handleTaxClassChange,
+  makeProductTypeKindChangeHandler,
+} from "@dashboard/productTypes/handlers";
+import { productTypeListUrl } from "@dashboard/productTypes/urls";
+import { FetchMoreProps, UserError } from "@dashboard/types";
+import useMetadataChangeTrigger from "@dashboard/utils/metadata/useMetadataChangeTrigger";
 import React from "react";
-import { useIntl } from "react-intl";
 
 import ProductTypeDetails from "../ProductTypeDetails/ProductTypeDetails";
 import ProductTypeShipping from "../ProductTypeShipping/ProductTypeShipping";
@@ -31,7 +27,7 @@ export interface ProductTypeForm extends MetadataFormData {
   name: string;
   kind: ProductTypeKindEnum;
   isShippingRequired: boolean;
-  taxType: string;
+  taxClassId: string;
   weight: number;
 }
 
@@ -41,10 +37,11 @@ export interface ProductTypeCreatePageProps {
   disabled: boolean;
   pageTitle: string;
   saveButtonBarState: ConfirmButtonTransitionState;
-  taxTypes: ProductTypeDetailsQuery["taxTypes"];
+  taxClasses: TaxClassBaseFragment[];
   kind: ProductTypeKindEnum;
   onChangeKind: (kind: ProductTypeKindEnum) => void;
   onSubmit: (data: ProductTypeForm) => SubmitPromise<any[]>;
+  onFetchMoreTaxClasses: FetchMoreProps;
 }
 
 const formInitialData: ProductTypeForm = {
@@ -53,115 +50,80 @@ const formInitialData: ProductTypeForm = {
   name: "",
   kind: ProductTypeKindEnum.NORMAL,
   privateMetadata: [],
-  taxType: "",
+  taxClassId: "",
   weight: 0,
 };
-
-function handleTaxTypeChange(
-  event: ChangeEvent,
-  taxTypes: ProductTypeDetailsQuery["taxTypes"],
-  formChange: FormChange,
-  displayChange: (name: string) => void,
-) {
-  formChange(event);
-  displayChange(
-    taxTypes.find(taxType => taxType.taxCode === event.target.value)
-      .description,
-  );
-}
-
 const ProductTypeCreatePage: React.FC<ProductTypeCreatePageProps> = ({
   defaultWeightUnit,
   disabled,
   errors,
   pageTitle,
   saveButtonBarState,
-  taxTypes,
+  taxClasses,
   kind,
   onChangeKind,
   onSubmit,
+  onFetchMoreTaxClasses,
 }: ProductTypeCreatePageProps) => {
-  const intl = useIntl();
   const navigate = useNavigator();
-
-  const [taxTypeDisplayName, setTaxTypeDisplayName] = useStateFromProps("");
-  const {
-    makeChangeHandler: makeMetadataChangeHandler,
-  } = useMetadataChangeTrigger();
-
+  const [taxClassDisplayName, setTaxClassDisplayName] = useStateFromProps("");
+  const { makeChangeHandler: makeMetadataChangeHandler } = useMetadataChangeTrigger();
   const initialData = {
     ...formInitialData,
     kind: kind || formInitialData.kind,
   };
 
   return (
-    <Form
-      confirmLeave
-      initial={initialData}
-      onSubmit={onSubmit}
-      disabled={disabled}
-    >
+    <Form confirmLeave initial={initialData} onSubmit={onSubmit} disabled={disabled}>
       {({ change, data, isSaveDisabled, submit }) => {
         const changeMetadata = makeMetadataChangeHandler(change);
-
-        const changeKind = makeProductTypeKindChangeHandler(
-          change,
-          onChangeKind,
-        );
+        const changeKind = makeProductTypeKindChangeHandler(change, onChangeKind);
 
         return (
-          <Container>
-            <Backlink href={productTypeListUrl()}>
-              {intl.formatMessage(sectionNames.productTypes)}
-            </Backlink>
-            <PageHeader title={pageTitle} />
-            <Grid>
-              <div>
-                <ProductTypeDetails
-                  data={data}
-                  disabled={disabled}
-                  errors={errors}
-                  onChange={change}
-                  onKindChange={changeKind}
-                />
-                <CardSpacer />
-                <ProductTypeTaxes
-                  disabled={disabled}
-                  data={data}
-                  taxTypes={taxTypes}
-                  taxTypeDisplayName={taxTypeDisplayName}
-                  onChange={event =>
-                    handleTaxTypeChange(
-                      event,
-                      taxTypes,
-                      change,
-                      setTaxTypeDisplayName,
-                    )
-                  }
-                />
-                <CardSpacer />
-                <Metadata data={data} onChange={changeMetadata} />
-              </div>
-              <div>
-                <ProductTypeShipping
-                  disabled={disabled}
-                  data={data}
-                  weightUnit={defaultWeightUnit}
-                  onChange={change}
-                />
-              </div>
-            </Grid>
+          <DetailPageLayout>
+            <TopNav href={productTypeListUrl()} title={pageTitle} />
+            <DetailPageLayout.Content>
+              <ProductTypeDetails
+                data={data}
+                disabled={disabled}
+                errors={errors}
+                onChange={change}
+                onKindChange={changeKind}
+              />
+              <CardSpacer />
+              <ProductTypeTaxes
+                disabled={disabled}
+                data={data}
+                taxClasses={taxClasses}
+                taxClassDisplayName={taxClassDisplayName}
+                onChange={event =>
+                  handleTaxClassChange(event, taxClasses, change, setTaxClassDisplayName)
+                }
+                onFetchMore={onFetchMoreTaxClasses}
+              />
+              <CardSpacer />
+              <Metadata data={data} onChange={changeMetadata} />
+            </DetailPageLayout.Content>
+            <DetailPageLayout.RightSidebar>
+              <ProductTypeShipping
+                disabled={disabled}
+                data={data}
+                weightUnit={defaultWeightUnit}
+                onChange={change}
+              />
+            </DetailPageLayout.RightSidebar>
             <Savebar
               onCancel={() => navigate(productTypeListUrl())}
               onSubmit={submit}
               disabled={isSaveDisabled}
               state={saveButtonBarState}
             />
-          </Container>
+          </DetailPageLayout>
         );
       }}
     </Form>
   );
 };
+
 ProductTypeCreatePage.displayName = "ProductTypeCreatePage";
 export default ProductTypeCreatePage;

@@ -1,27 +1,16 @@
+// @ts-strict-ignore
+import { useUser } from "@dashboard/auth";
+import ActionDialog from "@dashboard/components/ActionDialog";
+import NotFoundPage from "@dashboard/components/NotFoundPage";
+import { hasPermissions } from "@dashboard/components/RequirePermissions";
+import { WindowTitle } from "@dashboard/components/WindowTitle";
+import { DEFAULT_INITIAL_SEARCH_DATA } from "@dashboard/config";
+import { PermissionEnum, useStaffMemberDetailsQuery } from "@dashboard/graphql";
+import useNavigator from "@dashboard/hooks/useNavigator";
+import { extractMutationErrors, getStringOrPlaceholder } from "@dashboard/misc";
+import usePermissionGroupSearch from "@dashboard/searches/usePermissionGroupSearch";
+import { mapEdgesToItems } from "@dashboard/utils/maps";
 import { DialogContentText } from "@material-ui/core";
-import { useUser } from "@saleor/auth";
-import ActionDialog from "@saleor/components/ActionDialog";
-import NotFoundPage from "@saleor/components/NotFoundPage";
-import { WindowTitle } from "@saleor/components/WindowTitle";
-import { DEFAULT_INITIAL_SEARCH_DATA } from "@saleor/config";
-import {
-  useChangeStaffPasswordMutation,
-  useStaffAvatarDeleteMutation,
-  useStaffAvatarUpdateMutation,
-  useStaffMemberDeleteMutation,
-  useStaffMemberDetailsQuery,
-  useStaffMemberUpdateMutation,
-} from "@saleor/graphql";
-import useNavigator from "@saleor/hooks/useNavigator";
-import useNotifier from "@saleor/hooks/useNotifier";
-import { commonMessages, errorMessages } from "@saleor/intl";
-import {
-  extractMutationErrors,
-  getStringOrPlaceholder,
-  maybe,
-} from "@saleor/misc";
-import usePermissionGroupSearch from "@saleor/searches/usePermissionGroupSearch";
-import { mapEdgesToItems } from "@saleor/utils/maps";
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -29,11 +18,8 @@ import StaffDetailsPage, {
   StaffDetailsFormData,
 } from "../components/StaffDetailsPage/StaffDetailsPage";
 import StaffPasswordResetDialog from "../components/StaffPasswordResetDialog";
-import {
-  staffListUrl,
-  staffMemberDetailsUrl,
-  StaffMemberDetailsUrlQueryParams,
-} from "../urls";
+import { useProfileOperations, useStaffUserOperations } from "../hooks";
+import { staffListUrl, staffMemberDetailsUrl, StaffMemberDetailsUrlQueryParams } from "../urls";
 import { groupsDiff } from "../utils";
 
 interface OrderListProps {
@@ -43,10 +29,8 @@ interface OrderListProps {
 
 export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
   const navigate = useNavigator();
-  const notify = useNotifier();
   const user = useUser();
   const intl = useIntl();
-
   const closeModal = () =>
     navigate(
       staffMemberDetailsUrl(id, {
@@ -54,96 +38,41 @@ export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
         action: undefined,
       }),
     );
-
+  const isUserSameAsViewer = user.user?.id === id;
   const { data, loading, refetch } = useStaffMemberDetailsQuery({
     displayLoader: true,
     variables: { id },
+    skip: isUserSameAsViewer,
   });
-
-  const staffMember = data?.user;
-
-  const [changePassword, changePasswordOpts] = useChangeStaffPasswordMutation({
-    onCompleted: data => {
-      if (data.passwordChange.errors.length === 0) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        closeModal();
-      }
-    },
-  });
-
+  const { deleteResult, deleteStaffMember, updateStaffMember, updateStaffMemberOpts } =
+    useStaffUserOperations();
+  const {
+    updateUserAccount,
+    updateUserAccountOpts,
+    changePassword,
+    changePasswordOpts,
+    deleteAvatarResult,
+    deleteUserAvatar,
+    updateUserAvatar,
+  } = useProfileOperations({ closeModal, id, refetch });
+  const staffMember = isUserSameAsViewer ? user.user : data?.user;
+  const hasManageStaffPermission = hasPermissions(user.user.userPermissions, [
+    PermissionEnum.MANAGE_STAFF,
+  ]);
   const {
     loadMore: loadMorePermissionGroups,
     search: searchPermissionGroups,
     result: searchPermissionGroupsOpts,
   } = usePermissionGroupSearch({
     variables: DEFAULT_INITIAL_SEARCH_DATA,
-  });
-
-  const [
-    updateStaffMember,
-    updateStaffMemberOpts,
-  ] = useStaffMemberUpdateMutation({
-    onCompleted: data => {
-      if (!maybe(() => data.staffUpdate.errors.length !== 0)) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-      }
-    },
-  });
-
-  const [deleteStaffMember, deleteResult] = useStaffMemberDeleteMutation({
-    onCompleted: data => {
-      if (!maybe(() => data.staffDelete.errors.length !== 0)) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        navigate(staffListUrl());
-      }
-    },
-  });
-
-  const [updateStaffAvatar] = useStaffAvatarUpdateMutation({
-    onCompleted: data => {
-      if (!maybe(() => data.userAvatarUpdate.errors.length !== 0)) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        refetch();
-      } else {
-        notify({
-          status: "error",
-          title: intl.formatMessage(errorMessages.imgageUploadErrorTitle),
-          text: intl.formatMessage(errorMessages.imageUploadErrorText),
-        });
-      }
-    },
-  });
-
-  const [deleteStaffAvatar, deleteAvatarResult] = useStaffAvatarDeleteMutation({
-    onCompleted: data => {
-      if (!maybe(() => data.userAvatarDelete.errors.length !== 0)) {
-        notify({
-          status: "success",
-          text: intl.formatMessage(commonMessages.savedChanges),
-        });
-        navigate(staffMemberDetailsUrl(id));
-        refetch();
-      }
-    },
+    skip: !hasManageStaffPermission,
   });
 
   if (staffMember === null) {
     return <NotFoundPage backHref={staffListUrl()} />;
   }
 
-  const handleUpdate = (formData: StaffDetailsFormData) =>
+  const handleStaffUpdate = (formData: StaffDetailsFormData) =>
     extractMutationErrors(
       updateStaffMember({
         variables: {
@@ -153,13 +82,22 @@ export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
             firstName: formData.firstName,
             isActive: formData.isActive,
             lastName: formData.lastName,
-            ...groupsDiff(data?.user, formData),
+            ...(hasManageStaffPermission ? groupsDiff(data?.user, formData) : {}),
           },
         },
       }),
     );
-
-  const isUserSameAsViewer = user.user?.id === data?.user?.id;
+  const handleUserUpdate = (formData: StaffDetailsFormData) =>
+    extractMutationErrors(
+      updateUserAccount({
+        variables: {
+          input: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          },
+        },
+      }),
+    );
 
   return (
     <>
@@ -186,9 +124,9 @@ export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
             }),
           )
         }
-        onSubmit={handleUpdate}
+        onSubmit={isUserSameAsViewer ? handleUserUpdate : handleStaffUpdate}
         onImageUpload={file =>
-          updateStaffAvatar({
+          updateUserAvatar({
             variables: {
               image: file,
             },
@@ -201,13 +139,13 @@ export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
             }),
           )
         }
-        availablePermissionGroups={mapEdgesToItems(
-          searchPermissionGroupsOpts?.data?.search,
-        )}
+        availablePermissionGroups={mapEdgesToItems(searchPermissionGroupsOpts?.data?.search)}
         staffMember={staffMember}
-        saveButtonBarState={updateStaffMemberOpts.status}
+        saveButtonBarState={
+          isUserSameAsViewer ? updateUserAccountOpts.status : updateStaffMemberOpts.status
+        }
         fetchMorePermissionGroups={{
-          hasMore: searchPermissionGroupsOpts.data?.search.pageInfo.hasNextPage,
+          hasMore: searchPermissionGroupsOpts.data?.search?.pageInfo.hasNextPage,
           loading: searchPermissionGroupsOpts.loading,
           onFetchMore: loadMorePermissionGroups,
         }}
@@ -249,16 +187,14 @@ export const StaffDetails: React.FC<OrderListProps> = ({ id, params }) => {
         confirmButtonState={deleteAvatarResult.status}
         variant="delete"
         onClose={closeModal}
-        onConfirm={deleteStaffAvatar}
+        onConfirm={deleteUserAvatar}
       >
         <DialogContentText>
           <FormattedMessage
             id="fzpXvv"
             defaultMessage="Are you sure you want to remove {email} avatar?"
             values={{
-              email: (
-                <strong>{getStringOrPlaceholder(data?.user?.email)}</strong>
-              ),
+              email: <strong>{getStringOrPlaceholder(data?.user?.email)}</strong>,
             }}
           />
         </DialogContentText>

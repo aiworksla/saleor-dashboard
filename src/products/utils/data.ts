@@ -1,26 +1,25 @@
+// @ts-strict-ignore
 import {
   getDefaultAttributeValues,
   getSelectedAttributeValues,
   mergeChoicesWithValues,
-} from "@saleor/attributes/utils/data";
-import {
-  AttributeInput,
-  VariantAttributeScope,
-} from "@saleor/components/Attributes";
-import { SingleAutocompleteChoiceType } from "@saleor/components/SingleAutocompleteSelectField";
+} from "@dashboard/attributes/utils/data";
+import { AttributeInput, VariantAttributeScope } from "@dashboard/components/Attributes";
+import { SingleAutocompleteChoiceType } from "@dashboard/components/SingleAutocompleteSelectField";
 import {
   ProductDetailsVariantFragment,
   ProductFragment,
+  ProductMediaFragment,
   ProductTypeQuery,
   ProductVariantCreateDataQuery,
   ProductVariantFragment,
   SelectedVariantAttributeFragment,
   StockInput,
   VariantAttributeFragment,
-} from "@saleor/graphql";
-import { FormsetAtomicData } from "@saleor/hooks/useFormset";
-import { maybe } from "@saleor/misc";
-import { mapEdgesToItems, mapMetadataItemToInput } from "@saleor/utils/maps";
+} from "@dashboard/graphql";
+import { FormsetAtomicData } from "@dashboard/hooks/useFormset";
+import { maybe } from "@dashboard/misc";
+import { mapEdgesToItems, mapMetadataItemToInput } from "@dashboard/utils/maps";
 import moment from "moment";
 
 import { ProductStockInput } from "../components/ProductStocks";
@@ -43,9 +42,7 @@ export interface ProductType {
   productAttributes: ProductTypeQuery["productType"]["productAttributes"];
 }
 
-export function getAttributeInputFromProduct(
-  product: ProductFragment,
-): AttributeInput[] {
+export function getAttributeInputFromProduct(product: ProductFragment): AttributeInput[] {
   return (
     product?.attributes?.map(attribute => ({
       data: {
@@ -59,13 +56,27 @@ export function getAttributeInputFromProduct(
       id: attribute.attribute.id,
       label: attribute.attribute.name,
       value: getSelectedAttributeValues(attribute),
+      metadata: getReferenceAttributeValuesLabels(attribute),
     })) ?? []
   );
 }
+export interface AttributeValuesMetadata {
+  value: string;
+  label: string;
+}
 
-export function getAttributeInputFromProductType(
-  productType: ProductType,
-): AttributeInput[] {
+const getReferenceAttributeValuesLabels = (
+  attribute: ProductFragment["attributes"][0],
+): AttributeValuesMetadata[] => {
+  return attribute.values.map(value => {
+    return {
+      label: value.name,
+      value: value.reference,
+    };
+  });
+};
+
+export function getAttributeInputFromProductType(productType: ProductType): AttributeInput[] {
   return productType.productAttributes.map(attribute => ({
     data: {
       entityType: attribute.entityType,
@@ -119,9 +130,7 @@ export function getAttributeInputFromSelectedAttributes(
   }));
 }
 
-export function getAttributeInputFromVariant(
-  variant: ProductVariantFragment,
-): AttributeInput[] {
+export function getAttributeInputFromVariant(variant: ProductVariantFragment): AttributeInput[] {
   const selectionAttributeInput = getAttributeInputFromSelectedAttributes(
     variant?.selectionAttributes,
     VariantAttributeScope.VARIANT_SELECTION,
@@ -131,9 +140,7 @@ export function getAttributeInputFromVariant(
     VariantAttributeScope.NOT_VARIANT_SELECTION,
   );
 
-  return (
-    selectionAttributeInput?.concat(nonSelectionAttributeInput ?? []) ?? []
-  );
+  return selectionAttributeInput?.concat(nonSelectionAttributeInput ?? []) ?? [];
 }
 
 export function getVariantAttributeInputFromProduct(
@@ -143,20 +150,15 @@ export function getVariantAttributeInputFromProduct(
     product?.productType?.selectionVariantAttributes,
     VariantAttributeScope.VARIANT_SELECTION,
   );
-
   const nonSelectionAttributeInput = getAttributeInputFromAttributes(
     product?.productType?.nonSelectionVariantAttributes,
     VariantAttributeScope.NOT_VARIANT_SELECTION,
   );
 
-  return (
-    selectionAttributeInput?.concat(nonSelectionAttributeInput ?? []) ?? []
-  );
+  return selectionAttributeInput?.concat(nonSelectionAttributeInput ?? []) ?? [];
 }
 
-export function getStockInputFromVariant(
-  variant: ProductVariantFragment,
-): ProductStockInput[] {
+export function getStockInputFromVariant(variant: ProductVariantFragment): ProductStockInput[] {
   return (
     variant?.stocks.map(stock => ({
       data: {
@@ -201,10 +203,13 @@ export function getProductUpdatePageFormData(
 
   return {
     category: maybe(() => product.category.id, ""),
-    changeTaxCode: !!product?.taxType?.taxCode,
-    chargeTaxes: maybe(() => product?.chargeTaxes, false),
+    taxClassId: product?.taxClass?.id,
     collections: maybe(
-      () => product?.collections?.map(collection => collection.id),
+      () =>
+        product.collections.map(collection => ({
+          label: collection.name,
+          value: collection.id,
+        })),
       [],
     ),
     isAvailable: !!product?.isAvailable,
@@ -224,7 +229,6 @@ export function getProductUpdatePageFormData(
       "",
     ),
     slug: product?.slug || "",
-    taxCode: product?.taxType?.taxCode,
     trackInventory: !!variant?.trackInventory,
     weight: product?.weight?.value.toString() || "",
     isPreorder: !!variant?.preorder || false,
@@ -235,9 +239,7 @@ export function getProductUpdatePageFormData(
   };
 }
 
-export function mapFormsetStockToStockInput(
-  stock: FormsetAtomicData<null, string>,
-): StockInput {
+export function mapFormsetStockToStockInput(stock: FormsetAtomicData<null, string>): StockInput {
   return {
     quantity: parseInt(stock.value, 10) || 0,
     warehouse: stock.id,
@@ -249,3 +251,11 @@ export const getPreorderEndDateFormData = (endDate?: string) =>
 
 export const getPreorderEndHourFormData = (endDate?: string) =>
   endDate ? moment(endDate).format("HH:mm") : "";
+
+export const getSelectedMedia = <T extends Pick<ProductMediaFragment, "id" | "sortOrder">>(
+  media: T[] = [],
+  selectedMediaIds: string[],
+) =>
+  media
+    .filter(image => selectedMediaIds.includes(image.id))
+    .sort((prev, next) => (prev.sortOrder > next.sortOrder ? 1 : -1));

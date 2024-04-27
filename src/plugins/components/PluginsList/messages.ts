@@ -12,8 +12,7 @@ export const pluginAvailabilityStatusMessages = defineMessages({
 export const channelConfigPluginMessages = defineMessages({
   title: {
     id: "8u7els",
-    defaultMessage:
-      "Assigned to {activeChannelsCount} of {allChannelsCount} channels",
+    defaultMessage: "Assigned to {activeChannelsCount} of {allChannelsCount} channels",
     description: "channel config plugin status popup title",
   },
 });
@@ -73,5 +72,12 @@ export const pluginStatusMessages = defineMessages({
     id: "ho75Lr",
     defaultMessage: "Deactivated",
     description: "status label deactivated",
+  },
+});
+
+export const pluginsMiscMessages = defineMessages({
+  appReplacementMessage: {
+    defaultMessage: "Visit App Store to replace with the App",
+    id: "NL6mvR",
   },
 });

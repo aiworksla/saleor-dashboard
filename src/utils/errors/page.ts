@@ -1,4 +1,4 @@
-import { PageErrorCode, PageErrorFragment } from "@saleor/graphql";
+import { PageErrorCode, PageErrorFragment } from "@dashboard/graphql";
 import { defineMessages, IntlShape } from "react-intl";
 
 import { getCommonFormFieldErrorMessage } from "./common";
@@ -29,7 +29,7 @@ const messages = defineMessages({
 function getPageErrorMessage(
   err: Omit<PageErrorFragment, "__typename"> | undefined,
   intl: IntlShape,
-): string {
+): string | undefined {
   if (err) {
     switch (err.code) {
       case PageErrorCode.UNIQUE:

@@ -5,8 +5,8 @@ import {
   ShippingZoneFragment,
   ShippingZoneQuery,
   WeightUnitsEnum,
-} from "@saleor/graphql";
-import { RelayToFlat } from "@saleor/types";
+} from "@dashboard/graphql";
+import { RelayToFlat } from "@dashboard/types";
 
 export const shippingZones: ShippingZoneFragment[] = [
   {
@@ -273,6 +273,7 @@ export const shippingZones: ShippingZoneFragment[] = [
     metadata: [],
     name: "Europe",
     privateMetadata: [],
+    priceRange: null,
   },
   {
     __typename: "ShippingZone",
@@ -428,6 +429,7 @@ export const shippingZones: ShippingZoneFragment[] = [
     metadata: [],
     name: "Oceania",
     privateMetadata: [],
+    priceRange: null,
   },
   {
     __typename: "ShippingZone",
@@ -693,6 +695,7 @@ export const shippingZones: ShippingZoneFragment[] = [
     metadata: [],
     name: "Asia",
     privateMetadata: [],
+    priceRange: null,
   },
   {
     __typename: "ShippingZone",
@@ -988,6 +991,7 @@ export const shippingZones: ShippingZoneFragment[] = [
     metadata: [],
     name: "Americas",
     privateMetadata: [],
+    priceRange: null,
   },
   {
     __typename: "ShippingZone",
@@ -1215,8 +1219,7 @@ export const shippingZones: ShippingZoneFragment[] = [
       {
         __typename: "CountryDisplay",
         code: "SH",
-        country:
-          "Wyspa Świętej Heleny, Wyspa Wniebowstąpienia i Tristan da Cunha",
+        country: "Wyspa Świętej Heleny, Wyspa Wniebowstąpienia i Tristan da Cunha",
       },
       {
         __typename: "CountryDisplay",
@@ -1299,11 +1302,13 @@ export const shippingZones: ShippingZoneFragment[] = [
     metadata: [],
     name: "Africa",
     privateMetadata: [],
+    priceRange: null,
   },
 ];
 
 export const shippingZone: ShippingZoneQuery["shippingZone"] = {
   __typename: "ShippingZone",
+  priceRange: null,
   default: true,
   channels: [
     { __typename: "Channel", id: "channel1", name: "GBP", currencyCode: "GBP" },
@@ -1575,6 +1580,11 @@ export const shippingZone: ShippingZoneQuery["shippingZone"] = {
   shippingMethods: [
     {
       __typename: "ShippingMethodType",
+      taxClass: {
+        __typename: "TaxClass",
+        name: "Shipping method",
+        id: "VGV4Q2xhc3M6MQ==",
+      },
       channelListings: [
         {
           __typename: "ShippingMethodChannelListing",
@@ -1670,6 +1680,11 @@ export const shippingZone: ShippingZoneQuery["shippingZone"] = {
     },
     {
       __typename: "ShippingMethodType",
+      taxClass: {
+        __typename: "TaxClass",
+        name: "Shipping method",
+        id: "VGV4Q2xhc3M6MQ==",
+      },
       channelListings: [],
       excludedProducts: {
         __typename: "ProductCountableConnection",
@@ -1735,6 +1750,11 @@ export const shippingZone: ShippingZoneQuery["shippingZone"] = {
     },
     {
       __typename: "ShippingMethodType",
+      taxClass: {
+        __typename: "TaxClass",
+        name: "Shipping method",
+        id: "VGV4Q2xhc3M6MQ==",
+      },
       channelListings: [],
       excludedProducts: {
         __typename: "ProductCountableConnection",
@@ -1800,6 +1820,11 @@ export const shippingZone: ShippingZoneQuery["shippingZone"] = {
     },
     {
       __typename: "ShippingMethodType",
+      taxClass: {
+        __typename: "TaxClass",
+        name: "Shipping method",
+        id: "VGV4Q2xhc3M6MQ==",
+      },
       channelListings: [],
       excludedProducts: {
         __typename: "ProductCountableConnection",
@@ -1865,7 +1890,7 @@ export const shippingZone: ShippingZoneQuery["shippingZone"] = {
   ],
 };
 
-export const products: RelayToFlat<SearchProductsQuery["search"]> = [
+export const products: RelayToFlat<NonNullable<SearchProductsQuery["search"]>> = [
   {
     __typename: "Product",
     id: "1",

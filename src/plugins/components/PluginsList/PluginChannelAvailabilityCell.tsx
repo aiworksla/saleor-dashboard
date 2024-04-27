@@ -1,6 +1,6 @@
+import Skeleton from "@dashboard/components/Skeleton";
+import { PluginBaseFragment } from "@dashboard/graphql";
 import { TableCell } from "@material-ui/core";
-import Skeleton from "@saleor/components/Skeleton";
-import { PluginBaseFragment } from "@saleor/graphql";
 import React, { useRef, useState } from "react";
 
 import PluginAvailabilityStatus from "./PluginAvailabilityStatus";
@@ -15,9 +15,7 @@ const PluginChannelAvailabilityCell: React.FC<PluginChannelAvailabilityCellProps
 }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const popupAnchor = useRef<HTMLTableCellElement>(null);
-
   const handleMouseOver = () => setIsPopupOpen(true);
-
   const handleMouseLeave = () => setIsPopupOpen(false);
 
   return (

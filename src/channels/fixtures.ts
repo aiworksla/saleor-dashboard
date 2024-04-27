@@ -3,8 +3,10 @@ import {
   ChannelDetailsFragment,
   ChannelErrorCode,
   ChannelErrorFragment,
+  MarkAsPaidStrategyEnum,
   ProductFragment,
-} from "@saleor/graphql";
+  TransactionFlowStrategyEnum,
+} from "@dashboard/graphql";
 import { Money } from "@saleor/sdk/dist/apollo/types";
 
 export const channelCreateErrors: ChannelErrorFragment[] = [
@@ -46,6 +48,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -76,6 +88,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -106,6 +128,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -136,6 +168,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -166,6 +208,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -196,6 +248,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
   {
     __typename: "Channel",
@@ -226,6 +288,16 @@ export const channelsList: ChannelDetailsFragment[] = [
         name: "Warehouse 2",
       },
     ],
+    orderSettings: {
+      markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+      deleteExpiredOrdersAfter: 60,
+      allowUnpaidOrders: false,
+      __typename: "OrderSettings",
+    },
+    paymentSettings: {
+      __typename: "PaymentSettings",
+      defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+    },
   },
 ];
 
@@ -258,9 +330,19 @@ export const channel: ChannelDetailsFragment = {
       name: "Warehouse 2",
     },
   ],
+  orderSettings: {
+    markAsPaidStrategy: MarkAsPaidStrategyEnum.TRANSACTION_FLOW,
+    deleteExpiredOrdersAfter: 60,
+    allowUnpaidOrders: false,
+    __typename: "OrderSettings",
+  },
+  paymentSettings: {
+    __typename: "PaymentSettings",
+    defaultTransactionFlowStrategy: TransactionFlowStrategyEnum.CHARGE,
+  },
 };
 
-type ProductChannelsWithPricing = ProductFragment["channelListings"][0] & {
+type ProductChannelsWithPricing = NonNullable<ProductFragment["channelListings"]>[0] & {
   pricing: {
     priceRange: {
       start: {
