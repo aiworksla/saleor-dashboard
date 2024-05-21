@@ -189,6 +189,8 @@ export const ProductCreateView: React.FC<ProductCreateProps> = ({ params }) => {
     },
   });
   const handleSubmit = async (data: ProductCreateData) => {
+    data.rating = parseInt(data.rating.toString());
+
     const errors = await createMetadataCreateHandler(
       createHandler(
         selectedProductType?.productType,
